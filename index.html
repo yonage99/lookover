@@ -209,17 +209,31 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:24px}
 .tabs button{background:none;border:0;padding:12px 16px;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
 .tabs button[aria-selected="true"]{color:var(--accent-text);border-color:var(--accent)}
-.board-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.board{position:relative;columns:4 200px;column-gap:14px;min-height:200px;border-radius:20px}
-.board.placing{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:8px}
-.tile{break-inside:avoid;margin:0 0 14px;border-radius:16px;overflow:hidden;position:relative;background:var(--soft)}
-.tile img{width:100%;height:auto}
-.tile svg{width:100%;height:auto}
-.tile.sq svg{aspect-ratio:1/1}
-.tile .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;opacity:0;transition:opacity .15s;font-size:15px;line-height:1}
-.tile:hover .x,.tile .x:focus-visible{opacity:1}
-.stk{position:absolute;font-size:40px;line-height:1;cursor:grab;user-select:none;touch-action:none;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.18));z-index:2}
-.stk:active{cursor:grabbing}
+.board-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.cbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+.bgs{display:flex;gap:6px;align-items:center;margin-left:6px}
+.bgdot{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.bgdot[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.collage{position:relative;aspect-ratio:3/4;width:100%;max-width:620px;margin:0 auto;border-radius:22px;overflow:hidden;container-type:inline-size;box-shadow:inset 0 0 0 1px var(--line),var(--shadow);user-select:none;-webkit-user-select:none}
+.collage.editing{touch-action:none;box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+.ci{position:absolute;touch-action:none}
+.collage:not(.editing) .ci{pointer-events:none}
+.collage.editing .ci{cursor:grab}
+.collage.editing .ci:active{cursor:grabbing}
+.ci.sel{outline:2px dashed var(--accent);outline-offset:5px}
+.polaroid{background:#fff;padding:5% 5% 15%;box-shadow:0 12px 26px -12px rgba(20,20,40,.45);position:relative}
+.polaroid img,.polaroid svg{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;pointer-events:none}
+.polaroid .cap{position:absolute;left:0;right:0;bottom:3.5%;text-align:center;font-family:var(--display);font-style:italic;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6%}
+.ci-photo .polaroid::before{content:"";position:absolute;top:-5%;left:50%;width:38%;height:9%;transform:translateX(-50%) rotate(-4deg);background:color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.6));opacity:.85;z-index:1}
+.sticker{display:block;line-height:1;text-align:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,.22))}
+.ctext{display:block;text-align:center;font-family:var(--display);font-style:italic;line-height:1.05;overflow-wrap:anywhere}
+.h-rot,.h-size{display:none;position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:5}
+.ci.sel .h-rot,.ci.sel .h-size{display:block}
+.h-size{right:-16px;bottom:-16px;cursor:nwse-resize}
+.h-rot{left:50%;top:-40px;margin-left:-12px;cursor:grab}
+.h-rot::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:14px;background:var(--accent);margin-left:-1px}
+.collage-empty{position:absolute;inset:0;display:grid;place-content:center;gap:8px;text-align:center;padding:12%;color:var(--muted);pointer-events:none}
+.collage-empty b{font-family:var(--display);font-size:28px;font-weight:400;color:var(--ink)}
 .tray{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--soft);padding:10px 12px;border-radius:16px;margin-bottom:18px}
 .tray button{width:42px;height:42px;border-radius:12px;border:1px solid transparent;background:var(--surface);font-size:22px;cursor:pointer;display:grid;place-items:center}
 .tray button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
@@ -475,7 +489,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key);
 let ME=null;
 const GUEST={id:null,name:'Guest',keywords:[],favColor:'#8c1238',photo:null,board:[],stickers:[],submissions:0};
 let db={users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
-const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false};
+const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null};
 const ts=t=>Date.parse(t)||Date.now();
 const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,rating:+r.rating,reviews:r.reviews});
 const mapPost=r=>({id:r.id,authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,created:ts(r.created_at),
@@ -502,6 +516,7 @@ async function load(){
   const list=[...ids].filter(Boolean);
   if(list.length){const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords,board,stickers,submissions').in('id',list);(data||[]).forEach(u=>next.users[u.id]=mapUser(u))}
   next.stylists.forEach(x=>x.photo=next.users[x.id]?.photo||null);
+  if(ME&&next.users[ME]&&db.users[ME]&&(state.editBoard||saveTimer))next.users[ME].board=db.users[ME].board;
   db=next;
   if(state.role==='stylist'&&!db.me.stylistId)state.role='client';
   if(state.role==='admin'&&!db.isAdmin)state.role='client';
@@ -519,7 +534,47 @@ async function run(fn,okMsg){
   finally{state.busy=false;document.body.style.cursor=''}
 }
 const must=r=>{if(r.error)throw r.error;return r.data};
-const saveMe=()=>sb.from('profiles').update({board:me().board,stickers:me().stickers}).eq('id',ME).then(r=>{if(r.error)toast('Could not save your board. Try again.')});
+const saveMe=()=>sb.from('profiles').update({board:collageOf(me()),stickers:[]}).eq('id',ME).then(r=>{if(r.error)toast('Could not save your collage. Try again.')});
+let saveTimer=null;const queueSave=()=>{clearTimeout(saveTimer);saveTimer=setTimeout(()=>{saveTimer=null;saveMe()},700)};
+const BGS={white:'#ffffff',blush:'#fbe8ee',sky:'#e7effb',mint:'#e4f3ec',lilac:'#efe9fa',grid:'grid',dots:'dots'};
+const rid=()=>'c'+crypto.randomUUID().slice(0,8);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function collageOf(u){
+  let b=u.board;
+  if(Array.isArray(b)){const items=b.slice(0,12).map((t,i)=>({id:t.id||rid(),type:t.photo?'photo':'preset',src:t.photo||null,preset:t.preset||null,x:20+(i%3)*30,y:16+Math.floor(i/3)*28,w:30,r:[-6,4,-3,7,-5,2][i%6],z:i+1}));
+    (u.stickers||[]).forEach((k,j)=>items.push({id:k.id||rid(),type:'sticker',e:k.e,x:k.x,y:k.y,w:13,r:0,z:60+j}));b={bg:'white',items};u.board=b}
+  if(!b||typeof b!=='object')b=u.board={bg:'white',items:[]};
+  if(!Array.isArray(b.items))b.items=[];if(!BGS[b.bg])b.bg='white';return b;
+}
+const topZ=c=>c.items.reduce((m,i)=>Math.max(m,i.z||0),0)+1;
+function addItem(it){const c=collageOf(me());if(c.items.length>=40){toast('Your collage is full. Remove something first.');return null}
+  const n={id:rid(),x:30+Math.random()*40,y:28+Math.random()*40,r:Math.round(Math.random()*14-7),z:topZ(c),...it};c.items.push(n);state.sel=n.id;return n}
+function bgStyle(k){const v=BGS[k]||'#fff';
+  if(v==='grid')return 'background-color:#fff;background-image:linear-gradient(#e6e7ef 1px,transparent 1px),linear-gradient(90deg,#e6e7ef 1px,transparent 1px);background-size:5% 3.75%';
+  if(v==='dots')return 'background-color:#fff;background-image:radial-gradient(#d3d4df 1.3px,transparent 1.5px);background-size:4% 3%';
+  return 'background:'+v}
+function itemHTML(it,edit){
+  const st=`left:${it.x}%;top:${it.y}%;width:${it.w}%;transform:translate(-50%,-50%) rotate(${it.r}deg);z-index:${it.z}`;let inner='';
+  if(it.type==='photo')inner=`<div class="polaroid"><img src="${esc(it.src)}" alt="Collage photo" draggable="false"></div>`;
+  else if(it.type==='preset'){const P=PRESETS[it.preset]||['outfit',['Dove grey']];inner=`<div class="polaroid">${art(P[0],P[1])}<span class="cap" style="font-size:${(it.w*.085).toFixed(2)}cqw">${esc(it.preset)}</span></div>`}
+  else if(it.type==='sticker')inner=`<span class="sticker" style="font-size:${(it.w*.8).toFixed(2)}cqw">${esc(it.e)}</span>`;
+  else inner=`<span class="ctext" style="font-size:${(it.w*.15).toFixed(2)}cqw;color:${esc(it.color||'#111114')}">${esc(it.text)}</span>`;
+  return `<div class="ci ci-${it.type} ${edit&&state.sel===it.id?'sel':''}" data-ci="${it.id}" style="${st}">${inner}${edit?'<span class="h-rot" data-h="rot"></span><span class="h-size" data-h="size"></span>':''}</div>`;
+}
+function collageHTML(c,edit){
+  return `<div class="collage ${edit?'editing':''}" id="collage" style="${bgStyle(c.bg)}" aria-label="Mood board collage">${c.items.slice().sort((a,b)=>a.z-b.z).map(i=>itemHTML(i,edit)).join('')}
+    ${c.items.length?'':`<div class="collage-empty"><b>Start your collage</b><span>Add photos, inspiration, stickers and words, then arrange them however you like.</span></div>`}</div>`;
+}
+function addTextSheet(){
+  const colors=['#111114','#ffffff',FAV_COLORS[0],'#c2185b','#2b59c3','#2e7d5b','#d9742b'];let col=colors[0];
+  openSheet(`<div class="eyebrow">Collage</div><h2 style="margin:6px 0 18px">Add words</h2>
+    <div class="field"><label for="tx-text">Your text</label><input id="tx-text" maxlength="40" placeholder="Soft, polished, a little bold"></div>
+    <div class="field"><span class="label">Color</span><div class="swatch-row" id="tx-col">${colors.map(c=>`<button type="button" data-txc="${c}" style="background:${c}" aria-label="Text color ${c}" aria-pressed="${c===col}"></button>`).join('')}</div></div>
+    <div class="actions"><button class="btn line" id="tx-cancel">Cancel</button><button class="btn" id="tx-add">Add to collage</button></div>`);
+  document.querySelectorAll('[data-txc]').forEach(b=>b.onclick=()=>{col=b.dataset.txc;document.querySelectorAll('[data-txc]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+  $('#tx-cancel').onclick=closeSheet;
+  $('#tx-add').onclick=()=>{const t=$('#tx-text').value.trim();if(!t){toast('Type something first');return}if(addItem({type:'text',text:t,color:col,w:48,r:-3})){queueSave();closeSheet();render()}};
+}
 function requireAuth(then){if(ME)return true;openAuth('signup',then);return false}
 function openAuth(mode='signup',then){
   const up=mode==='signup';
@@ -620,12 +675,16 @@ function renderShell(){
 function setMenu(open){$('#menu').hidden=!open;$('#explore-btn').setAttribute('aria-expanded',open)}
 $('#explore-btn').onclick=e=>{e.stopPropagation();setMenu($('#menu').hidden)};
 document.addEventListener('click',e=>{if(!e.target.closest('.explore'))setMenu(false)});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();setMenu(false)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();setMenu(false)}
+  if(state.editBoard&&state.sel&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')&&!$('#sheet').classList.contains('open')){
+    const c=collageOf(me()),it=c.items.find(i=>i.id===state.sel);if(!it)return;
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();c.items=c.items.filter(i=>i!==it);state.sel=null;queueSave();render()}
+    const nd={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(nd){e.preventDefault();it.x=clamp(it.x+nd[0],0,100);it.y=clamp(it.y+nd[1],0,100);queueSave();render()}}});
 const goHome=()=>go(state.role==='stylist'?'feed':state.role==='admin'?'admin':'browse');
 $('#home').onclick=goHome;$('#home').onkeydown=e=>{if(e.key==='Enter')goHome()};
 $('#me-btn').onclick=()=>{if(!ME)return openAuth('login');go(state.role==='stylist'?'sprofile':'me')};
 
-function go(v){const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
+function go(v){if(state.editBoard&&v!=='me'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe()}const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
 function render(){
   if(!db.loaded){$('#app').innerHTML='<div class="empty"><h3>Loading Lookover…</h3></div>';return}
   if(state.view==='feed'||state.view==='studio'||state.view==='sprofile'){if(!db.me.stylistId)state.view='join'}
@@ -725,14 +784,18 @@ const VIEWS={
       <input type="file" id="avatar-input" accept="image/*" hidden></section>
       <div class="tabs" role="tablist"><button role="tab" data-tab="board" aria-selected="${state.meTab==='board'}">Mood board</button><button role="tab" data-tab="colors" aria-selected="${state.meTab==='colors'}">My colors</button></div>`;
     if(state.meTab==='colors')return head+colorsTab(P);
-    return head+`<div class="board-tools"><p class="muted" style="margin:0">Looks you love and styles you have done. ${state.placing?'<b style="color:var(--accent-text)">Tap the board to place your sticker.</b>':'Drag stickers to move them, double-click to remove.'}</p><button class="btn" id="add-board">Add to board</button></div>
-      <div class="tray" aria-label="Your stickers"><span class="hint" style="margin-right:6px">Stickers ${unlocked}/${STICKERS.length}</span>
-        ${STICKERS.map((e,i)=>i<unlocked?`<button data-sticker="${e}" aria-pressed="${state.placing===e}" aria-label="Place sticker">${e}</button>`:`<button class="locked" disabled aria-label="Locked sticker">${e}</button>`).join('')}
-        <span class="hint" style="margin-left:auto">Earn 2 more with every look you submit</span></div>
-      <div class="board ${state.placing?'placing':''}" id="board">
-        ${u.board.map((t,i)=>`<div class="tile ${i%3===1?'sq':''}">${t.photo?`<img src="${t.photo}" alt="Mood board photo">`:art(PRESETS[t.preset]?.[0]||'outfit',PRESETS[t.preset]?.[1],t.preset)}<button class="x" data-unpin="${t.id}" aria-label="Remove from board">×</button></div>`).join('')}
-        ${(u.stickers||[]).map(k=>`<span class="stk" data-stk="${k.id}" style="left:${k.x}%;top:${k.y}%">${k.e}</span>`).join('')}
-      </div>`;
+    const c=collageOf(u),edit=!!state.editBoard;
+    const tools=edit?`<div class="cbar"><button class="btn sm line" data-cb="photo">+ Photo</button><button class="btn sm line" data-cb="inspo">+ Inspiration</button><button class="btn sm line" data-cb="text">+ Words</button>
+        <div class="bgs" role="group" aria-label="Background">${Object.keys(BGS).map(k=>`<button class="bgdot" data-cb="bg" data-bg="${k}" style="${bgStyle(k)};background-size:${k==='grid'?'6px 6px':k==='dots'?'5px 5px':'auto'}" aria-label="${k} background" aria-pressed="${c.bg===k}"></button>`).join('')}</div>
+        <span class="spacer"></span><span id="seltools" ${state.sel?'':'hidden'} style="display:inline-flex;gap:6px"><button class="btn sm soft" data-cb="front">Forward</button><button class="btn sm soft" data-cb="back">Back</button><button class="btn sm line" data-cb="del">Delete</button></span>
+        <button class="btn sm" data-cb="done">Done</button></div>`
+      :`<p class="muted" style="margin:0">Your collage. Mix photos, inspiration, stickers and words.</p><button class="btn" data-cb="edit">${c.items.length?'Edit collage':'Start my collage'}</button>`;
+    return head+`<div class="board-tools">${tools}</div>
+      ${edit?`<div class="tray" aria-label="Your stickers"><span class="hint" style="margin-right:6px">Stickers ${unlocked}/${STICKERS.length}</span>
+        ${STICKERS.map((e,i)=>i<unlocked?`<button data-sticker="${e}" aria-label="Add sticker">${e}</button>`:`<button class="locked" disabled aria-label="Locked sticker">${e}</button>`).join('')}
+        <span class="hint" style="margin-left:auto">Drag to move · corner dot resizes · top dot rotates</span></div>`:''}
+      ${collageHTML(c,edit)}
+      ${edit?'':'<p class="hint" style="text-align:center;margin-top:12px">Submit looks to unlock more stickers.</p>'}`;
   },
   feed(){
     const mine=stylist(db.me.stylistId);
@@ -1025,15 +1088,15 @@ function editMe(){
 }
 function addToBoard(){
   const u=me();let chosen=new Set();
-  openSheet(`<div class="eyebrow">Mood board</div><h2 style="margin:6px 0 18px">Add to your board</h2>
+  openSheet(`<div class="eyebrow">Mood board</div><h2 style="margin:6px 0 18px">Add to your collage</h2>
     <div class="pick-photo" style="margin-bottom:20px"><label for="mb-roll">${ICON.gallery}From camera roll<input type="file" id="mb-roll" accept="image/*" multiple></label><label for="mb-cam">${ICON.camera}Take a photo<input type="file" id="mb-cam" accept="image/*" capture="environment"></label></div>
     <div class="field"><span class="label">Or pick some inspiration</span><div class="presets">${Object.keys(PRESETS).map(n=>`<button type="button" data-preset="${esc(n)}" aria-pressed="false" aria-label="${esc(n)}">${art(PRESETS[n][0],PRESETS[n][1],n)}</button>`).join('')}</div></div>
     <div class="actions"><button class="btn line" id="mb-cancel">Cancel</button><button class="btn" id="mb-add">Add selected</button></div>`);
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const n=b.dataset.preset;chosen.has(n)?chosen.delete(n):chosen.add(n);b.setAttribute('aria-pressed',chosen.has(n))});
-  const onFiles=e=>{const files=[...e.target.files].slice(0,6);run(async()=>{for(const f of files){const p=await readPhoto(f,800);if(p)u.board.unshift({id:'b'+crypto.randomUUID().slice(0,8),photo:await upload(p,'board')})}
-    must(await sb.from('profiles').update({board:u.board.slice(0,60)}).eq('id',ME));closeSheet();render()},`Added ${files.length} photo${files.length>1?'s':''}`)};
+  const onFiles=e=>{const files=[...e.target.files].slice(0,6);run(async()=>{for(const f of files){const p=await readPhoto(f,800);if(p)addItem({type:'photo',src:await upload(p,'board'),w:34})}
+    await saveMe();closeSheet();render()},`Added ${files.length} photo${files.length>1?'s':''}`)};
   $('#mb-roll').onchange=onFiles;$('#mb-cam').onchange=onFiles;$('#mb-cancel').onclick=closeSheet;
-  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>u.board.push({id:'b'+crypto.randomUUID().slice(0,8),preset:n}));saveMe();closeSheet();toast('Added to your board');render()};
+  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>addItem({type:'preset',preset:n,w:30}));queueSave();closeSheet();toast('Added to your collage');render()};
 }
 function viewStylist(id){
   const s=stylist(id),p=priceOf(s);
@@ -1069,18 +1132,27 @@ function afterRender(){
     $('#avatar-btn').onclick=()=>{if(requireAuth())$('#avatar-input').click()};
     $('#avatar-input').onchange=async e=>{const p=await readPhoto(e.target.files?.[0],500,true);if(p)run(async()=>{const url=await upload(p,'avatar');must(await sb.from('profiles').update({photo_url:url}).eq('id',ME));await load();render()},'Photo updated')};
     $('#edit-me').onclick=()=>{if(requireAuth(editMe))editMe()};
-    const board=$('#board');if(board){
-      board.onclick=e=>{if(!state.placing||e.target.closest('.x,.stk'))return;const b=board.getBoundingClientRect();
-        me().stickers.push({id:'k'+Date.now(),e:state.placing,x:+((e.clientX-b.left)/b.width*100).toFixed(1),y:+((e.clientY-b.top)/b.height*100).toFixed(1)});state.placing=null;saveMe();render()};
-      board.querySelectorAll('.stk').forEach(el=>{
-        el.ondblclick=()=>{me().stickers=me().stickers.filter(k=>k.id!==el.dataset.stk);saveMe();render()};
-        el.onpointerdown=e=>{e.preventDefault();el.setPointerCapture(e.pointerId);const b=board.getBoundingClientRect();
-          const move=ev=>{el.style.left=Math.max(0,Math.min(100,(ev.clientX-b.left)/b.width*100))+'%';el.style.top=Math.max(0,Math.min(100,(ev.clientY-b.top)/b.height*100))+'%'};
-          const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);const k=me().stickers.find(x=>x.id===el.dataset.stk);if(k){k.x=parseFloat(el.style.left);k.y=parseFloat(el.style.top);saveMe()}};
-          el.addEventListener('pointermove',move);el.addEventListener('pointerup',up)};
-      });
+    const cv=$('#collage');
+    if(cv&&state.editBoard){
+      const c=collageOf(me());
+      const select=id=>{state.sel=id;cv.querySelectorAll('.ci').forEach(e=>e.classList.toggle('sel',e.dataset.ci===id));const t=$('#seltools');if(t)t.hidden=!id;
+        cv.querySelectorAll('.h-rot,.h-size').forEach(h=>h.remove());const el=id&&cv.querySelector(`[data-ci="${id}"]`);if(el)el.insertAdjacentHTML('beforeend','<span class="h-rot" data-h="rot"></span><span class="h-size" data-h="size"></span>')};
+      select(state.sel);
+      cv.onpointerdown=e=>{
+        const el=e.target.closest('.ci');if(!el){select(null);return}
+        e.preventDefault();const it=c.items.find(i=>i.id===el.dataset.ci);if(!it)return;const h=e.target.dataset.h;if(state.sel!==it.id)select(it.id);
+        const R=cv.getBoundingClientRect(),cx=R.left+it.x/100*R.width,cy=R.top+it.y/100*R.height;
+        const st={x:e.clientX,y:e.clientY,ix:it.x,iy:it.y,w:it.w,r:it.r,d:Math.hypot(e.clientX-cx,e.clientY-cy)||1,a:Math.atan2(e.clientY-cy,e.clientX-cx)};
+        const apply=()=>{el.style.left=it.x+'%';el.style.top=it.y+'%';el.style.width=it.w+'%';el.style.transform=`translate(-50%,-50%) rotate(${it.r}deg)`;
+          const k=el.querySelector('.sticker,.ctext,.cap');if(k)k.style.fontSize=(it.w*(it.type==='sticker'?.8:it.type==='text'?.15:.085)).toFixed(2)+'cqw'};
+        const move=ev=>{if(h==='size')it.w=+clamp(st.w*Math.hypot(ev.clientX-cx,ev.clientY-cy)/st.d,6,95).toFixed(1);
+          else if(h==='rot')it.r=Math.round(st.r+(Math.atan2(ev.clientY-cy,ev.clientX-cx)-st.a)*180/Math.PI);
+          else{it.x=+clamp(st.ix+(ev.clientX-st.x)/R.width*100,0,100).toFixed(1);it.y=+clamp(st.iy+(ev.clientY-st.y)/R.height*100,0,100).toFixed(1)}apply()};
+        const up=()=>{cv.removeEventListener('pointermove',move);cv.removeEventListener('pointerup',up);cv.removeEventListener('pointercancel',up);queueSave()};
+        try{cv.setPointerCapture(e.pointerId)}catch(_){}
+        cv.addEventListener('pointermove',move);cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+      };
     }
-    const ab=$('#add-board');if(ab)ab.onclick=()=>{if(requireAuth(addToBoard))addToBoard()};
   }
   document.querySelectorAll('[data-cform]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.elements.c.value;if(!t.trim())return;addComment(f.dataset.cform,t);render();const el=document.getElementById('post-'+f.dataset.cform);el&&el.scrollIntoView({block:'center'})});
   const as=$('#apply-v');if(as)as.onclick=applyVerification;
@@ -1100,8 +1172,18 @@ document.addEventListener('click',e=>{
   if(d.filter){state.filter=d.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
   if(d.comcat){state.comCat=d.comcat;return render()}
   if(d.tab){state.meTab=d.tab;return render()}
-  if(d.sticker){state.placing=state.placing===d.sticker?null:d.sticker;return render()}
-  if(d.unpin){me().board=me().board.filter(b=>b.id!==d.unpin);saveMe();return render()}
+  if(d.sticker){if(addItem({type:'sticker',e:d.sticker,w:14,r:Math.round(Math.random()*20-10)})){queueSave();render()}return}
+  if(d.cb){const c=collageOf(me()),it=c.items.find(i=>i.id===state.sel);
+    if(d.cb==='edit'){if(!requireAuth())return;state.editBoard=true;state.sel=null;return render()}
+    if(d.cb==='done'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe().then(()=>toast('Collage saved'));return render()}
+    if(d.cb==='photo'||d.cb==='inspo')return addToBoard();
+    if(d.cb==='text')return addTextSheet();
+    if(d.cb==='bg'){c.bg=d.bg;queueSave();return render()}
+    if(!it)return;
+    if(d.cb==='front')it.z=topZ(c);
+    if(d.cb==='back'){const lo=c.items.reduce((m,i)=>Math.min(m,i.z),Infinity);c.items.forEach(i=>i.z+=1);it.z=Math.max(1,lo)}
+    if(d.cb==='del'){c.items=c.items.filter(i=>i.id!==it.id);state.sel=null}
+    queueSave();return render()}
   if(d.rate){if(!requireAuth())return;const pid=d.rate,n=+d.n,had=db.posts.find(x=>x.id===pid)?.ratings?.[ME];
     return run(async()=>{must(had?await sb.from('ratings').update({score:n}).eq('post_id',pid).eq('user_id',ME):await sb.from('ratings').insert({post_id:pid,user_id:ME,score:n}));await load();render();document.getElementById('post-'+pid)?.scrollIntoView({block:'center'})})}
   if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by===ME?'You':personOf(c.by).name)}</b>${esc(c.text)}</div>`).join('')}</div>`);return}
