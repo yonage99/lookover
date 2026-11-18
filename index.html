@@ -375,7 +375,7 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
   </div>
 </header>
 <main id="app"></main>
-<footer>Lookover prototype · payments are simulated and everything is saved in this browser only</footer>
+<footer>Lookover · early access · payments are not live yet</footer>
 <nav class="dock" id="dock" aria-label="Main"></nav>
 
 <div class="scrim" id="scrim"></div>
@@ -385,6 +385,7 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 </aside>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
 /* ================= Reference data ================= */
 const SWATCHES=[['Ink','#1c1c22'],['Optic white','#fbfbf8'],['Ecru','#ece3d2'],['Camel','#b88a5a'],['Chocolate','#5a3a28'],['Rust','#a5482b'],['Mustard','#c99a2e'],['Olive','#6b6b3a'],['Pine','#24493d'],['Teal','#1f6f78'],['Navy','#1f2e55'],['Cornflower','#6f8fd0'],['Plum','#5e2a4d'],['Rose','#d99aa6'],['Dove grey','#b9b7b2'],['True red','#b3202a']];
@@ -468,63 +469,81 @@ function art(kind,names,label){
 }
 const media=(x,kind,cols,alt)=>x&&x.photo?`<img src="${x.photo}" alt="${esc(alt||'Photo')}">`:art(kind,cols);
 
-/* ================= Seed data ================= */
-const DAY=86400000,now=Date.now();
-const seed={
-  users:{
-    you:{id:'you',name:'Jamie',keywords:['Minimal','Modest','Gold jewelry'],favColor:'#8c1238',photo:null,
-      board:[{id:'b1',preset:'Quiet luxury'},{id:'b2',preset:'Clean girl'},{id:'b3',preset:'Modest chic'},{id:'b4',preset:'French tips'},{id:'b5',preset:'Old money'},{id:'b6',preset:'Curtain bangs'}],
-      stickers:[{id:'k1',e:'✨',x:22,y:10},{id:'k2',e:'🎀',x:74,y:46}],submissions:2},
-    u1:{id:'u1',name:'Ari',keywords:['Coquette']},u2:{id:'u2',name:'Jordan',keywords:['Streetwear']},u3:{id:'u3',name:'Sofia',keywords:['Modest']},u4:{id:'u4',name:'Theo',keywords:['Minimal']},u5:{id:'u5',name:'Nia',keywords:['Glam']}
-  },
-  stylists:[
-    {id:'s1',name:'Maya Okafor',title:'Color analyst & personal stylist',line:'I find the shades that make your skin look rested.',specialties:['Color analysis','Workwear','Capsule wardrobes'],turnaround:'48h',rating:4.9,reviews:132,services:['outfit','makeup'],verified:true},
-    {id:'s2',name:'Jules Moreau',title:'Streetwear & menswear',line:'Proportion and layering, so basics look intentional.',specialties:['Streetwear','Menswear'],turnaround:'24h',rating:4.8,reviews:87,services:['outfit'],verified:true},
-    {id:'s3',name:'Priya Sharma',title:'Occasion & event styling',line:'Tell me the event and I will get you there.',specialties:['Events & formal','Modest fashion'],turnaround:'24h',rating:5.0,reviews:54,services:['outfit','makeup'],verified:true},
-    {id:'s4',name:'Sam Rivera',title:'Thrift & budget styling',line:'Great outfits from what you already own.',specialties:['Thrift & budget','Capsule wardrobes'],turnaround:'72h',rating:4.7,reviews:18,services:['outfit'],verified:false},
-    {id:'s7',name:'Camille Dubois',title:'Makeup artist',line:'Shade matching and a five-minute face.',specialties:['Everyday makeup','Bridal makeup'],turnaround:'48h',rating:4.9,reviews:96,services:['makeup'],verified:true},
-    {id:'s8',name:'Aisha Rahman',title:'Licensed esthetician',line:'Simple routines you will actually keep.',specialties:['Acne-prone skin','Sensitive skin'],turnaround:'48h',rating:4.9,reviews:118,services:['skin'],verified:true},
-    {id:'s9',name:'Noor Haddad',title:'Skincare & makeup lover',line:'Skin first, then makeup that works with it.',specialties:['Everyday makeup','Sensitive skin'],turnaround:'72h',rating:4.6,reviews:12,services:['skin','makeup'],verified:false},
-    {id:'s10',name:'Kiki Tran',title:'Nail artist',line:'Shapes and shades that flatter your hands.',specialties:['Nail art','Gel & builder'],turnaround:'24h',rating:4.9,reviews:31,services:['nails'],verified:false},
-    {id:'s11',name:'Marcus Bell',title:'Hairstylist & colorist',line:'What to ask your salon or barber for.',specialties:['Haircuts','Hair color','Curly hair'],turnaround:'48h',rating:4.8,reviews:104,services:['hair'],verified:true}
-  ],
-  requests:[
-    {id:'r1',kind:'outfit',stylistId:'s1',clientId:'you',client:'Jamie',question:'Does this blouse work on me? I feel washed out in it.',keep:'The wide-leg trousers',swap:'Any top',aesthetic:'Quiet luxury',art:['Camel','Ecru','Chocolate','Dove grey'],status:'done',amount:15,created:now-3*DAY,postId:'p1',
-      feedback:{score:7,season:'Deep Winter',palette:['Navy','Plum','Optic white','Pine'],avoid:['Camel','Mustard'],notes:'The cut and trouser length are right for you. The beige sits close to your skin tone, so nothing frames your face.',tryInstead:'Keep the trousers. Swap the blouse for deep navy or plum, and wear silver near the face instead of gold.',products:[{name:'Satin blouse in navy',url:'https://www.shein.com',store:'shein.com'}]}},
-    {id:'r8',kind:'hair',stylistId:'s11',clientId:'you',client:'Jamie',question:'I want a change but I am scared to go short.',keep:'Length past my shoulders',swap:'Color is open',aesthetic:'Soft and natural',art:['Chestnut','Caramel','Chocolate brown'],status:'done',amount:15,created:now-2*DAY,
-      feedback:{score:7,faceShape:'Oval',hairType:'Wavy',cuts:['Long layers','Curtain bangs'],hairColors:['Espresso brown','Ash brown'],notes:'One length all over flattens your natural wave and hides your cheekbones.',tryInstead:'Ask for long layers starting at the chin and soft curtain bangs. Go one shade cooler with an espresso gloss.',products:[]}},
-    {id:'r9',kind:'nails',stylistId:'s10',clientId:'you',client:'Jamie',question:'Nail shape and color for a June wedding? My dress is navy.',keep:'',swap:'',aesthetic:'Clean and elegant',art:['Ballet nude'],status:'pending',amount:0,created:now-.3*DAY},
-    {id:'r3',kind:'outfit',stylistId:'s1',clientId:'u3',client:'Sofia',question:'First interview at a law firm. Is a grey suit too boring?',keep:'The blazer, it was my mom’s',swap:'Shoes and blouse',aesthetic:'Modest and polished',art:['Dove grey','Optic white','Ink','Plum'],status:'pending',amount:15,created:now-.2*DAY,profile:makeProfile('Soft Summer','Neutral','Combination')},
-    {id:'r4',kind:'outfit',stylistId:'s1',clientId:'u2',client:'Jordan',question:'Green overshirt or black? Which suits me better?',keep:'The cargo pants',swap:'The overshirt',aesthetic:'Streetwear',art:['Olive','Ink','Ecru','Camel'],status:'pending',amount:15,created:now-1.1*DAY,profile:makeProfile('Deep Autumn','Olive','Oily',['Breakouts'])},
-    {id:'r7',kind:'makeup',stylistId:'s1',clientId:'u1',client:'Ari',question:'What eyeshadow goes with an emerald dress and brown eyes?',keep:'My winged liner',swap:'Lip color',aesthetic:'Soft glam',art:['Bronze','Champagne','Mauve','Pine'],status:'pending',amount:15,created:now-.6*DAY,profile:makeProfile('Warm Spring','Warm','Normal',['Dullness'])}
-  ],
-  posts:[
-    {id:'p1',authorId:'you',kind:'outfit',caption:'Office look, round two. Be honest!',aesthetic:'Quiet luxury',art:['Camel','Ecru','Chocolate','Dove grey'],created:now-3*DAY,ratings:{u1:8,u2:7,u4:8,u5:9},comments:[{by:'u4',text:'The trousers are perfect.'},{by:'s1',pro:true,text:'Try a navy top with these and you will glow.'}]},
-    {id:'p2',authorId:'u1',kind:'outfit',caption:'Brunch fit. Too many bows?',aesthetic:'Coquette',art:['Soft pink','Optic white','Rose','Cherry'],created:now-.5*DAY,ratings:{u2:9,u3:8,u5:10},comments:[{by:'u5',text:'Never too many bows.'}]},
-    {id:'p3',authorId:'u2',kind:'outfit',caption:'Thrifted the jacket for $12.',aesthetic:'Streetwear',art:['Olive','Ink','Optic white','True red'],created:now-1.2*DAY,ratings:{u1:8,u4:7},comments:[{by:'s2',pro:true,text:'Great find. Cuff the pants once to show the sneakers.'}]},
-    {id:'p4',authorId:'u5',kind:'makeup',caption:'Testing a berry lip for winter.',aesthetic:'Soft glam',art:['Berry','Mauve','Taupe','Champagne'],created:now-.8*DAY,ratings:{u1:9,u3:9,u4:8},comments:[]},
-    {id:'p5',authorId:'u3',kind:'outfit',caption:'Eid outfit, first try with green.',aesthetic:'Modest',art:['Pine','Ecru','Camel','Chocolate'],created:now-2*DAY,ratings:{u1:10,u2:9,u5:9},comments:[{by:'u1',text:'This green is stunning on you.'}]},
-    {id:'p6',authorId:'u4',kind:'nails',caption:'Chrome or too much for work?',aesthetic:'Minimal',art:['Silver chrome','Silver chrome','Milky white','Silver chrome','Silver chrome'],created:now-.1*DAY,ratings:{u5:7},comments:[]}
-  ],
-  applications:[
-    {id:'a1',stylistId:'s4',experience:'Working stylist',link:'instagram.com/thriftedbysam',note:'Five years running a thrift styling account.',portfolio:[['outfit',['Rust','Mustard','Ecru','Chocolate']],['outfit',['Olive','Ink','Optic white','Camel']],['outfit',['Teal','Ecru','Camel','Chocolate']]],status:'pending',created:now-1*DAY},
-    {id:'a2',stylistId:'s10',experience:'Licensed professional',link:'kikinails.com',note:'Licensed nail technician, 4 years in a salon.',portfolio:[['nails',['Cherry']],['nails',['Silver chrome']],['nails',['Milky white','Ballet nude']]],status:'pending',created:now-.4*DAY}
-  ],
-  profile:makeProfile('Deep Winter','Cool','Combination',['Large pores','Dullness'],'Confirmed by Maya Okafor',{confirmed:true,faceShape:'Oval',hairType:'Wavy'}),
-  me:{stylistId:'s1'}
-};
-const KEY='lookover.v3';
-let db;
-try{db=JSON.parse(localStorage.getItem(KEY))||structuredClone(seed)}catch(e){db=structuredClone(seed)}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Storage is full. Try smaller photos.')}};
-const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null};
-
+/* ================= Data (Supabase) ================= */
+const CFG={url:"https://stehllepbcppfkqmayfg.supabase.co",key:"sb_publishable_u_VjXnXUna6oQOrFJ7E4Pw_AxkzzxyA"};
+const sb=window.supabase.createClient(CFG.url,CFG.key);
+let ME=null;
+const GUEST={id:null,name:'Guest',keywords:[],favColor:'#8c1238',photo:null,board:[],stickers:[],submissions:0};
+let db={users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
+const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false};
+const ts=t=>Date.parse(t)||Date.now();
+const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,rating:+r.rating,reviews:r.reviews});
+const mapPost=r=>({id:r.id,authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,created:ts(r.created_at),
+  ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro}))});
+const mapReq=r=>({id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
+const mapApp=r=>({id:r.id,stylistId:r.stylist_id,experience:r.experience,link:r.link,note:r.note,portfolio:r.portfolio||[],status:r.status,created:ts(r.created_at)});
+const mapUser=r=>({id:r.id,name:r.name,photo:r.photo_url,favColor:r.fav_color,keywords:r.keywords||[],board:r.board||[],stickers:r.stickers||[],submissions:r.submissions||0});
+async function load(){
+  const {data:{session}}=await sb.auth.getSession();ME=session?.user?.id||null;
+  const [st,po]=await Promise.all([sb.from('stylists').select('*').order('verified',{ascending:false}).order('rating',{ascending:false}).limit(200),
+    sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').order('created_at',{ascending:false}).limit(60)]);
+  if(st.error||po.error)throw (st.error||po.error);
+  const next={users:{},stylists:st.data.map(mapStylist),posts:po.data.map(mapPost),requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
+  const ids=new Set([...next.stylists.map(x=>x.id),...next.posts.map(x=>x.authorId),...next.posts.flatMap(x=>x.comments.map(c=>c.by))]);
+  if(ME){
+    ids.add(ME);
+    const [cp,rq,ap,pr]=await Promise.all([sb.from('color_profiles').select('data').eq('user_id',ME).maybeSingle(),
+      sb.from('requests').select('*').or(`client_id.eq.${ME},stylist_id.eq.${ME}`).order('created_at',{ascending:false}).limit(200),
+      sb.from('applications').select('*').order('created_at',{ascending:false}).limit(100),sb.from('profiles').select('is_admin').eq('id',ME).maybeSingle()]);
+    next.profile=cp.data?.data||null;next.requests=(rq.data||[]).map(mapReq);next.applications=(ap.data||[]).map(mapApp);next.isAdmin=!!pr.data?.is_admin;
+    next.requests.forEach(r=>{ids.add(r.clientId);ids.add(r.stylistId)});next.applications.forEach(a=>ids.add(a.stylistId));
+    next.me.stylistId=next.stylists.some(x=>x.id===ME)?ME:null;
+  }
+  const list=[...ids].filter(Boolean);
+  if(list.length){const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords,board,stickers,submissions').in('id',list);(data||[]).forEach(u=>next.users[u.id]=mapUser(u))}
+  next.stylists.forEach(x=>x.photo=next.users[x.id]?.photo||null);
+  db=next;
+  if(state.role==='stylist'&&!db.me.stylistId)state.role='client';
+  if(state.role==='admin'&&!db.isAdmin)state.role='client';
+}
+async function refresh(){try{await load()}catch(e){console.error(e);toast('Could not reach Lookover. Check your connection.')}render()}
+function dataUrlToBlob(u){const [h,b]=u.split(',');const bin=atob(b);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:(h.match(/:(.*?);/)||[])[1]||'image/jpeg'})}
+async function upload(dataUrl,prefix='photo'){
+  const path=`${ME}/${prefix}-${crypto.randomUUID()}.jpg`;
+  const {error}=await sb.storage.from('photos').upload(path,dataUrlToBlob(dataUrl),{contentType:'image/jpeg',upsert:false});
+  if(error)throw error;return sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
+}
+async function run(fn,okMsg){
+  if(state.busy){toast('One moment…');return}state.busy=true;document.body.style.cursor='progress';
+  try{await fn();if(okMsg)toast(okMsg)}catch(e){console.error(e);toast(e?.message?('Something went wrong: '+e.message):'Something went wrong. Please try again.')}
+  finally{state.busy=false;document.body.style.cursor=''}
+}
+const must=r=>{if(r.error)throw r.error;return r.data};
+const saveMe=()=>sb.from('profiles').update({board:me().board,stickers:me().stickers}).eq('id',ME).then(r=>{if(r.error)toast('Could not save your board. Try again.')});
+function requireAuth(then){if(ME)return true;openAuth('signup',then);return false}
+function openAuth(mode='signup',then){
+  const up=mode==='signup';
+  openSheet(`<div class="eyebrow">${up?'Join Lookover':'Welcome back'}</div><h2 style="margin:6px 0 8px">${up?'Create your account':'Log in'}</h2>
+    <p class="muted" style="margin:0 0 20px">${up?'It takes ten seconds. Free for everyone.':'Use the email and password you signed up with.'}</p>
+    <form id="auth-form">${up?'<div class="field"><label for="au-name">First name</label><input id="au-name" autocomplete="given-name" maxlength="40" required></div>':''}
+      <div class="field"><label for="au-email">Email</label><input id="au-email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="au-pass">Password</label><input id="au-pass" type="password" minlength="8" autocomplete="${up?'new-password':'current-password'}" required><span class="hint">${up?'At least 8 characters.':''}</span></div>
+      <div class="actions" style="justify-content:space-between;align-items:center"><button type="button" class="textlink" id="au-switch">${up?'I already have an account':'Create an account instead'}</button><button class="btn" type="submit">${up?'Create account':'Log in'}</button></div></form>`);
+  $('#au-switch').onclick=()=>openAuth(up?'login':'signup',then);
+  $('#auth-form').onsubmit=e=>{e.preventDefault();run(async()=>{
+    const email=$('#au-email').value.trim(),password=$('#au-pass').value;
+    const res=up?await sb.auth.signUp({email,password,options:{data:{name:$('#au-name').value.trim()}}}):await sb.auth.signInWithPassword({email,password});
+    if(res.error)throw new Error(res.error.message==='Invalid login credentials'?'Wrong email or password.':res.error.message);
+    closeSheet();await load();render();toast(up?'Welcome to Lookover!':'Logged in');if(then)then();
+  })};
+}
+async function logout(){await sb.auth.signOut();state.role='client';await load();go('browse');toast('Logged out')}
 /* ================= Helpers ================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=n=>String(n||'?').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 const stylist=id=>db.stylists.find(s=>s.id===id);
-const me=()=>db.users.you;
+const me=()=>(ME&&db.users[ME])||GUEST;
 const svc=s=>s.services?.length?s.services:['outfit'];
 const isTop=s=>s.verified&&s.rating>=4.8&&s.reviews>=50;
 const priceOf=s=>!s.verified?0:isTop(s)?15:10;
@@ -539,7 +558,7 @@ function face(p,label){
   const t=p?.favColor||TONES[[...String(p?.id||'x')].reduce((a,c)=>a+c.charCodeAt(0),0)%TONES.length];
   return `<div class="mono" style="background:radial-gradient(120% 90% at 30% 20%,${mix(t,'#ffffff',.3)},${t})"><b>${esc(initials(p?.name))}</b>${label?'<small>Photo coming soon</small>':''}</div>`;
 }
-const personOf=id=>id==='you'?me():db.users[id]||stylist(id)||{id,name:'Someone'};
+const personOf=id=>db.users[id]||stylist(id)||{id,name:'Member'};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600)}
 function openSheet(html){$('#sheet-body').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');$('#sheet').scrollTop=0;setTimeout(()=>$('#sheet-x').focus(),60)}
 function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open')}
@@ -580,7 +599,8 @@ function renderShell(){
   applyTheme(me().favColor||'#8c1238');
   $('#dock').innerHTML=DOCK[state.role].map(([v,l,ic])=>v==='+'?`<button class="plus" id="plus" aria-label="New review request">${ICON.plus}</button>`
     :`<button data-go="${v}" ${state.view===v||(v==='me'&&state.view==='colors')?'aria-current="page"':''}>${ICON[ic]}<span>${l}</span></button>`).join('');
-  $('#me-btn').innerHTML=face(state.role==='stylist'?stylist(db.me.stylistId):me());
+  $('#me-btn').innerHTML=ME?face(state.role==='stylist'?stylist(db.me.stylistId):me()):'<span style="font-size:12px;font-weight:600">Log in</span>';
+  $('#me-btn').style.width=ME?'':'auto';$('#me-btn').style.padding=ME?'':'0 14px';$('#me-btn').style.borderRadius=ME?'':'999px';
   const v=$('#viewing');v.hidden=state.role==='client';v.textContent=state.role==='stylist'?'Viewing as stylist':'Viewing as admin';
   $('#menu').innerHTML=`
     <div class="menu-col"><h4>Get feedback</h4>${Object.entries(KINDS).map(([k,v])=>`<button data-compose="${k}"><i>+</i>${v.ask}</button>`).join('')}</div>
@@ -593,7 +613,9 @@ function renderShell(){
       <button data-go="me"><i>☺</i>My profile & mood board</button>
       <button data-go="mine"><i>✎</i>My reviews</button>
       <button data-go="join"><i>✓</i>Become a stylist</button></div>
-    <div class="roles"><span class="hint">Prototype · view as</span>${['client','stylist','admin'].map(r=>`<button data-role="${r}" aria-pressed="${state.role===r}">${r[0].toUpperCase()+r.slice(1)}</button>`).join('')}</div>`;
+    <div class="roles">${(()=>{const roles=['client',...(db.me.stylistId?['stylist']:[]),...(db.isAdmin?['admin']:[])];
+      return roles.length>1?`<span class="hint">Switch view</span>${roles.map(r=>`<button data-role="${r}" aria-pressed="${state.role===r}">${{client:'Client',stylist:'Stylist',admin:'Admin'}[r]}</button>`).join('')}`:''})()}
+      <span class="spacer"></span>${ME?'<button id="logout">Log out</button>':'<button id="login">Log in</button><button data-signup="1">Sign up</button>'}</div>`;
 }
 function setMenu(open){$('#menu').hidden=!open;$('#explore-btn').setAttribute('aria-expanded',open)}
 $('#explore-btn').onclick=e=>{e.stopPropagation();setMenu($('#menu').hidden)};
@@ -601,10 +623,15 @@ document.addEventListener('click',e=>{if(!e.target.closest('.explore'))setMenu(f
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();setMenu(false)}});
 const goHome=()=>go(state.role==='stylist'?'feed':state.role==='admin'?'admin':'browse');
 $('#home').onclick=goHome;$('#home').onkeydown=e=>{if(e.key==='Enter')goHome()};
-$('#me-btn').onclick=()=>go(state.role==='stylist'?'sprofile':'me');
+$('#me-btn').onclick=()=>{if(!ME)return openAuth('login');go(state.role==='stylist'?'sprofile':'me')};
 
-function go(v){state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
-function render(){renderShell();$('#app').innerHTML=(VIEWS[state.view]||VIEWS.browse)();afterRender()}
+function go(v){const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
+function render(){
+  if(!db.loaded){$('#app').innerHTML='<div class="empty"><h3>Loading Lookover…</h3></div>';return}
+  if(state.view==='feed'||state.view==='studio'||state.view==='sprofile'){if(!db.me.stylistId)state.view='join'}
+  if(state.view==='admin'&&!db.isAdmin)state.view='browse';
+  if(state.view==='join'&&db.me.stylistId)state.view='studio';
+  renderShell();$('#app').innerHTML=(VIEWS[state.view]||VIEWS.browse)();afterRender()}
 
 /* ================= Feedback rendering ================= */
 function picksBlock(f){
@@ -641,6 +668,7 @@ function stylistCard(s){
     <div class="stylist-info"><div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div><h3>${esc(s.name)}</h3>
       <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${tierOf(s)}</span></div></div></button>`;
 }
+function signInPrompt(h,t){return `<div class="empty" style="padding:90px 0"><h3>${h}</h3><p style="max-width:44ch;margin:8px auto 18px">${t}</p><div class="ctas" style="justify-content:center"><button class="btn" data-signup="1">Create account</button><button class="btn line" id="login">Log in</button></div></div>`}
 const VIEWS={
   browse(){
     const inCat=db.stylists.filter(s=>state.cat==='all'||svc(s).includes(state.cat));
@@ -651,16 +679,16 @@ const VIEWS={
         <h1>Send the look.<br><em>Get the verdict.</em></h1>
         <p class="lede">Tap the + button, add a photo, say what has to stay and what you are going for. A stylist looks it over, and the community can rate it too.</p>
         <div class="ctas"><button class="btn" data-compose="outfit">Rate my outfit</button><button class="btn line" data-quiz="1">Find my colors</button></div>
-        <div class="facts-row num"><div><b>${db.stylists.length}</b><span>stylists & pros</span></div><div><b>${free}</b><span>review for free</span></div><div><b>${db.posts.length}</b><span>looks in the community</span></div></div></div>
+        <div class="facts-row num"><div><b>${db.stylists.length}</b><span>stylists & pros</span></div><div><b>${free}</b><span>review for free</span></div><div><b>${db.posts.length}</b><span>looks shared</span></div></div></div>
       <article class="sample" aria-label="Example review"><div class="sample-art">${art('outfit',['Navy','Optic white','Camel','Chocolate'],'Example review')}</div>
         <div class="sample-body"><div class="verdict"><div class="score num">8<small>/10</small></div><div style="text-align:right"><span class="eyebrow">Color season</span><div style="font-family:var(--display);font-style:italic;font-size:22px">Deep Winter</div></div></div>
         <p class="quote">“Keep the trousers. Trade the beige for navy and you’ll look rested instead of washed out.”</p>${chips(['Navy','Plum','Optic white','Pine'])}
-        <div class="eyebrow">Maya Okafor · Verified stylist</div></div></article></section>
+        <div class="eyebrow">Example review · what you get back</div></div></article></section>
     <div class="section-head" id="roster"><div><h2>Choose your <em>${({skin:'skincare pro',makeup:'makeup artist',nails:'nail artist',hair:'hairstylist'})[state.cat]||'stylist'}</em></h2><p>Community stylists review for free. Verified pros have been checked by our team.</p></div><span class="muted">${list.length} available</span></div>
     <div class="cats" role="group" aria-label="Type of review"><button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
       ${Object.entries(KINDS).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
     <div class="filters" role="group" aria-label="Filter">${['All','Verified','Free'].map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
-    <div class="roster">${list.map(stylistCard).join('')||'<div class="empty"><h3>No one here yet</h3>Try another filter.</div>'}</div>`;
+    <div class="roster">${list.map(stylistCard).join('')||`<div class="empty" style="grid-column:1/-1"><h3>${db.stylists.length?'No one here yet':'Be the first stylist on Lookover'}</h3>${db.stylists.length?'Try another filter.':'Lookover just launched. Join as a stylist and start reviewing looks for free.'}<div style="margin-top:16px"><button class="btn" data-go="join">Become a stylist</button></div></div>`}</div>`;
   },
   community(){
     const posts=db.posts.filter(p=>state.comCat==='all'||p.kind===state.comCat).sort((a,b)=>b.created-a.created);
@@ -669,7 +697,8 @@ const VIEWS={
       <div class="feed">${posts.map(postCard).join('')||'<div class="empty"><h3>No looks yet</h3>Be the first to post one.</div>'}</div>`;
   },
   mine(){
-    const list=db.requests.filter(r=>r.clientId==='you').sort((a,b)=>b.created-a.created);
+    if(!ME)return signInPrompt('Your reviews live here','Create a free account to send looks to stylists and keep every review in one place.');
+    const list=db.requests.filter(r=>r.clientId===ME).sort((a,b)=>b.created-a.created);
     return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>
       <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
         return `<article class="req"><div class="req-media">${media(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
@@ -678,12 +707,14 @@ const VIEWS={
           <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'In review'}</span></div>
           <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
           ${f?feedbackBlock(f,r.kind):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
+          ${f?`<div class="row-actions"><span class="hint" style="flex:1">${r.stars?'You rated this review':'How helpful was this review?'}</span><div class="chips">${[1,2,3,4,5].map(n=>`<button class="chip" ${r.stars?'disabled':''} data-stars="${r.id}" data-n="${n}" aria-pressed="${(r.stars||0)>=n}" aria-label="${n} star${n>1?'s':''}">★</button>`).join('')}</div></div>`:''}
           <div class="row-actions">${r.postId?`<span class="hint" style="flex:1">Posted to the community</span><button class="btn sm line" data-go="community">See ratings</button>`
             :`<span class="hint" style="flex:1">Want more opinions?</span><button class="btn sm soft" data-share="${r.id}">Post to community</button>`}
             ${f&&(f.season||f.skinType||f.lips?.length||f.nailShades?.length||f.faceShape)?`<button class="btn sm line" data-adopt="${r.id}">Save to my colors</button>`:''}</div>
         </div></article>`}).join('')||'<div class="empty"><h3>No reviews yet</h3>Tap the + button to send your first look.</div>'}</div>`;
   },
   me(){
+    if(!ME)return signInPrompt('Make it yours','Create a free account to build your mood board, collect stickers and save your colors.');
     const u=me(),P=db.profile;
     const unlocked=Math.min(STICKERS.length,3+2*(u.submissions||0));
     const head=`<section class="prof-head"><button class="prof-avatar" id="avatar-btn" aria-label="Change profile photo">${face(u)}</button>
@@ -751,7 +782,7 @@ const VIEWS={
     const apps=db.applications.slice().sort((a,b)=>(a.status!=='pending')-(b.status!=='pending')||b.created-a.created);
     return `<div class="section-head"><div><div class="eyebrow">Admin</div><h2>Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
       <div class="list">${apps.map(a=>{const s=stylist(a.stylistId);return `<div class="app-card"><div class="avatar" style="width:72px;height:72px">${face(s)}</div>
-        <div><h3 style="font-size:24px">${esc(s?.name)}</h3><div class="meta"><span>${svc(s).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s.rating} (${s.reviews})</span></div>
+        <div><h3 style="font-size:24px">${esc(s?.name)}</h3><div class="meta"><span>${s?svc(s).map(k=>KINDS[k].label).join(' · '):''}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s?.rating||0} (${s?.reviews||0})</span></div>
           <p style="margin:8px 0 4px">${esc(a.note)}</p><span class="hint">${esc(a.link)}</span>
           <div class="portfolio">${a.portfolio.map(p=>`<div>${typeof p==='string'?`<img src="${p}" alt="Portfolio photo">`:art(p[0],p[1])}</div>`).join('')}</div></div>
         <div class="actions" style="margin:0">${a.status==='pending'?`<button class="btn line sm" data-decline="${a.id}">Decline</button><button class="btn sm" data-approve="${a.id}">Approve</button>`:`<span class="pill ${a.status==='approved'?'done':'pending'}">${a.status}</span>`}</div></div>`}).join('')||'<div class="empty"><h3>No requests</h3></div>'}</div>`;
@@ -795,20 +826,19 @@ function readStylistForm(){
 /* ================= Community posts ================= */
 function postCard(p){
   const a=personOf(p.authorId),vals=Object.values(p.ratings||{}),avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:0;
-  const mineR=p.ratings?.you;const cm=p.comments||[];
+  const mineR=ME?p.ratings?.[ME]:null;const cm=p.comments||[];
   return `<article class="post" id="post-${p.id}"><div class="post-media">${media(p,p.kind,p.art,'')}${vals.length?`<span class="avgtag num"><b>${avg.toFixed(1)}</b>${vals.length} rating${vals.length>1?'s':''}</span>`:''}</div>
-    <div class="post-body"><div class="who"><div class="avatar">${face(a)}</div><div style="flex:1"><b>${esc(p.authorId==='you'?'You':a.name)}</b><div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
+    <div class="post-body"><div class="who"><div class="avatar">${face(a)}</div><div style="flex:1"><b>${esc(p.authorId===ME?'You':a.name)}</b><div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
       <p style="margin:0">${esc(p.caption)}</p>
-      ${p.authorId==='you'?'<span class="hint">You can’t rate your own look.</span>':`<div><span class="hint">${mineR?'Your rating':'Rate this look'}</span><div class="rate" role="group" aria-label="Rate out of 10">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-rate="${p.id}" data-n="${n}" aria-pressed="${mineR===n}">${n}</button>`).join('')}</div></div>`}
-      <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by==='you'?'You':w.name)}</b>${esc(c.text)}</div>`}).join('')}
+      ${p.authorId===ME?'<span class="hint">You can’t rate your own look.</span>':`<div><span class="hint">${mineR?'Your rating':'Rate this look'}</span><div class="rate" role="group" aria-label="Rate out of 10">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-rate="${p.id}" data-n="${n}" aria-pressed="${mineR===n}">${n}</button>`).join('')}</div></div>`}
+      <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by===ME?'You':w.name)}</b>${esc(c.text)}</div>`}).join('')}
         ${cm.length>2?`<button class="textlink" data-allc="${p.id}">View all ${cm.length} comments</button>`:''}</div>
       <form class="cmt-form" data-cform="${p.id}"><input name="c" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200"><button class="btn sm" type="submit">Post</button></form>
     </div></article>`;
 }
 function addComment(pid,text){
-  const p=db.posts.find(x=>x.id===pid);if(!text.trim())return;
-  const by=state.role==='stylist'?db.me.stylistId:'you';
-  p.comments=[...(p.comments||[]),{by,text:text.trim(),pro:state.role==='stylist'}];save();
+  if(!text.trim()||!requireAuth())return;
+  run(async()=>{must(await sb.from('comments').insert({post_id:pid,author_id:ME,text:text.trim().slice(0,300)}));await load();render();document.getElementById('post-'+pid)?.scrollIntoView({block:'center'})});
 }
 
 /* ================= Composer (+ button) ================= */
@@ -817,10 +847,10 @@ function openComposer(opts={}){
   renderComposer();
 }
 function renderComposer(){
-  const c=state.compose,pros=db.stylists.filter(s=>svc(s).includes(c.kind)).sort((a,b)=>b.verified-a.verified||b.rating-a.rating);
+  const c=state.compose,pros=db.stylists.filter(s=>svc(s).includes(c.kind)&&s.id!==ME).sort((a,b)=>b.verified-a.verified||b.rating-a.rating);
   if(c.stylistId!=='auto'&&!pros.some(p=>p.id===c.stylistId))c.stylistId='auto';
   const chosen=c.stylistId==='auto'?null:stylist(c.stylistId);
-  const keep=id=>$(id)?.value??'';const vals={q:keep('#cp-q'),keep:keep('#cp-keep'),swap:keep('#cp-swap'),aes:keep('#cp-aes')||c.aesthetic};
+  const keep=id=>$(id)?.value??'';const vals={q:keep('#cp-q')||c._q||'',keep:keep('#cp-keep')||c._keep||'',swap:keep('#cp-swap')||c._swap||'',aes:keep('#cp-aes')||c.aesthetic||''};
   openSheet(`<div class="eyebrow">New request</div><h2 style="margin:6px 0 18px">${KINDS[c.kind].ask}</h2>
     ${c.photo?`<div class="preview" style="margin-bottom:16px"><img src="${c.photo}" alt="Your photo"><button class="btn line sm" id="cp-clear">Change photo</button></div>`
       :`<div class="pick-photo" style="margin-bottom:6px"><label for="cp-roll">${ICON.gallery}Camera roll<input type="file" id="cp-roll" accept="image/*"></label><label for="cp-cam">${ICON.camera}Take a photo<input type="file" id="cp-cam" accept="image/*" capture="environment"></label></div><p class="hint" style="margin:0 0 16px">Tip: ${KINDS[c.kind].photo.toLowerCase()}.</p>`}
@@ -830,33 +860,42 @@ function renderComposer(){
       <div class="field"><label for="cp-swap">Willing to swap</label><input id="cp-swap" value="${esc(vals.swap)}" placeholder="Shoes, bag"></div></div>
     <div class="field"><label for="cp-aes">The aesthetic I’m going for</label><input id="cp-aes" value="${esc(vals.aes)}" placeholder="Quiet luxury, but warmer" maxlength="60">
       <div class="chips" style="margin-top:6px">${AESTHETICS.slice(0,8).map(a=>`<button type="button" class="chip" data-aes="${a}">${a}</button>`).join('')}</div></div>
-    <div class="field"><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great ${KINDS[c.kind].label.toLowerCase()} pro</option>
+    ${pros.length?'':`<div class="mini"><span class="eyebrow">No ${KINDS[c.kind].label.toLowerCase()} pros yet</span><span class="hint">Lookover is brand new. Your look will go to the community for ratings, and you can send it to a pro once one joins.</span></div>`}
+    <div class="field" ${pros.length?'':'hidden'}><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great ${KINDS[c.kind].label.toLowerCase()} pro</option>
       ${pros.map(s=>`<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${s.verified?'Verified $'+priceOf(s):'Free'} · ★ ${s.rating}</option>`).join('')}</select>
-      <span class="hint">${chosen&&priceOf(chosen)?`$${priceOf(chosen)} per review. Payment is simulated in this prototype.`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
+      <span class="hint">${chosen&&priceOf(chosen)?`$${priceOf(chosen)} per review. Payment is not live yet, so it is free for now.`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
     ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
     <label class="switch"><span><b>Also post to the community</b><span class="hint">Let other people rate it out of 10 and comment</span></span><input type="checkbox" id="cp-share" ${c.share?'checked':''}></label>
-    <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send">Send for review</button></div>`);
+    <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send">${pros.length?'Send for review':'Post to community'}</button></div>`);
   const onFile=async e=>{const f=e.target.files?.[0];if(!f)return;state.compose.photo=await readPhoto(f,1000);if(!state.compose.photo){toast('That photo could not be read. Try another one.');return}snapshotCompose();renderComposer()};
   $('#cp-roll')&&($('#cp-roll').onchange=onFile);$('#cp-cam')&&($('#cp-cam').onchange=onFile);
   $('#cp-clear')&&($('#cp-clear').onclick=()=>{snapshotCompose();state.compose.photo=null;renderComposer()});
-  $('#cp-pro').onchange=e=>{snapshotCompose();state.compose.stylistId=e.target.value;renderComposer()};
+  $('#cp-pro')&&($('#cp-pro').onchange=e=>{snapshotCompose();state.compose.stylistId=e.target.value;renderComposer()});
   $('#cp-cancel').onclick=closeSheet;$('#cp-send').onclick=submitCompose;
   if(vals.q){$('#cp-q').value=vals.q}
 }
 function snapshotCompose(){const c=state.compose;if(!$('#cp-q'))return;c._q=$('#cp-q').value;c._keep=$('#cp-keep').value;c._swap=$('#cp-swap').value;c.aesthetic=$('#cp-aes').value;c.share=$('#cp-share').checked;
   setTimeout(()=>{if($('#cp-q')){$('#cp-q').value=c._q||'';$('#cp-keep').value=c._keep||'';$('#cp-swap').value=c._swap||''}},0)}
 function submitCompose(){
+  if(!ME){snapshotCompose();openAuth('signup',()=>renderComposer());return}
   const c=state.compose,q=$('#cp-q').value.trim();
   if(!c.photo){toast('Add a photo first');return}
   if(!q){toast('Write a short question for your stylist');$('#cp-q').focus();return}
+  const pool=db.stylists.filter(x=>svc(x).includes(c.kind)&&x.id!==ME);
   let s=c.stylistId==='auto'?null:stylist(c.stylistId);
-  if(!s){const pool=db.stylists.filter(x=>svc(x).includes(c.kind));const tt=t=>parseInt(t.turnaround)||48;s=(pool.filter(x=>!x.verified).sort((a,b)=>tt(a)-tt(b)||b.rating-a.rating)[0])||pool.sort((a,b)=>tt(a)-tt(b))[0]}
-  const id='r'+Date.now(),u=me();
-  const r={id,kind:c.kind,stylistId:s.id,clientId:'you',client:u.name,question:q,keep:$('#cp-keep').value.trim(),swap:$('#cp-swap').value.trim(),aesthetic:$('#cp-aes').value.trim(),photo:c.photo,profile:db.profile?structuredClone(db.profile):null,status:'pending',amount:priceOf(s),created:Date.now()};
-  if($('#cp-share').checked){const pid='p'+Date.now();db.posts.push({id:pid,authorId:'you',kind:c.kind,caption:q,aesthetic:r.aesthetic,photo:c.photo,created:Date.now(),ratings:{},comments:[],requestId:id});r.postId=pid}
-  db.requests.push(r);const before=Math.min(STICKERS.length,3+2*(u.submissions||0));u.submissions=(u.submissions||0)+1;
-  save();closeSheet();const gained=Math.min(STICKERS.length,3+2*u.submissions)-before;
-  toast(`Sent to ${s.name}.${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go('mine');
+  if(!s&&pool.length){const tt=t=>parseInt(t.turnaround)||48;s=pool.filter(x=>!x.verified).sort((a,b)=>tt(a)-tt(b)||b.rating-a.rating)[0]||pool.sort((a,b)=>tt(a)-tt(b))[0]}
+  const share=$('#cp-share').checked||!s;
+  const fields={keep:$('#cp-keep').value.trim().slice(0,120),swap:$('#cp-swap').value.trim().slice(0,120),aesthetic:$('#cp-aes').value.trim().slice(0,60)};
+  run(async()=>{
+    const url=await upload(c.photo,c.kind);const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
+    let req=null;
+    if(s)req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kind,question:q.slice(0,600),...fields,photo_url:url,color_profile:db.profile}).select().single());
+    if(share){const post=must(await sb.from('posts').insert({author_id:ME,kind:c.kind,caption:q.slice(0,600),aesthetic:fields.aesthetic,photo_url:url,request_id:req?.id||null}).select().single());
+      if(req)must(await sb.from('requests').update({post_id:post.id}).eq('id',req.id))}
+    must(await sb.from('profiles').update({submissions:(u.submissions||0)+1}).eq('id',ME));
+    closeSheet();await load();const gained=Math.min(STICKERS.length,3+2*me().submissions)-before;
+    toast(`${s?'Sent to '+s.name+'.':'Posted to the community.'}${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go(s?'mine':'community');
+  });
 }
 
 /* ================= Review form for stylists ================= */
@@ -896,12 +935,12 @@ function sendReview(rid){
   const products=[0,1].map(i=>({name:$('#pn'+i).value.trim(),url:$('#pu'+i).value.trim()})).filter(x=>x.name&&/^https?:\/\/\S+$/i.test(x.url))
     .map(x=>{try{return {...x,store:new URL(x.url).hostname.replace(/^www\./,'')}}catch(e){return null}}).filter(Boolean);
   const r=db.requests.find(x=>x.id===rid),k=r.kind,val=id=>$(id)?.value,score=+val('#fb-score');
-  r.feedback=k==='skin'?{skinType:val('#fb-type'),concerns:picked('fb-concerns'),am:val('#fb-am').trim(),pm:val('#fb-pm').trim(),notes,tryInstead,products}
+  const feedback=k==='skin'?{skinType:val('#fb-type'),concerns:picked('fb-concerns'),am:val('#fb-am').trim(),pm:val('#fb-pm').trim(),notes,tryInstead,products}
     :k==='makeup'?{score,undertone:val('#fb-under'),season:val('#fb-season'),lips:picked('fb-lips'),cheeks:picked('fb-cheeks'),eyes:picked('fb-eyes'),avoid:picked('fb-avoid'),notes,tryInstead,products}
     :k==='nails'?{score,shape:val('#fb-shape'),length:val('#fb-length'),nailShades:picked('fb-polish'),finishes:picked('fb-finish'),notes,tryInstead,products}
     :k==='hair'?{score,faceShape:val('#fb-face'),hairType:val('#fb-htype'),cuts:picked('fb-cuts'),hairColors:picked('fb-haircol'),notes,tryInstead,products}
     :{score,season:val('#fb-season'),palette:picked('fb-palette'),avoid:picked('fb-avoid'),notes,tryInstead,products};
-  r.status='done';save();toast(`Review sent to ${r.client}`);render();window.scrollTo({top:0,behavior:'smooth'});
+  run(async()=>{must(await sb.from('requests').update({feedback}).eq('id',rid));await load();render();window.scrollTo({top:0,behavior:'smooth'})},`Review sent to ${r.client}`);
 }
 
 /* ================= Color quiz + profile editing ================= */
@@ -917,6 +956,7 @@ const QUIZ=[
   ['skin','A few hours after washing your face, your skin feels',[['Dry','Tight or flaky'],['Oily','Shiny all over'],['Combination','Shiny T-zone, dry cheeks'],['Normal','Comfortable'],['Sensitive','Easily irritated']]]
 ];
 let quizAns={};
+async function saveColors(P,msg){if(!requireAuth())return;await run(async()=>{must(await sb.from('color_profiles').upsert({user_id:ME,data:P,updated_at:new Date().toISOString()}));db.profile=P},msg)}
 function computeProfile(a){
   const w={cool:-1.5,warm:1.5,mixed:0,olive:.5}[a.veins]+{silver:-1,gold:1,both:0}[a.metal]+{optic:-1,cream:1,both:0}[a.white];
   const undertone=a.veins==='olive'?'Olive':w>=1?'Warm':w<=-1?'Cool':'Neutral',warm=undertone==='Warm'||(undertone!=='Cool'&&w>0);
@@ -939,7 +979,7 @@ function openQuiz(){
       <div><h4 class="h4" style="margin-top:6px">Wear more</h4>${chips(P.wear)}</div><div><h4 class="h4" style="margin-top:6px">Lips & nails</h4>${chips([...P.lips,...P.nails.slice(0,2)])}</div></div>`;
     $('#quiz-actions').innerHTML='<button class="btn line" id="qz-again">Change answers</button><button class="btn" id="qz-save">Save to my profile</button>';
     $('#qz-again').onclick=openQuiz;
-    $('#qz-save').onclick=()=>{db.profile=P;save();closeSheet();toast('Saved. Your colors now go with every request.');state.role='client';go('colors')};
+    $('#qz-save').onclick=()=>{if(!requireAuth(()=>saveColors(P,'Saved. Your colors now go with every request.').then(()=>go('colors'))))return;saveColors(P,'Saved. Your colors now go with every request.').then(()=>{closeSheet();state.role='client';go('colors')})};
     $('#quiz-result').scrollIntoView({behavior:'smooth'});
   };
 }
@@ -957,15 +997,15 @@ function editColors(){
     <div class="actions"><button class="btn line" id="ep-cancel">Cancel</button><button class="btn" id="ep-save">Save</button></div>`);
   $('#ep-cancel').onclick=closeSheet;
   $('#ep-save').onclick=()=>{const v=id=>$(id).value||null;
-    db.profile={season:v('#ep-season')||P.season,undertone:v('#ep-under')||P.undertone,skinType:v('#ep-skin'),concerns:picked('ep-concerns'),wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),nails:picked('ep-nails'),hairColors:picked('ep-hair'),faceShape:v('#ep-face'),hairType:v('#ep-htype'),source:'Edited by you',updated:Date.now()};
-    save();closeSheet();toast('Palette saved');render()};
+    const NP={season:v('#ep-season')||P.season,undertone:v('#ep-under')||P.undertone,skinType:v('#ep-skin'),concerns:picked('ep-concerns'),wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),nails:picked('ep-nails'),hairColors:picked('ep-hair'),faceShape:v('#ep-face'),hairType:v('#ep-htype'),source:'Edited by you',updated:Date.now()};
+    saveColors(NP,'Palette saved').then(()=>{closeSheet();render()})};
 }
 function adoptReview(rid){
   const r=db.requests.find(x=>x.id===rid),f=r.feedback,s=stylist(r.stylistId),P={...(db.profile||makeProfile(f.season||'Cool Summer','Neutral','Normal'))};
   if(f.season)P.season=f.season;if(f.undertone)P.undertone=f.undertone;if(f.palette?.length)P.wear=f.palette;if(f.avoid?.length&&r.kind==='outfit')P.avoid=f.avoid;
   ['lips','cheeks','eyes'].forEach(k=>{if(f[k]?.length)P[k]=f[k]});if(f.skinType)P.skinType=f.skinType;if(f.concerns?.length)P.concerns=f.concerns;
   if(f.nailShades?.length)P.nails=f.nailShades;if(f.hairColors?.length)P.hairColors=f.hairColors;if(f.faceShape)P.faceShape=f.faceShape;if(f.hairType)P.hairType=f.hairType;
-  P.source=`Confirmed by ${s.name}`;P.confirmed=true;P.updated=Date.now();db.profile=P;save();toast('Saved to your colors');render();
+  P.source=`Confirmed by ${s.name}`;P.confirmed=true;P.updated=Date.now();saveColors(P,'Saved to your colors').then(render);
 }
 function editMe(){
   const u=me();let fav=u.favColor||FAV_COLORS[0];
@@ -980,7 +1020,8 @@ function editMe(){
   document.querySelectorAll('#em-fav [data-fav]').forEach(b=>b.onclick=()=>pick(b.dataset.fav));$('#em-wheel').oninput=e=>pick(e.target.value);
   $('#em-add').onclick=()=>{const v=$('#em-custom').value.trim();if(!v)return;const box=$('#em-words');const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.sw=v;b.setAttribute('aria-pressed','true');b.textContent=v;box.appendChild(b);$('#em-custom').value=''};
   $('#em-cancel').onclick=()=>{applyTheme(u.favColor);closeSheet()};
-  $('#em-save').onclick=()=>{u.name=$('#em-name').value.trim()||u.name;u.keywords=picked('em-words').slice(0,8);u.favColor=fav;save();closeSheet();toast('Profile saved');render()};
+  $('#em-save').onclick=()=>run(async()=>{const name=($('#em-name').value.trim()||u.name).slice(0,40);
+    must(await sb.from('profiles').update({name,keywords:picked('em-words').slice(0,8),fav_color:/^#[0-9a-f]{6}$/i.test(fav)?fav:'#8c1238'}).eq('id',ME));closeSheet();await load();render()},'Profile saved');
 }
 function addToBoard(){
   const u=me();let chosen=new Set();
@@ -989,9 +1030,10 @@ function addToBoard(){
     <div class="field"><span class="label">Or pick some inspiration</span><div class="presets">${Object.keys(PRESETS).map(n=>`<button type="button" data-preset="${esc(n)}" aria-pressed="false" aria-label="${esc(n)}">${art(PRESETS[n][0],PRESETS[n][1],n)}</button>`).join('')}</div></div>
     <div class="actions"><button class="btn line" id="mb-cancel">Cancel</button><button class="btn" id="mb-add">Add selected</button></div>`);
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const n=b.dataset.preset;chosen.has(n)?chosen.delete(n):chosen.add(n);b.setAttribute('aria-pressed',chosen.has(n))});
-  const onFiles=async e=>{const files=[...e.target.files].slice(0,6);for(const f of files){const p=await readPhoto(f,700);if(p)u.board.unshift({id:'b'+Date.now()+Math.random().toString(36).slice(2,6),photo:p})}save();closeSheet();toast(`Added ${files.length} photo${files.length>1?'s':''}`);render()};
+  const onFiles=e=>{const files=[...e.target.files].slice(0,6);run(async()=>{for(const f of files){const p=await readPhoto(f,800);if(p)u.board.unshift({id:'b'+crypto.randomUUID().slice(0,8),photo:await upload(p,'board')})}
+    must(await sb.from('profiles').update({board:u.board.slice(0,60)}).eq('id',ME));closeSheet();render()},`Added ${files.length} photo${files.length>1?'s':''}`)};
   $('#mb-roll').onchange=onFiles;$('#mb-cam').onchange=onFiles;$('#mb-cancel').onclick=closeSheet;
-  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>u.board.push({id:'b'+Date.now()+n.length+Math.random().toString(36).slice(2,5),preset:n}));save();closeSheet();toast('Added to your board');render()};
+  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>u.board.push({id:'b'+crypto.randomUUID().slice(0,8),preset:n}));saveMe();closeSheet();toast('Added to your board');render()};
 }
 function viewStylist(id){
   const s=stylist(id),p=priceOf(s);
@@ -1008,11 +1050,11 @@ function applyVerification(){
     <div class="field"><span class="label">Portfolio · up to 6 photos</span><div class="pick-photo" style="grid-template-columns:1fr"><label for="av-photos">${ICON.gallery}Choose photos of looks you’ve done<input type="file" id="av-photos" accept="image/*" multiple></label></div><div class="portfolio" id="av-prev"></div></div>
     <div class="field"><label for="av-link">Instagram, TikTok or website</label><input id="av-link" placeholder="instagram.com/yourname"></div>
     <div class="actions"><button class="btn line" id="av-cancel">Cancel</button><button class="btn" id="av-send">Send application</button></div>`);
-  $('#av-photos').onchange=async e=>{for(const f of [...e.target.files].slice(0,6-photos.length)){const p=await readPhoto(f,500);if(p)photos.push(p)}$('#av-prev').innerHTML=photos.map(p=>`<div><img src="${p}" alt="Portfolio photo"></div>`).join('')};
+  $('#av-photos').onchange=async e=>{for(const f of [...e.target.files].slice(0,6-photos.length)){const p=await readPhoto(f,800);if(p)photos.push(p)}$('#av-prev').innerHTML=photos.map(p=>`<div><img src="${p}" alt="Portfolio photo"></div>`).join('')};
   $('#av-cancel').onclick=closeSheet;
   $('#av-send').onclick=()=>{if(!photos.length){toast('Add at least one portfolio photo');return}
-    db.applications.push({id:'a'+Date.now(),stylistId:s.id,experience:$('#av-exp').value,link:$('#av-link').value.trim(),note:s.line||'',portfolio:photos,status:'pending',created:Date.now()});
-    save();closeSheet();toast('Application sent. We will review it soon.');render()};
+    run(async()=>{const urls=[];for(const ph of photos)urls.push(await upload(ph,'portfolio'));
+      must(await sb.from('applications').insert({stylist_id:ME,experience:$('#av-exp').value,link:$('#av-link').value.trim().slice(0,200),note:(s.line||'').slice(0,300),portfolio:urls}));closeSheet();await load();render()},'Application sent. We will review it soon.')};
 }
 
 /* ================= After render: wire per-view behavior ================= */
@@ -1024,21 +1066,21 @@ function afterRender(){
       $('#q-prev').onclick=()=>{state.qi--;render()};$('#q-next').onclick=()=>{state.qi++;render()}}
   }
   if(state.view==='me'){
-    $('#avatar-btn').onclick=()=>$('#avatar-input').click();
-    $('#avatar-input').onchange=async e=>{const p=await readPhoto(e.target.files?.[0],400,true);if(p){me().photo=p;save();render()}};
-    $('#edit-me').onclick=editMe;
+    $('#avatar-btn').onclick=()=>{if(requireAuth())$('#avatar-input').click()};
+    $('#avatar-input').onchange=async e=>{const p=await readPhoto(e.target.files?.[0],500,true);if(p)run(async()=>{const url=await upload(p,'avatar');must(await sb.from('profiles').update({photo_url:url}).eq('id',ME));await load();render()},'Photo updated')};
+    $('#edit-me').onclick=()=>{if(requireAuth(editMe))editMe()};
     const board=$('#board');if(board){
       board.onclick=e=>{if(!state.placing||e.target.closest('.x,.stk'))return;const b=board.getBoundingClientRect();
-        me().stickers.push({id:'k'+Date.now(),e:state.placing,x:+((e.clientX-b.left)/b.width*100).toFixed(1),y:+((e.clientY-b.top)/b.height*100).toFixed(1)});state.placing=null;save();render()};
+        me().stickers.push({id:'k'+Date.now(),e:state.placing,x:+((e.clientX-b.left)/b.width*100).toFixed(1),y:+((e.clientY-b.top)/b.height*100).toFixed(1)});state.placing=null;saveMe();render()};
       board.querySelectorAll('.stk').forEach(el=>{
-        el.ondblclick=()=>{me().stickers=me().stickers.filter(k=>k.id!==el.dataset.stk);save();render()};
+        el.ondblclick=()=>{me().stickers=me().stickers.filter(k=>k.id!==el.dataset.stk);saveMe();render()};
         el.onpointerdown=e=>{e.preventDefault();el.setPointerCapture(e.pointerId);const b=board.getBoundingClientRect();
           const move=ev=>{el.style.left=Math.max(0,Math.min(100,(ev.clientX-b.left)/b.width*100))+'%';el.style.top=Math.max(0,Math.min(100,(ev.clientY-b.top)/b.height*100))+'%'};
-          const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);const k=me().stickers.find(x=>x.id===el.dataset.stk);if(k){k.x=parseFloat(el.style.left);k.y=parseFloat(el.style.top);save()}};
+          const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);const k=me().stickers.find(x=>x.id===el.dataset.stk);if(k){k.x=parseFloat(el.style.left);k.y=parseFloat(el.style.top);saveMe()}};
           el.addEventListener('pointermove',move);el.addEventListener('pointerup',up)};
       });
     }
-    const ab=$('#add-board');if(ab)ab.onclick=addToBoard;
+    const ab=$('#add-board');if(ab)ab.onclick=()=>{if(requireAuth(addToBoard))addToBoard()};
   }
   document.querySelectorAll('[data-cform]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.elements.c.value;if(!t.trim())return;addComment(f.dataset.cform,t);render();const el=document.getElementById('post-'+f.dataset.cform);el&&el.scrollIntoView({block:'center'})});
   const as=$('#apply-v');if(as)as.onclick=applyVerification;
@@ -1052,27 +1094,35 @@ document.addEventListener('click',e=>{
   if(t.id==='plus'||t.id==='plus2'||t.id==='plus3'){return openComposer()}
   if(d.compose){setMenu(false);return openComposer({kind:d.compose,stylistId:d.to})}
   if(d.quiz){setMenu(false);return openQuiz()}
+  if(d.signup){setMenu(false);return openAuth('signup')}
   if(d.stylist)return viewStylist(d.stylist);
   if(d.cat){state.cat=d.cat;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
   if(d.filter){state.filter=d.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
   if(d.comcat){state.comCat=d.comcat;return render()}
   if(d.tab){state.meTab=d.tab;return render()}
   if(d.sticker){state.placing=state.placing===d.sticker?null:d.sticker;return render()}
-  if(d.unpin){me().board=me().board.filter(b=>b.id!==d.unpin);save();return render()}
-  if(d.rate){const p=db.posts.find(x=>x.id===d.rate);p.ratings={...(p.ratings||{}),[state.role==='stylist'?db.me.stylistId:'you']:+d.n};save();render();document.getElementById('post-'+p.id)?.scrollIntoView({block:'center'});return}
-  if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by==='you'?'You':personOf(c.by).name)}</b>${esc(c.text)}</div>`).join('')}</div>`);return}
-  if(d.share){const r=db.requests.find(x=>x.id===d.share);const pid='p'+Date.now();db.posts.push({id:pid,authorId:'you',kind:r.kind,caption:r.question,aesthetic:r.aesthetic,photo:r.photo||null,art:r.art,created:Date.now(),ratings:{},comments:[],requestId:r.id});r.postId=pid;save();toast('Posted to the community');return render()}
+  if(d.unpin){me().board=me().board.filter(b=>b.id!==d.unpin);saveMe();return render()}
+  if(d.rate){if(!requireAuth())return;const pid=d.rate,n=+d.n,had=db.posts.find(x=>x.id===pid)?.ratings?.[ME];
+    return run(async()=>{must(had?await sb.from('ratings').update({score:n}).eq('post_id',pid).eq('user_id',ME):await sb.from('ratings').insert({post_id:pid,user_id:ME,score:n}));await load();render();document.getElementById('post-'+pid)?.scrollIntoView({block:'center'})})}
+  if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by===ME?'You':personOf(c.by).name)}</b>${esc(c.text)}</div>`).join('')}</div>`);return}
+  if(d.share){const r=db.requests.find(x=>x.id===d.share);return run(async()=>{const post=must(await sb.from('posts').insert({author_id:ME,kind:r.kind,caption:r.question,aesthetic:r.aesthetic,photo_url:r.photo,request_id:r.id}).select().single());
+    must(await sb.from('requests').update({post_id:post.id}).eq('id',r.id));await load();render()},'Posted to the community')}
+  if(d.stars){return run(async()=>{must(await sb.from('requests').update({client_stars:+d.n}).eq('id',d.stars));await load();render()},'Thanks for rating your stylist')}
   if(d.adopt)return adoptReview(d.adopt);
   if(d.ckind){snapshotCompose();state.compose.kind=d.ckind;return renderComposer()}
   if(d.aes){$('#cp-aes').value=d.aes;return}
   if(d.qk){t.parentElement.querySelectorAll('[data-qk]').forEach(b=>b.setAttribute('aria-pressed',b===t));quizAns[d.qk]=d.qv;return}
   if(d.sw!==undefined&&!t.closest('#em-fav')){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
   if(t.id==='ep-open')return editColors();
-  if(d.approve||d.decline){const a=db.applications.find(x=>x.id===(d.approve||d.decline));a.status=d.approve?'approved':'declined';if(d.approve)stylist(a.stylistId).verified=true;save();toast(d.approve?`${stylist(a.stylistId).name} is now verified`:'Application declined');return render()}
-  if(t.id==='save-stylist'){const v=readStylistForm();if(!v)return;Object.assign(stylist(db.me.stylistId),v);save();toast('Profile saved');return render()}
-  if(t.id==='create-stylist'){const v=readStylistForm();if(!v)return;const id='s'+Date.now();db.stylists.push({id,...v,rating:0,reviews:0,turnaround:'48h',verified:false});db.me.stylistId=id;save();state.role='stylist';toast('Welcome! You can start reviewing for free.');return go('studio')}
+  if(d.approve||d.decline){const id=d.approve||d.decline,ok=!!d.approve;return run(async()=>{must(await sb.rpc('review_application',{app_id:id,approve:ok}));await load();render()},ok?'Stylist verified':'Application declined')}
+  if(t.id==='save-stylist'){const v=readStylistForm();if(!v)return;return run(async()=>{must(await sb.from('stylists').update(v).eq('id',ME));await load();render()},'Profile saved')}
+  if(t.id==='create-stylist'){if(!requireAuth())return;const v=readStylistForm();if(!v)return;return run(async()=>{must(await sb.from('stylists').insert({id:ME,...v}));await load();state.role='stylist';go('studio')},'Welcome! You can start reviewing for free.')}
+  if(t.id==='logout'){setMenu(false);return logout()}
+  if(t.id==='login'){setMenu(false);return openAuth('login')}
 });
 render();
+refresh();
+sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'||ev==='TOKEN_REFRESHED')return;});
 </script>
 </body>
 </html>
