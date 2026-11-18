@@ -6,277 +6,377 @@
 <title>Lookover</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,700;1,6..96,400;1,6..96,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: a fashion-magazine masthead over a quiet hairline grid; color appears only as fabric swatches. */
+/* Layout idea: a bright white app with an editorial masthead, a floating dock with a + button, and the user's favorite color as the only accent. */
 :root{
-  --paper:#fafafb; --surface:#ffffff; --ink:#0a0a0b; --muted:#6b6b73; --line:#e4e4e8; --soft:#f1f1f4;
-  --accent:#8c1238; --accent-ink:#ffffff; --ok:#2b6a4c; --ok-soft:#e1efe7; --warn:#8a6100; --warn-soft:#f6ecd2;
+  --paper:#ffffff; --surface:#ffffff; --soft:#f5f5f7; --ink:#111114; --muted:#6b6b73; --line:#e7e7ec;
+  --accent:#8c1238; --accent-ink:#ffffff; --accent-text:#8c1238; --accent-soft:#f6e8ed;
+  --ok:#2b6a4c; --ok-soft:#e3f1e9; --warn:#8a6100; --warn-soft:#f7eed6;
   --display:'Bodoni Moda',Didot,'Bodoni 72','Times New Roman',serif;
   --body:'Instrument Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
-  --shadow:0 24px 60px -24px rgba(10,10,20,.18);
+  --shadow:0 18px 50px -22px rgba(17,17,30,.22);
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0a0a0b; --surface:#131315; --ink:#f5f5f7; --muted:#9b9ba3; --line:#2a2a2f; --soft:#1c1c20;
-  --accent:#ef6f93; --accent-ink:#1a0a0d; --ok:#7fc7a1; --ok-soft:#1d3329; --warn:#e2b75a; --warn-soft:#33291a;
-  --shadow:0 24px 60px -24px rgba(0,0,0,.7); color-scheme:dark;}}
-:root[data-theme="dark"]{
-  --paper:#0a0a0b; --surface:#131315; --ink:#f5f5f7; --muted:#9b9ba3; --line:#2a2a2f; --soft:#1c1c20;
-  --accent:#ef6f93; --accent-ink:#1a0a0d; --ok:#7fc7a1; --ok-soft:#1d3329; --warn:#e2b75a; --warn-soft:#33291a;
-  --shadow:0 24px 60px -24px rgba(0,0,0,.7); color-scheme:dark;}
-
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
+svg{display:block}
 a{color:inherit}
 button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
 h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;text-wrap:balance;letter-spacing:-.01em}
 .num{font-variant-numeric:tabular-nums lining-nums}
-.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .muted{color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
 
-/* Masthead */
-.mast{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.mast-in{max-width:1200px;margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;gap:32px}
-.wordmark{font-family:var(--display);font-size:30px;font-weight:500;letter-spacing:-.01em;text-decoration:none;line-height:1}
-.wordmark em{font-style:italic;font-weight:400;color:var(--accent)}
-.links{display:flex;gap:24px;flex:1}
-.links button{background:none;border:0;padding:6px 0;cursor:pointer;color:var(--muted);font-size:14px;border-bottom:1px solid transparent}
-.links button[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
-.links button:hover{color:var(--ink)}
-.role{display:flex;align-items:center;border:1px solid var(--line);padding:3px;border-radius:999px;background:var(--surface)}
-.role button{background:none;border:0;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:13px;color:var(--muted)}
-.role button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+/* Masthead + Explore menu */
+.mast{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.mast-in{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:20px}
+.wordmark{font-family:var(--display);font-size:28px;font-weight:500;letter-spacing:-.01em;text-decoration:none;line-height:1;cursor:pointer}
+.wordmark em{font-style:italic;font-weight:400;color:var(--accent-text)}
+.explore{position:relative}
+.explore-btn{display:flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px;font-weight:500}
+.explore-btn[aria-expanded="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent-text)}
+.menu{position:absolute;top:calc(100% + 10px);left:0;width:min(560px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;z-index:40}
+.menu h4{grid-column:span 1;margin:6px 0 4px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.menu-col{display:grid;gap:2px;align-content:start}
+.menu button{display:flex;align-items:center;gap:10px;background:none;border:0;padding:9px 10px;border-radius:10px;text-align:left;cursor:pointer;font-size:14px}
+.menu button:hover{background:var(--soft)}
+.menu button i{width:26px;height:26px;border-radius:8px;background:var(--accent-soft);display:grid;place-items:center;font-style:normal;font-size:13px;color:var(--accent-text);flex:none}
+.menu .roles{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px;margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.menu .roles button{padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:13px}
+.menu .roles button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-text);border-color:transparent}
+.spacer{flex:1}
+.viewing{font-size:12px;font-weight:600;color:var(--accent-text);background:var(--accent-soft);padding:5px 10px;border-radius:999px}
+.me-btn .mono b{font-size:15px}
+.me-btn{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--accent);padding:0;cursor:pointer;background:var(--soft);position:relative}
 
-main{max-width:1200px;margin:0 auto;padding:0 24px 96px}
+/* Dock */
+.dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:4px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;padding:6px 8px;box-shadow:var(--shadow)}
+.dock button{background:none;border:0;cursor:pointer;display:grid;justify-items:center;gap:2px;padding:6px 14px;border-radius:999px;color:var(--muted);font-size:11px;font-weight:500;min-width:64px}
+.dock button svg{width:22px;height:22px}
+.dock button[aria-current="page"]{color:var(--accent-text)}
+.dock .plus{width:54px;height:54px;min-width:0;padding:0;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin:0 6px;box-shadow:0 10px 24px -10px var(--accent);transition:transform .15s}
+.dock .plus:hover{transform:scale(1.06)}
+.dock .plus svg{width:26px;height:26px}
+
+main{max-width:1200px;margin:0 auto;padding:0 24px 140px}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--paper);border:1px solid var(--ink);padding:12px 22px;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:.01em;text-decoration:none;transition:transform .15s ease,background .15s}
-.btn:hover{transform:translateY(-1px)}
-.btn.line{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);padding:12px 22px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .15s,filter .15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn.line{background:var(--surface);color:var(--ink);border-color:var(--line)}
 .btn.line:hover{border-color:var(--ink)}
-.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.soft{background:var(--accent-soft);color:var(--accent-text);border-color:transparent}
 .btn.sm{padding:8px 14px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
 .textlink{background:none;border:0;padding:0;cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;color:var(--muted)}
 
 /* Hero */
-.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:64px;align-items:center;padding:72px 0 80px;border-bottom:1px solid var(--line)}
-.hero h1{font-size:clamp(46px,7.2vw,104px);line-height:.95;font-weight:400;letter-spacing:-.025em;margin:18px 0 28px}
-.hero h1 em{font-style:italic;color:var(--accent)}
-.hero p.lede{font-size:18px;max-width:46ch;color:var(--muted);margin:0 0 32px}
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
-.hero-facts{display:flex;gap:40px;margin-top:48px;padding-top:24px;border-top:1px solid var(--line);flex-wrap:wrap}
-.hero-facts div{display:grid;gap:2px}
-.hero-facts b{font-family:var(--display);font-size:30px;font-weight:500}
-.hero-facts span{font-size:13px;color:var(--muted)}
-
-/* Sample review (the thesis object) */
-.sample{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);position:relative}
-.sample-top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
-.drape{display:flex;height:220px;overflow:hidden}
-.drape span{flex:1;transform-origin:top;animation:fall .9s cubic-bezier(.2,.8,.2,1) both}
-.drape span:nth-child(2){animation-delay:.08s}.drape span:nth-child(3){animation-delay:.16s}.drape span:nth-child(4){animation-delay:.24s}.drape span:nth-child(5){animation-delay:.32s}
-@keyframes fall{from{transform:scaleY(.0)}to{transform:scaleY(1)}}
-@media (prefers-reduced-motion:reduce){.drape span,.sheet,.toast{animation:none!important;transition:none!important}}
-.sample-body{padding:12px 22px 22px;display:grid;gap:16px}
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:64px;align-items:center;padding:64px 0 72px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(46px,7vw,100px);line-height:.95;font-weight:400;letter-spacing:-.025em;margin:18px 0 26px}
+.hero h1 em{font-style:italic;color:var(--accent-text)}
+.lede{font-size:18px;max-width:46ch;color:var(--muted);margin:0 0 30px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.facts-row{display:flex;gap:40px;margin-top:44px;padding-top:22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.facts-row div{display:grid;gap:2px}
+.facts-row b{font-family:var(--display);font-size:30px;font-weight:500}
+.facts-row span{font-size:13px;color:var(--muted)}
+.sample{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.sample-art{aspect-ratio:4/3;overflow:hidden}
+.sample-art svg{width:100%;height:100%}
+.sample-body{padding:20px 22px 22px;display:grid;gap:14px}
 .verdict{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
-.score{font-family:var(--display);font-size:64px;line-height:.8;font-weight:500}
+.score{font-family:var(--display);font-size:60px;line-height:.8;font-weight:500}
 .score small{font-size:20px;color:var(--muted);font-weight:400}
-.season{text-align:right}
-.season b{display:block;font-family:var(--display);font-style:italic;font-size:22px;font-weight:400}
 .quote{font-family:var(--display);font-style:italic;font-size:17px;line-height:1.45;margin:0}
 
-/* Swatches */
+/* Chips */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);padding:4px 10px 4px 4px;font-size:12px;background:var(--surface);border-radius:999px}
-.chip i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);padding:5px 11px;font-size:12.5px;background:var(--surface);border-radius:999px;line-height:1.3}
+.chip.c{padding-left:4px}
+.chip i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex:none}
 .chip.avoid{opacity:.75}
-.chip.avoid i{background-image:linear-gradient(135deg,transparent 45%,var(--surface) 46%,var(--surface) 54%,transparent 55%)!important}
+.chip.avoid i{background-image:linear-gradient(135deg,transparent 45%,#fff 46%,#fff 54%,transparent 55%)!important}
+.chip.tag{background:var(--accent-soft);border-color:transparent;color:var(--accent-text);font-weight:500}
 button.chip{cursor:pointer}
-button.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 
-/* Section heads */
-.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:56px 0 24px;flex-wrap:wrap}
+/* Sections */
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:48px 0 22px;flex-wrap:wrap}
 .section-head h2{font-size:clamp(32px,4vw,48px);font-weight:400}
 .section-head h2 em{font-style:italic}
-.filters{display:flex;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:28px}
-.filters button{background:none;border:0;padding:10px 0;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
-.filters button[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.section-head p{margin:6px 0 0;color:var(--muted);max-width:56ch}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:18px}
+.cats button{background:var(--soft);border:1px solid transparent;border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;display:grid;gap:2px}
+.cats button b{font-family:var(--display);font-size:20px;font-weight:500}
+.cats button span{font-size:12px;color:var(--muted)}
+.cats button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.cats button[aria-pressed="true"] b{color:var(--accent-text)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.filters button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:13px;color:var(--muted)}
+.filters button[aria-pressed="true"]{color:var(--accent-text);border-color:var(--accent);background:var(--accent-soft)}
 
-/* Stylist cards */
-.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px 24px}
+/* Pros */
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:28px 22px}
 .stylist{display:grid;grid-template-rows:auto 1fr;cursor:pointer;background:none;border:0;padding:0;text-align:left}
-.portrait{position:relative;aspect-ratio:4/5;overflow:hidden;border:1px solid var(--line);background:var(--soft)}
+.portrait{position:relative;aspect-ratio:4/5;overflow:hidden;border-radius:18px;background:var(--soft)}
 .portrait img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
 .stylist:hover .portrait img,.stylist:hover .mono{transform:scale(1.03)}
 .mono{position:absolute;inset:0;display:grid;place-items:center;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.mono b{font-family:var(--display);font-style:italic;font-weight:400;font-size:clamp(64px,9vw,112px);color:#fff;letter-spacing:-.02em;line-height:1}
-.mono small{position:absolute;left:14px;bottom:12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.75)}
-.avatar{width:72px;height:72px;border-radius:50%;overflow:hidden;flex:none;position:relative;border:1px solid var(--line)}
-.avatar .mono b{font-size:28px}
-.photo-edit{display:flex;gap:16px;align-items:center}
-.tag{position:absolute;left:14px;bottom:14px;background:var(--paper);color:var(--ink);padding:10px 14px 8px;min-width:96px;box-shadow:0 6px 16px -8px rgba(0,0,0,.4)}
-.tag::before{content:"";position:absolute;top:6px;left:50%;width:6px;height:6px;border-radius:50%;border:1px solid var(--line);transform:translateX(-50%)}
-.tag b{display:block;font-family:var(--display);font-size:28px;font-style:italic;font-weight:500;line-height:1;margin-top:6px}
-.tag small{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.price-badge{position:absolute;right:14px;top:14px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px}
-.price-badge.free{background:var(--ink);color:var(--paper)}
-.stylist-info{padding-top:14px;display:grid;gap:4px}
-.stylist-info h3{font-size:24px}
-.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.mono b{font-family:var(--display);font-style:italic;font-weight:400;font-size:clamp(56px,8vw,100px);color:#fff;letter-spacing:-.02em;line-height:1}
+.mono small{position:absolute;left:14px;bottom:12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.8)}
+.avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;position:relative;background:var(--soft)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar .mono b{font-size:16px}
+.badge{position:absolute;right:12px;top:12px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;display:flex;gap:5px;align-items:center}
+.badge.v{background:var(--accent);color:var(--accent-ink)}
+.vcheck{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:9px;font-weight:700;vertical-align:1px}
+.badge.v .vcheck{background:var(--accent-ink);color:var(--accent)}
+.stylist-info{padding-top:12px;display:grid;gap:3px}
+.stylist-info h3{font-size:23px}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);align-items:center}
 .meta .dot::before{content:"·";margin-right:10px}
-.spec{font-size:13px;color:var(--muted)}
+.kind{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--accent-text)}
 
-/* Requests */
+/* Review cards (client) */
 .list{display:grid;gap:20px}
-.req{display:grid;grid-template-columns:220px minmax(0,1fr);background:var(--surface);border:1px solid var(--line)}
-.req-photo{position:relative;min-height:260px;background:var(--soft);display:flex}
-.req-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-.req-photo .stripes{display:flex;flex:1}
-.req-photo .stripes span{flex:1}
-.req-photo .nophoto{position:absolute;inset:auto 12px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--paper);color:var(--muted);padding:6px 8px;text-align:center}
+.req{display:grid;grid-template-columns:240px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.req-media{position:relative;min-height:280px;background:var(--soft)}
+.req-media img,.req-media svg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .req-body{padding:24px 28px;display:grid;gap:14px;align-content:start}
 .req-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .req-head h3{font-size:24px}
 .ask{font-family:var(--display);font-style:italic;font-size:19px;margin:0;line-height:1.4}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.note-box{background:var(--soft);border-radius:12px;padding:10px 12px}
+.note-box h4{margin:0 0 2px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.note-box p{margin:0;font-size:14px}
 .pill{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;white-space:nowrap}
 .pill.pending{background:var(--warn-soft);color:var(--warn)}
 .pill.done{background:var(--ok-soft);color:var(--ok)}
 .fb{border-top:1px solid var(--line);padding-top:18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:24px}
-.fb-score{display:grid;align-content:start;gap:10px}
+.fb-score{display:grid;align-content:start;gap:12px}
 .fb-main{display:grid;gap:14px}
-.fb h4{margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fb h4,.h4{margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .fb p{margin:0;max-width:65ch}
-.picks{display:grid;border-top:1px solid var(--line)}
-.pick{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none}
-.pick:hover .pick-store{color:var(--accent)}
-.pick-store{font-size:12px;color:var(--muted);white-space:nowrap}
-.disclose{font-size:11px;color:var(--muted)}
-
-/* Stylist dashboard */
-.studio-head{padding:56px 0 32px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:24px;align-items:flex-end;flex-wrap:wrap}
-.studio-head h1{font-size:clamp(36px,5vw,60px);font-weight:400}
-.studio-head h1 em{font-style:italic}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);margin-bottom:40px}
-.stat{padding:24px 0 24px 24px;border-left:1px solid var(--line)}
-.stat:first-child{border-left:0;padding-left:0}
-.stat b{display:block;font-family:var(--display);font-size:44px;font-weight:500;line-height:1.1}
-.stat span{font-size:13px;color:var(--muted)}
-.queue{display:grid;border-top:1px solid var(--line)}
-.qrow{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:20px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
-.thumb{width:72px;height:90px;background:var(--soft);display:flex;overflow:hidden}
-.thumb img{width:100%;height:100%;object-fit:cover}
-.thumb span{flex:1}
-.qrow h3{font-size:20px}
-.qrow .ask{font-size:16px}
-.qrow-right{display:flex;align-items:center;gap:14px}
-
-/* Forms */
-.formcard{max-width:720px;background:var(--surface);border:1px solid var(--line);padding:36px}
-.field{display:grid;gap:6px;margin-bottom:18px}
-.field label,.label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input,textarea,select{width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;border-radius:0}
-input:focus,textarea:focus,select:focus{outline:none;border-color:var(--ink)}
-textarea{min-height:96px;resize:vertical}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-input[type=range]{padding:0;accent-color:var(--accent);background:none;border:0}
-input[type=file]{background:var(--surface);border-style:dashed;padding:18px}
-.hint{font-size:12px;color:var(--muted)}
-
-/* Sheet */
-.scrim{position:fixed;inset:0;background:rgba(8,8,12,.5);z-index:40;display:none}
-.scrim.open{display:block}
-.sheet{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--surface);z-index:41;overflow:auto;transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);border-left:1px solid var(--line)}
-.sheet.open{transform:none}
-.sheet-in{padding:32px 36px 48px}
-.sheet-close{position:sticky;top:0;display:flex;justify-content:flex-end;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);z-index:1}
-.sheet h2{font-size:34px;font-weight:400}
-.sheet .bio{font-size:16px;max-width:52ch}
-.divider{border:0;border-top:1px solid var(--line);margin:28px 0}
-.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
-
-.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:12px 20px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:60}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.empty{padding:64px 0;text-align:center;color:var(--muted)}
-.empty h3{font-size:28px;color:var(--ink);margin-bottom:8px}
-.cats{display:flex;gap:0;border:1px solid var(--line);margin-bottom:20px;background:var(--surface)}
-.cats button{flex:1;background:none;border:0;border-left:1px solid var(--line);padding:18px 20px;text-align:left;cursor:pointer;display:grid;gap:2px}
-.cats button:first-child{border-left:0}
-.cats button b{font-family:var(--display);font-size:22px;font-weight:500}
-.cats button span{font-size:12px;color:var(--muted)}
-.cats button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.cats button[aria-pressed="true"] span{color:color-mix(in srgb,var(--paper) 70%,transparent)}
-.kind{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--accent)}
+.facts{display:flex;gap:24px;flex-wrap:wrap}
+.facts b{display:block;font-family:var(--display);font-style:italic;font-weight:400;font-size:19px}
 .routine{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .routine ol{margin:0;padding-left:20px;display:grid;gap:4px}
-.facts{display:flex;gap:28px;flex-wrap:wrap}
-.facts b{display:block;font-family:var(--display);font-style:italic;font-weight:400;font-size:19px}
-.note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
-@media (max-width:620px){.cats{flex-direction:column}.cats button{border-left:0;border-top:1px solid var(--line)}.cats button:first-child{border-top:0}.routine{grid-template-columns:1fr}}
-.passport{display:grid;grid-template-columns:320px minmax(0,1fr);background:var(--surface);border:1px solid var(--line)}
+.picks{display:grid;border-top:1px solid var(--line)}
+.pick{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.pick:hover .pick-store{color:var(--accent-text)}
+.pick-store{font-size:12px;color:var(--muted);white-space:nowrap}
+.disclose{font-size:11px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px;margin:0}
+.row-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--soft);padding:12px 14px;border-radius:12px}
+
+/* Community */
+.feed{columns:3 300px;column-gap:20px}
+.post{break-inside:avoid;margin:0 0 20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:grid}
+.post-media{position:relative;background:var(--soft)}
+.post-media img,.post-media svg{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.post-media .avgtag{position:absolute;left:12px;bottom:12px;background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;display:flex;gap:6px;align-items:baseline}
+.post-media .avgtag b{font-family:var(--display);font-size:20px}
+.post-body{padding:14px 16px 16px;display:grid;gap:10px}
+.who{display:flex;gap:10px;align-items:center}
+.who .avatar{width:32px;height:32px}
+.who b{font-size:14px}
+.rate{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.rate button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 0;font-size:12px;font-weight:600;cursor:pointer}
+.rate button:hover{border-color:var(--accent)}
+.rate button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.comments{display:grid;gap:8px}
+.cmt{font-size:13.5px;line-height:1.45}
+.cmt b{font-weight:600;margin-right:6px}
+.pro-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text);background:var(--accent-soft);padding:2px 6px;border-radius:6px;margin-right:6px}
+.cmt-form{display:flex;gap:8px}
+.cmt-form input{border-radius:999px;padding:9px 14px}
+
+/* Profile */
+.prof-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:28px;align-items:center;padding:44px 0 28px}
+.prof-avatar{width:120px;height:120px;border-radius:50%;overflow:hidden;position:relative;border:3px solid var(--accent);cursor:pointer;background:var(--soft);padding:0}
+.prof-avatar img{width:100%;height:100%;object-fit:cover}
+.prof-avatar .mono b{font-size:44px}
+.prof-head h1{font-size:clamp(34px,5vw,54px);font-weight:400}
+.fav{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.fav i{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.tabs button{background:none;border:0;padding:12px 16px;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tabs button[aria-selected="true"]{color:var(--accent-text);border-color:var(--accent)}
+.board-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.board{position:relative;columns:4 200px;column-gap:14px;min-height:200px;border-radius:20px}
+.board.placing{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:8px}
+.tile{break-inside:avoid;margin:0 0 14px;border-radius:16px;overflow:hidden;position:relative;background:var(--soft)}
+.tile img{width:100%;height:auto}
+.tile svg{width:100%;height:auto}
+.tile.sq svg{aspect-ratio:1/1}
+.tile .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;opacity:0;transition:opacity .15s;font-size:15px;line-height:1}
+.tile:hover .x,.tile .x:focus-visible{opacity:1}
+.stk{position:absolute;font-size:40px;line-height:1;cursor:grab;user-select:none;touch-action:none;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.18));z-index:2}
+.stk:active{cursor:grabbing}
+.tray{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--soft);padding:10px 12px;border-radius:16px;margin-bottom:18px}
+.tray button{width:42px;height:42px;border-radius:12px;border:1px solid transparent;background:var(--surface);font-size:22px;cursor:pointer;display:grid;place-items:center}
+.tray button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tray button.locked{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.presets button{padding:0;border:2px solid transparent;border-radius:14px;overflow:hidden;cursor:pointer;background:none}
+.presets button[aria-pressed="true"]{border-color:var(--accent)}
+.presets svg{width:100%;height:auto;aspect-ratio:4/5}
+.swatch-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.swatch-row button{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.swatch-row button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.swatch-row input[type=color]{width:44px;height:38px;padding:2px;border-radius:10px;cursor:pointer}
+
+/* Color passport */
+.passport{display:grid;grid-template-columns:300px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
 .pp-side{border-right:1px solid var(--line);display:grid;align-content:start}
-.pp-side .drape{height:260px}
+.stripes{display:flex;height:220px}
+.stripes span{flex:1}
 .pp-side-body{padding:22px;display:grid;gap:16px}
-.pp-season{font-family:var(--display);font-style:italic;font-size:40px;line-height:1}
-.pp-main{padding:28px 32px;display:grid;gap:28px}
-.pp-sec{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.pp-season{font-family:var(--display);font-style:italic;font-size:38px;line-height:1}
+.pp-main{padding:26px 30px;display:grid;gap:24px}
+.pp-sec{display:grid;grid-template-columns:130px minmax(0,1fr);gap:20px;padding-bottom:22px;border-bottom:1px solid var(--line)}
 .pp-sec:last-child{border-bottom:0;padding-bottom:0}
-.pp-sec>h3{font-size:22px}
-.pp-rows{display:grid;gap:14px}
-.pp-rows h4{margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pp-sec>h3{font-size:21px}
+.pp-rows{display:grid;gap:12px}
 .source{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
 .source.ok{color:var(--ok)}
-.mini{background:var(--soft);border:1px solid var(--line);padding:16px 18px;display:grid;gap:10px;margin-bottom:22px}
+.mini{background:var(--soft);border-radius:14px;padding:14px 16px;display:grid;gap:8px;margin-bottom:18px}
 .mini-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
-.mini-top b{font-family:var(--display);font-style:italic;font-weight:400;font-size:22px}
-.quiz-q{padding:18px 0;border-bottom:1px solid var(--line)}
-.quiz-q h3{font-size:19px;margin-bottom:10px;font-family:var(--body);font-weight:600;letter-spacing:0}
-.quiz-q .num-q{font-family:var(--display);font-style:italic;color:var(--accent);margin-right:6px}
-.adopt{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--soft);padding:12px 14px}
-.findcolors{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;padding:64px 0}
-@media (max-width:900px){.passport{grid-template-columns:1fr}.pp-side{border-right:0;border-bottom:1px solid var(--line)}.pp-sec{grid-template-columns:1fr;gap:10px}.findcolors{grid-template-columns:1fr}}
-footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size:12px;color:var(--muted)}
+.mini-top b,.mini b.s{font-family:var(--display);font-style:italic;font-weight:400;font-size:21px}
+.quiz-q{padding:16px 0;border-bottom:1px solid var(--line)}
+.quiz-q h3{font-size:16px;margin-bottom:10px;font-family:var(--body);font-weight:600;letter-spacing:0}
+.quiz-q .n{font-family:var(--display);font-style:italic;color:var(--accent-text);margin-right:6px;font-size:18px}
 
+/* Stylist review desk */
+.desk-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:28px 0 18px;flex-wrap:wrap}
+.desk-top h1{font-size:clamp(30px,4vw,44px);font-weight:400}
+.desk-top h1 em{font-style:italic}
+.pager{display:flex;align-items:center;gap:8px}
+.pager button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:16px}
+.pager button:disabled{opacity:.35;cursor:default}
+.progress{height:4px;background:var(--soft);border-radius:4px;overflow:hidden;margin-bottom:22px}
+.progress span{display:block;height:100%;background:var(--accent);transition:width .3s}
+.desk{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:28px;align-items:start}
+.zoomer{position:relative;border-radius:20px;overflow:auto;background:var(--soft);max-height:72vh;cursor:zoom-in;aspect-ratio:4/5}
+.zoomer img,.zoomer svg{width:100%;height:100%;object-fit:cover;transition:width .25s}
+.zoomer.z{cursor:zoom-out}
+.zoomer.z img,.zoomer.z svg{width:220%;height:auto;max-width:none}
+.zoom-hint{position:absolute;right:12px;bottom:12px;background:rgba(255,255,255,.94);border-radius:999px;font-size:12px;padding:5px 10px;pointer-events:none}
+.desk-left{display:grid;gap:16px;position:sticky;top:84px}
+.client-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:12px}
+.desk-form{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px}
+.desk-actions{position:sticky;bottom:0;background:var(--surface);padding:14px 0 100px;margin-bottom:-90px;z-index:2;display:flex;gap:10px;justify-content:space-between;border-top:1px solid var(--line);margin-top:8px}
+
+/* Studio + tiers + admin */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat{background:var(--soft);border-radius:16px;padding:18px 20px}
+.stat b{display:block;font-family:var(--display);font-size:40px;font-weight:500;line-height:1.1}
+.stat span{font-size:13px;color:var(--muted)}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tier{border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:6px;align-content:start;background:var(--surface)}
+.tier.on{border-color:var(--accent);background:var(--accent-soft)}
+.tier b{font-family:var(--display);font-size:30px;font-weight:500}
+.tier h3{font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:0}
+.tier p{margin:0;font-size:13px;color:var(--muted)}
+.queue{display:grid;gap:10px}
+.qrow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.thumb{width:64px;height:80px;border-radius:10px;overflow:hidden;background:var(--soft)}
+.thumb img,.thumb svg{width:100%;height:100%;object-fit:cover}
+.app-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:20px;align-items:start;padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--surface)}
+.portfolio{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.portfolio div{width:84px;height:104px;border-radius:10px;overflow:hidden;background:var(--soft)}
+.portfolio img,.portfolio svg{width:100%;height:100%;object-fit:cover}
+
+/* Forms */
+.formcard{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px}
+.field{display:grid;gap:6px;margin-bottom:18px}
+.field>label,.label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+input,textarea,select{width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;border-radius:12px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+textarea{min-height:88px;resize:vertical}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+input[type=range]{padding:0;accent-color:var(--accent);border:0}
+.pick-photo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick-photo label{display:grid;place-items:center;gap:6px;border:1.5px dashed var(--line);border-radius:16px;padding:22px 10px;cursor:pointer;text-align:center;font-weight:600;font-size:14px;background:var(--soft);text-transform:none;letter-spacing:0;color:var(--ink)}
+.pick-photo label:hover{border-color:var(--accent)}
+.pick-photo label svg{width:26px;height:26px;color:var(--accent-text)}
+.pick-photo input{position:absolute;width:1px;height:1px;opacity:0}
+.preview{position:relative;border-radius:16px;overflow:hidden;background:var(--soft);max-height:340px}
+.preview img{width:100%;max-height:340px;object-fit:contain}
+.preview button{position:absolute;right:10px;top:10px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--soft);border-radius:14px;padding:14px 16px;cursor:pointer}
+.switch input{width:auto;accent-color:var(--accent);transform:scale(1.3)}
+.switch b{display:block;font-size:14px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,20,30,.35);z-index:50;display:none}
+.scrim.open{display:block}
+.sheet{position:fixed;top:0;right:0;height:100%;width:min(580px,100%);background:var(--surface);z-index:51;overflow:auto;transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);border-radius:24px 0 0 24px;box-shadow:var(--shadow)}
+.sheet.open{transform:none}
+.sheet-in{padding:28px 34px 48px}
+.sheet-close{position:sticky;top:0;display:flex;justify-content:flex-end;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);z-index:3}
+.sheet h2{font-size:32px;font-weight:400}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;flex-wrap:wrap}
+.toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{padding:56px 0;text-align:center;color:var(--muted)}
+.empty h3{font-size:28px;color:var(--ink);margin-bottom:8px}
+footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:900px){
-  .hero{grid-template-columns:1fr;gap:40px;padding:48px 0 56px}
-  .links{display:none}
+  .hero{grid-template-columns:1fr;gap:36px;padding:40px 0 48px}
   .stats{grid-template-columns:1fr 1fr}
-  .stat:nth-child(3){border-left:0;padding-left:0}
   .fb{grid-template-columns:1fr}
+  .passport{grid-template-columns:1fr}.pp-side{border-right:0;border-bottom:1px solid var(--line)}
+  .pp-sec{grid-template-columns:1fr;gap:8px}
+  .desk{grid-template-columns:1fr}.desk-left{position:static}
+  .tiers{grid-template-columns:1fr}
+  .prof-head{grid-template-columns:auto minmax(0,1fr)}.prof-head .edit{grid-column:1/-1}
 }
 @media (max-width:620px){
-  .mast-in{gap:12px;padding:0 16px}
-  main{padding:0 16px 72px}
-  .wordmark{font-size:24px}
-  .req{grid-template-columns:1fr}
-  .req-photo{min-height:240px}
-  .cols{grid-template-columns:1fr}
-  .qrow{grid-template-columns:56px minmax(0,1fr)}
-  .thumb{width:56px;height:70px}
-  .qrow-right{grid-column:1/-1}
-  .formcard{padding:24px}
-  .sheet-in{padding:24px 20px 40px}
+  .mast-in{padding:0 16px;gap:12px}
+  .wordmark{font-size:23px}
+  .viewing{display:none}
+  main{padding:0 16px 130px}
+  .req{grid-template-columns:1fr}.req-media{min-height:300px}
+  .cols,.pick-photo{grid-template-columns:1fr 1fr}
+  .routine{grid-template-columns:1fr}
+  .formcard{padding:22px}
+  .sheet{border-radius:0}
+  .sheet-in{padding:22px 18px 40px}
+  .menu{grid-template-columns:1fr;left:-60px}
+  .dock button{min-width:52px;padding:6px 8px}
+  .prof-avatar{width:88px;height:88px}
+  .app-card{grid-template-columns:1fr}
+  .qrow{grid-template-columns:56px minmax(0,1fr)}.qrow>:last-child{grid-column:1/-1}
 }
-.mobile-links{display:none}
-@media (max-width:900px){.mobile-links{display:flex;gap:18px;padding:12px 0 0;overflow-x:auto}.mobile-links button{background:none;border:0;padding:6px 0;font-size:14px;color:var(--muted);border-bottom:1px solid transparent;white-space:nowrap;cursor:pointer}.mobile-links button[aria-current="page"]{color:var(--ink);border-color:var(--ink)}}
 </style>
 </head>
 <body>
 <header class="mast">
   <div class="mast-in">
-    <a class="wordmark" href="#" id="home" aria-label="Lookover home">Look<em>over</em></a>
-    <nav class="links" id="links" aria-label="Main"></nav>
-    <div class="role" role="group" aria-label="Prototype view">
-      <button id="role-client" data-role="client">Client</button>
-      <button id="role-stylist" data-role="stylist">Stylist</button>
+    <a class="wordmark" id="home" role="button" tabindex="0" aria-label="Lookover home">Look<em>over</em></a>
+    <div class="explore">
+      <button class="explore-btn" id="explore-btn" aria-expanded="false" aria-controls="menu">Explore
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      <div class="menu" id="menu" hidden></div>
     </div>
+    <span class="spacer"></span>
+    <span class="viewing" id="viewing" hidden></span>
+    <button class="me-btn" id="me-btn" aria-label="My profile"></button>
   </div>
 </header>
 <main id="app"></main>
-<footer>Lookover prototype · payments are simulated and data stays in this browser</footer>
+<footer>Lookover prototype · payments are simulated and everything is saved in this browser only</footer>
+<nav class="dock" id="dock" aria-label="Main"></nav>
 
 <div class="scrim" id="scrim"></div>
 <aside class="sheet" id="sheet" aria-modal="true" role="dialog" aria-label="Details">
@@ -286,501 +386,693 @@ footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size
 <div class="toast" id="toast" role="status"></div>
 
 <script>
+/* ================= Reference data ================= */
 const SWATCHES=[['Ink','#1c1c22'],['Optic white','#fbfbf8'],['Ecru','#ece3d2'],['Camel','#b88a5a'],['Chocolate','#5a3a28'],['Rust','#a5482b'],['Mustard','#c99a2e'],['Olive','#6b6b3a'],['Pine','#24493d'],['Teal','#1f6f78'],['Navy','#1f2e55'],['Cornflower','#6f8fd0'],['Plum','#5e2a4d'],['Rose','#d99aa6'],['Dove grey','#b9b7b2'],['True red','#b3202a']];
-
+const SHADES=[['Nude rose','#c98f86'],['Mauve','#a26a7c'],['Berry','#7d2948'],['Classic red','#b51f2e'],['Brick','#9a3b2b'],['Coral','#e2725b'],['Peach','#f0a98a'],['Soft pink','#e6a3b4'],['Bronze','#9c6a3c'],['Taupe','#8a7466'],['Champagne','#e5cfa5'],['Espresso','#3f2a22'],['Plum shade','#5e2a4d'],['Slate','#5f6670']];
+const POLISH=[['Milky white','#f4f1ea'],['Sheer pink','#f1d3d6'],['Ballet nude','#e2c1ae'],['Cherry','#8f1730'],['Fire red','#c8232c'],['Coral pop','#ef6f5b'],['Lilac','#b9a3d6'],['Sage','#a7b59a'],['Navy lacquer','#1f2a4d'],['Oxblood','#4e1420'],['Mocha','#7a5444'],['Gold chrome','#cfa94a'],['Silver chrome','#c7c9cc'],['Black lacquer','#121212']];
+const HAIRC=[['Platinum','#e8e0cf'],['Ash blonde','#bfae8f'],['Honey blonde','#c99a52'],['Caramel','#a86b35'],['Copper','#b5532a'],['Auburn','#7f2f1f'],['Chestnut','#6b3b22'],['Chocolate brown','#4a2c1d'],['Ash brown','#5d5148'],['Espresso brown','#2f2019'],['Jet black','#141212'],['Blue black','#1a1d2b']];
+const HEX=Object.fromEntries([...SWATCHES,...SHADES,...POLISH,...HAIRC]);
 const SEASONS=['Light Spring','Warm Spring','Clear Spring','Light Summer','Cool Summer','Soft Summer','Soft Autumn','Warm Autumn','Deep Autumn','Deep Winter','Cool Winter','Clear Winter'];
-const SHADES=[['Nude rose','#c98f86'],['Mauve','#a26a7c'],['Berry','#7d2948'],['Classic red','#b51f2e'],['Brick','#9a3b2b'],['Coral','#e2725b'],['Peach','#f0a98a'],['Soft pink','#e6a3b4'],['Bronze','#9c6a3c'],['Taupe','#8a7466'],['Champagne','#e5cfa5'],['Espresso','#3f2a22'],['Plum','#5e2a4d'],['Slate','#5f6670']];
-const KINDS={outfit:{label:'Outfit',blurb:'Fit, color and what to wear',photo:'A full-length photo in daylight works best.'},
-  makeup:{label:'Makeup & color',blurb:'Undertone, shades and technique',photo:'A front-facing photo in daylight, with or without makeup.'},
-  skin:{label:'Skincare',blurb:'Skin type, concerns and a routine',photo:'A close-up with no makeup, in natural light.'}};
 const UNDERTONES=['Cool','Neutral','Warm','Olive'];
 const SKIN_TYPES=['Dry','Oily','Combination','Normal','Sensitive'];
 const CONCERNS=['Breakouts','Dark spots','Redness','Dryness','Fine lines','Texture','Large pores','Dullness'];
+const NAIL_SHAPES=['Almond','Oval','Round','Square','Squoval','Coffin','Stiletto'];
+const NAIL_LENGTHS=['Short','Medium','Long'];
+const FINISHES=['Cream','Sheer','French','Chrome','Glitter','Matte','Nail art'];
+const FACE_SHAPES=['Oval','Round','Square','Heart','Long','Diamond'];
+const HAIR_TYPES=['Straight','Wavy','Curly','Coily'];
+const CUTS=['Long layers','Curtain bangs','Face-framing layers','Lob','Bob','Pixie','Shag','Blunt cut','Taper fade','Textured crop','Buzz cut','Defined curls'];
+const AESTHETICS=['Quiet luxury','Minimal','Modest','Streetwear','Coquette','Old money','Y2K','Boho','Clean girl','Soft glam','Edgy','Preppy'];
+const STYLE_WORDS=['Modest','Minimal','Colorful','Vintage','Streetwear','Classic','Feminine','Edgy','Sporty','Boho','Preppy','Glam','Thrifted','Neutral tones','Bold prints','Gold jewelry','Silver jewelry'];
+const SPECIALTIES=['Color analysis','Modest fashion','Streetwear','Workwear','Menswear','Events & formal','Thrift & budget','Capsule wardrobes','Everyday makeup','Bridal makeup','Acne-prone skin','Sensitive skin','Nail art','Gel & builder','Haircuts','Hair color','Curly hair','Barbering'];
+const FAV_COLORS=['#8c1238','#c2185b','#e0607e','#d9742b','#c9a227','#2e7d5b','#1f6f78','#2b59c3','#6a4cc2','#8a6f5a','#5f6670','#111114'];
+const STICKERS=['✨','🎀','🌸','💖','⭐','🦋','🍒','👑','🔥','🌈','💅','👗','💄','🕶️','👠','🧸'];
+const KINDS={
+  outfit:{label:'Outfit',ask:'Rate my outfit',blurb:'Fit, color, what to swap',photo:'Full-length, in daylight'},
+  makeup:{label:'Makeup',ask:'Rate my makeup',blurb:'Shades and technique',photo:'Front-facing, in daylight'},
+  skin:{label:'Skincare',ask:'Check my skin',blurb:'Skin type and a routine',photo:'Close-up, no makeup'},
+  nails:{label:'Nails',ask:'Rate my nails',blurb:'Shape, length, shades',photo:'Hands in daylight'},
+  hair:{label:'Hair',ask:'Rate my hair',blurb:'Cuts, color, styling',photo:'Front and side, hair down'}
+};
 const FAMILY={
-  Winter:{wear:['Navy','Ink','Optic white','True red','Plum','Teal'],avoid:['Camel','Mustard','Rust','Ecru'],lips:['Berry','Classic red','Plum'],cheeks:['Soft pink','Berry'],eyes:['Slate','Plum','Espresso']},
-  Summer:{wear:['Navy','Cornflower','Rose','Dove grey','Plum','Teal'],avoid:['Rust','Mustard','Chocolate','Olive'],lips:['Mauve','Soft pink','Berry'],cheeks:['Soft pink','Nude rose'],eyes:['Taupe','Slate','Plum']},
-  Autumn:{wear:['Camel','Rust','Olive','Chocolate','Mustard','Pine'],avoid:['Optic white','Cornflower','Rose','Ink'],lips:['Brick','Nude rose','Coral'],cheeks:['Peach','Bronze'],eyes:['Bronze','Espresso','Champagne']},
-  Spring:{wear:['Ecru','Camel','Teal','Cornflower','True red','Mustard'],avoid:['Ink','Dove grey','Plum','Chocolate'],lips:['Coral','Peach','Classic red'],cheeks:['Peach','Coral'],eyes:['Champagne','Bronze','Taupe']}
+  Winter:{wear:['Navy','Ink','Optic white','True red','Plum','Teal'],avoid:['Camel','Mustard','Rust','Ecru'],lips:['Berry','Classic red','Plum shade'],cheeks:['Soft pink','Berry'],eyes:['Slate','Plum shade','Espresso'],nails:['Cherry','Navy lacquer','Silver chrome','Milky white'],hairColors:['Jet black','Blue black','Espresso brown','Ash brown']},
+  Summer:{wear:['Navy','Cornflower','Rose','Dove grey','Plum','Teal'],avoid:['Rust','Mustard','Chocolate','Olive'],lips:['Mauve','Soft pink','Berry'],cheeks:['Soft pink','Nude rose'],eyes:['Taupe','Slate','Plum shade'],nails:['Sheer pink','Lilac','Silver chrome','Navy lacquer'],hairColors:['Ash blonde','Platinum','Ash brown']},
+  Autumn:{wear:['Camel','Rust','Olive','Chocolate','Mustard','Pine'],avoid:['Optic white','Cornflower','Rose','Ink'],lips:['Brick','Nude rose','Coral'],cheeks:['Peach','Bronze'],eyes:['Bronze','Espresso','Champagne'],nails:['Mocha','Oxblood','Gold chrome','Sage'],hairColors:['Copper','Auburn','Chestnut','Caramel']},
+  Spring:{wear:['Ecru','Camel','Teal','Cornflower','True red','Mustard'],avoid:['Ink','Dove grey','Plum','Chocolate'],lips:['Coral','Peach','Classic red'],cheeks:['Peach','Coral'],eyes:['Champagne','Bronze','Taupe'],nails:['Coral pop','Ballet nude','Gold chrome','Fire red'],hairColors:['Honey blonde','Caramel','Copper']}
 };
 const famOf=season=>Object.keys(FAMILY).find(f=>String(season).endsWith(f))||'Winter';
 function makeProfile(season,undertone,skinType,concerns=[],source='From the color quiz',extra={}){
   const f=FAMILY[famOf(season)];
-  return {season,undertone,skinType,concerns,wear:[...f.wear],avoid:[...f.avoid],lips:[...f.lips],cheeks:[...f.cheeks],eyes:[...f.eyes],source,updated:Date.now(),...extra};
+  return {season,undertone,skinType,concerns,wear:[...f.wear],avoid:[...f.avoid],lips:[...f.lips],cheeks:[...f.cheeks],eyes:[...f.eyes],nails:[...f.nails],hairColors:[...f.hairColors],faceShape:null,hairType:null,source,updated:Date.now(),...extra};
 }
-const OCCASIONS=['Everyday','Office','Date night','Wedding guest','Interview','Travel','Night out'];
-const DAY=86400000;
-const HEX=Object.fromEntries([...SWATCHES,...SHADES].map(([n,h])=>[n,h]));
+/* Board presets: inspiration cards drawn in the page */
+const PRESETS={
+  'Quiet luxury':['outfit',['Camel','Ecru','Chocolate','Dove grey']],'Old money':['outfit',['Navy','Optic white','Camel','Chocolate']],
+  'Modest chic':['outfit',['Pine','Ecru','Camel','Chocolate']],'Streetwear':['outfit',['Ink','Olive','Optic white','True red']],
+  'Minimal':['outfit',['Optic white','Ink','Dove grey','Ecru']],'Y2K':['outfit',['Lilac','Cornflower','Soft pink','Silver chrome']],
+  'Boho':['outfit',['Rust','Mustard','Ecru','Chocolate']],'Coquette':['outfit',['Soft pink','Optic white','Rose','Cherry']],
+  'Clean girl':['makeup',['Nude rose','Peach','Champagne','Ballet nude']],'Soft glam':['makeup',['Mauve','Soft pink','Taupe','Champagne']],
+  'Chrome nails':['nails',['Silver chrome']],'French tips':['nails',['Milky white']],'Cherry nails':['nails',['Cherry']],
+  'Glass skin':['skin',['Sheer pink','Milky white']],'Curtain bangs':['hair',['Chestnut','Caramel','Chocolate brown']],'Copper hair':['hair',['Copper','Auburn','Caramel']]
+};
+
+/* ================= Color helpers ================= */
+const rgb=h=>{h=String(h).replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16)||0;return [n>>16&255,n>>8&255,n&255]};
+const toHex=a=>'#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const mix=(a,b,t)=>{const x=rgb(a),y=rgb(b);return toHex(x.map((v,i)=>v+(y[i]-v)*t))};
+const lum=h=>{const [r,g,b]=rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};
+function applyTheme(c){
+  const r=document.documentElement.style;let t=c,i=0;
+  while(lum(t)>.16&&i++<12)t=mix(t,'#000000',.14);
+  r.setProperty('--accent',c);r.setProperty('--accent-ink',lum(c)>.42?'#111114':'#ffffff');
+  r.setProperty('--accent-text',t);r.setProperty('--accent-soft',mix(c,'#ffffff',.88));
+}
+
+/* ================= Illustrations (used when there is no photo) ================= */
+function art(kind,names,label){
+  const c=(names&&names.length?names:['Dove grey']).map(n=>HEX[n]||n);while(c.length<4)c.push(c[c.length%Math.max(1,c.length)]||'#bbb');
+  const st='stroke="rgba(0,0,0,.08)" stroke-width="2"';let g='';
+  if(kind==='outfit')g=`<path d="M92 62 L128 48 Q150 64 172 48 L208 62 L236 104 L212 118 L200 100 L200 178 L100 178 L100 100 L88 118 L64 104 Z" fill="${c[0]}" ${st}/>
+    <path d="M106 192 L194 192 L204 334 L164 334 L150 236 L136 334 L96 334 Z" fill="${c[1]}" ${st}/>
+    <rect x="222" y="292" width="48" height="22" rx="11" fill="${c[2]}" ${st}/><rect x="230" y="320" width="48" height="22" rx="11" fill="${c[2]}" ${st}/>
+    <path d="M238 152 q14 -26 28 0" stroke="${c[3]}" stroke-width="5" fill="none"/><rect x="226" y="150" width="52" height="44" rx="8" fill="${c[3]}" ${st}/>`;
+  else if(kind==='makeup')g=`<rect x="70" y="172" width="44" height="130" rx="6" fill="#1d1d22"/><rect x="76" y="122" width="32" height="56" fill="#cfae6e"/><path d="M78 124 L78 86 L106 70 L106 124 Z" fill="${c[0]}"/>
+    <circle cx="205" cy="118" r="58" fill="#e9e9ee"/><circle cx="205" cy="118" r="44" fill="${c[1]}"/>
+    <rect x="148" y="214" width="122" height="96" rx="12" fill="#26262c"/>${[0,1,2,3].map(i=>`<rect x="${160+(i%2)*52}" y="${224+Math.floor(i/2)*40}" width="46" height="34" rx="6" fill="${c[(i+1)%4]}"/>`).join('')}`;
+  else if(kind==='nails')g=[0,1,2,3,4].map(i=>{const x=58+i*40,y=120+[34,12,0,14,48][i];return `<rect x="${x-5}" y="${y+40}" width="40" height="${190-([34,12,0,14,48][i])}" rx="20" fill="#e5c2a6"/><path d="M${x} ${y+74} L${x} ${y+26} Q${x} ${y} ${x+15} ${y} Q${x+30} ${y} ${x+30} ${y+26} L${x+30} ${y+74} Z" fill="${c[i%c.length]}" ${st}/><rect x="${x+7}" y="${y+14}" width="5" height="34" rx="3" fill="#fff" opacity=".35"/>`}).join('');
+  else if(kind==='hair')g=[0,1,2].map(i=>{const x=105+i*45;return `<path d="M${x} 50 C ${x-50} 130, ${x+50} 210, ${x-6} 330" stroke="${c[i]}" stroke-width="40" fill="none" stroke-linecap="round"/>`}).join('');
+  else g=`<rect x="116" y="88" width="26" height="40" rx="10" fill="#26262c"/><rect x="110" y="124" width="38" height="30" fill="#d8d8de"/><rect x="88" y="150" width="82" height="160" rx="16" fill="${c[0]}" ${st}/>
+    <rect x="186" y="214" width="92" height="92" rx="14" fill="${c[1]}" ${st}/><rect x="182" y="198" width="100" height="26" rx="8" fill="${mix(c[1],'#000000',.18)}"/>`;
+  const lab=label?`<rect x="16" y="330" width="${Math.min(268,label.length*9+28)}" height="30" rx="15" fill="#ffffff" opacity=".94"/><text x="30" y="350" font-family="Instrument Sans, Arial, sans-serif" font-size="14" font-weight="600" fill="#111114">${esc(label)}</text>`:'';
+  return `<svg viewBox="0 0 300 375" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(label||KINDS[kind]?.label+' example')}" preserveAspectRatio="xMidYMid slice"><rect width="300" height="375" fill="${mix(c[0],'#f1f2f5',.86)}"/>${g}${lab}</svg>`;
+}
+const media=(x,kind,cols,alt)=>x&&x.photo?`<img src="${x.photo}" alt="${esc(alt||'Photo')}">`:art(kind,cols);
+
+/* ================= Seed data ================= */
+const DAY=86400000,now=Date.now();
 const seed={
+  users:{
+    you:{id:'you',name:'Jamie',keywords:['Minimal','Modest','Gold jewelry'],favColor:'#8c1238',photo:null,
+      board:[{id:'b1',preset:'Quiet luxury'},{id:'b2',preset:'Clean girl'},{id:'b3',preset:'Modest chic'},{id:'b4',preset:'French tips'},{id:'b5',preset:'Old money'},{id:'b6',preset:'Curtain bangs'}],
+      stickers:[{id:'k1',e:'✨',x:22,y:10},{id:'k2',e:'🎀',x:74,y:46}],submissions:2},
+    u1:{id:'u1',name:'Ari',keywords:['Coquette']},u2:{id:'u2',name:'Jordan',keywords:['Streetwear']},u3:{id:'u3',name:'Sofia',keywords:['Modest']},u4:{id:'u4',name:'Theo',keywords:['Minimal']},u5:{id:'u5',name:'Nia',keywords:['Glam']}
+  },
   stylists:[
-    {id:'s1',name:'Maya Okafor',title:'Color analyst & personal stylist',bio:'Ten years of seasonal color analysis. I find the shades that make your skin look rested, and build a wardrobe around them.',specialties:['Color analysis','Workwear','Capsule wardrobes'],price:0,turnaround:'48h',rating:4.9,reviews:132,colors:['Plum','Navy','Optic white','Pine'],services:['outfit','makeup']},
-    {id:'s2',name:'Jules Moreau',title:'Streetwear & menswear',bio:'Former retail buyer. I work on proportion and layering so basics look intentional.',specialties:['Streetwear','Menswear','Fit & proportion'],price:15,turnaround:'24h',rating:4.8,reviews:87,colors:['Olive','Ecru','Ink','Camel'],services:['outfit']},
-    {id:'s3',name:'Priya Sharma',title:'Occasion & event styling',bio:'Weddings, interviews, first dates. Tell me the event and the budget and I will get you there.',specialties:['Events','Formalwear','Accessories'],price:25,turnaround:'24h',rating:5.0,reviews:54,colors:['True red','Rose','Ink','Mustard'],services:['outfit','makeup']},
-    {id:'s4',name:'Sam Rivera',title:'Thrift & sustainable styling',bio:'Great outfits from what you already own, plus second-hand finds under $40.',specialties:['Thrift','Capsule wardrobes','Budget'],price:0,turnaround:'72h',rating:4.7,reviews:61,colors:['Rust','Teal','Ecru','Chocolate'],services:['outfit']},
-    {id:'s5',name:'Lena Hoffmann',title:'Minimalist wardrobe editor',bio:'Fewer, better pieces. I edit your closet down to what works together.',specialties:['Capsule wardrobes','Color analysis','Workwear'],price:20,turnaround:'48h',rating:4.9,reviews:73,colors:['Dove grey','Camel','Ink','Optic white'],services:['outfit']},
-    {id:'s6',name:'Andre Baptiste',title:'Menswear tailoring',bio:'Suits, fit and fabrics. I make tailoring work for real budgets.',specialties:['Menswear','Formalwear','Fit & proportion'],price:30,turnaround:'24h',rating:4.8,reviews:41,colors:['Navy','Chocolate','Cornflower','Ecru'],services:['outfit']},
-    {id:'s7',name:'Camille Dubois',title:'Makeup artist & color specialist',bio:'Bridal and editorial makeup artist. I match shades to your undertone and teach you a five-minute face.',specialties:['Everyday makeup','Bridal','Shade matching'],price:0,turnaround:'48h',rating:4.9,reviews:96,colors:['Nude rose','Berry','Champagne','Bronze'],services:['makeup']},
-    {id:'s8',name:'Dr. Aisha Rahman',title:'Licensed esthetician',bio:'Licensed esthetician focused on simple routines that you will actually keep. Acne-prone and sensitive skin.',specialties:['Acne-prone skin','Sensitive skin','Simple routines'],price:20,turnaround:'48h',rating:4.9,reviews:118,colors:['Ecru','Soft pink','Dove grey','Optic white'],services:['skin']},
-    {id:'s9',name:'Noor Haddad',title:'Skincare & makeup coach',bio:'Skin first, then makeup. I build routines and makeup looks that work together.',specialties:['Skin prep','Everyday makeup','Budget products'],price:10,turnaround:'72h',rating:4.7,reviews:39,colors:['Peach','Coral','Taupe','Ecru'],services:['skin','makeup']}
+    {id:'s1',name:'Maya Okafor',title:'Color analyst & personal stylist',line:'I find the shades that make your skin look rested.',specialties:['Color analysis','Workwear','Capsule wardrobes'],turnaround:'48h',rating:4.9,reviews:132,services:['outfit','makeup'],verified:true},
+    {id:'s2',name:'Jules Moreau',title:'Streetwear & menswear',line:'Proportion and layering, so basics look intentional.',specialties:['Streetwear','Menswear'],turnaround:'24h',rating:4.8,reviews:87,services:['outfit'],verified:true},
+    {id:'s3',name:'Priya Sharma',title:'Occasion & event styling',line:'Tell me the event and I will get you there.',specialties:['Events & formal','Modest fashion'],turnaround:'24h',rating:5.0,reviews:54,services:['outfit','makeup'],verified:true},
+    {id:'s4',name:'Sam Rivera',title:'Thrift & budget styling',line:'Great outfits from what you already own.',specialties:['Thrift & budget','Capsule wardrobes'],turnaround:'72h',rating:4.7,reviews:18,services:['outfit'],verified:false},
+    {id:'s7',name:'Camille Dubois',title:'Makeup artist',line:'Shade matching and a five-minute face.',specialties:['Everyday makeup','Bridal makeup'],turnaround:'48h',rating:4.9,reviews:96,services:['makeup'],verified:true},
+    {id:'s8',name:'Aisha Rahman',title:'Licensed esthetician',line:'Simple routines you will actually keep.',specialties:['Acne-prone skin','Sensitive skin'],turnaround:'48h',rating:4.9,reviews:118,services:['skin'],verified:true},
+    {id:'s9',name:'Noor Haddad',title:'Skincare & makeup lover',line:'Skin first, then makeup that works with it.',specialties:['Everyday makeup','Sensitive skin'],turnaround:'72h',rating:4.6,reviews:12,services:['skin','makeup'],verified:false},
+    {id:'s10',name:'Kiki Tran',title:'Nail artist',line:'Shapes and shades that flatter your hands.',specialties:['Nail art','Gel & builder'],turnaround:'24h',rating:4.9,reviews:31,services:['nails'],verified:false},
+    {id:'s11',name:'Marcus Bell',title:'Hairstylist & colorist',line:'What to ask your salon or barber for.',specialties:['Haircuts','Hair color','Curly hair'],turnaround:'48h',rating:4.8,reviews:104,services:['hair'],verified:true}
   ],
   requests:[
-    {id:'r1',stylistId:'s1',client:'You',occasion:'Office',question:'Does this blouse work on me? I feel a bit washed out in it.',photo:null,paid:false,amount:0,status:'done',created:Date.now()-3*DAY,
-     feedback:{score:7,season:'Deep Winter',palette:['Navy','Plum','Optic white','Pine'],avoid:['Camel','Mustard'],notes:'The cut and trouser length are right for you. The beige sits close to your skin tone, so nothing frames your face and you read as tired.',tryInstead:'Keep the trousers. Swap the blouse for deep navy or plum, and wear silver near the face instead of gold.',products:[{name:'Satin blouse in navy',url:'https://www.shein.com',store:'shein.com'},{name:'Silver hoop earrings',url:'https://www.asos.com',store:'asos.com'}]}},
-    {id:'r5',kind:'makeup',stylistId:'s7',client:'You',occasion:'Everyday',question:'Which lipstick and blush shades suit me? Everything looks too orange.',photo:null,paid:false,amount:0,status:'done',created:Date.now()-1.6*DAY,
-     feedback:{score:6,undertone:'Cool',season:'Cool Summer',lips:['Mauve','Berry','Soft pink'],cheeks:['Soft pink','Nude rose'],eyes:['Taupe','Slate','Champagne'],avoid:['Coral','Bronze','Brick'],notes:'You have a cool undertone, so the coral and bronze shades turn orange on your skin and make it look sallow.',tryInstead:'Switch to blue-based pinks and berries. Use a taupe contour instead of bronzer, and a champagne highlight instead of gold.',products:[{name:'Berry lip tint',url:'https://www.sephora.com',store:'sephora.com'}]}},
-    {id:'r6',kind:'skin',stylistId:'s8',client:'You',occasion:'Everyday',question:'My T-zone gets oily by noon but my cheeks are dry. What routine should I use?',photo:null,paid:true,amount:20,status:'done',created:Date.now()-4*DAY,
-     feedback:{skinType:'Combination',concerns:['Large pores','Dryness','Dullness'],am:'Gentle gel cleanser\nNiacinamide serum\nLightweight moisturizer\nSPF 30 or higher',pm:'Same cleanser\nBHA exfoliant on the T-zone, three nights a week\nRicher cream on the cheeks only',notes:'Classic combination skin. A harsh cleanser is likely stripping your cheeks, and your T-zone overproduces oil to make up for it.',tryInstead:'Moisturize the two zones separately, and give it four to six weeks before you judge the results.',products:[{name:'Niacinamide 10% serum',url:'https://www.theordinary.com',store:'theordinary.com'}]}},
-    {id:'r7',kind:'makeup',stylistId:'s1',client:'Zoe L.',occasion:'Wedding guest',question:'What eyeshadow colors go with an emerald dress and my brown eyes?',photo:null,paid:false,amount:0,status:'pending',created:Date.now()-0.6*DAY,profile:makeProfile('Warm Spring','Warm','Normal',['Dullness'])},
-    {id:'r2',stylistId:'s3',client:'You',occasion:'Wedding guest',question:'Garden wedding in June. Is this dress too casual?',photo:null,paid:true,amount:25,status:'pending',created:Date.now()-0.4*DAY},
-    {id:'r3',stylistId:'s1',client:'Danielle K.',occasion:'Interview',question:'First interview at a law firm. Is a grey suit too boring?',photo:null,paid:false,amount:0,status:'pending',created:Date.now()-0.2*DAY,profile:makeProfile('Soft Summer','Neutral','Combination',[])},
-    {id:'r4',stylistId:'s1',client:'Marcus T.',occasion:'Date night',question:'Green overshirt or black? Which one suits me better?',photo:null,paid:false,amount:0,status:'pending',created:Date.now()-1.1*DAY,profile:makeProfile('Deep Autumn','Olive','Oily',['Breakouts'])}
+    {id:'r1',kind:'outfit',stylistId:'s1',clientId:'you',client:'Jamie',question:'Does this blouse work on me? I feel washed out in it.',keep:'The wide-leg trousers',swap:'Any top',aesthetic:'Quiet luxury',art:['Camel','Ecru','Chocolate','Dove grey'],status:'done',amount:15,created:now-3*DAY,postId:'p1',
+      feedback:{score:7,season:'Deep Winter',palette:['Navy','Plum','Optic white','Pine'],avoid:['Camel','Mustard'],notes:'The cut and trouser length are right for you. The beige sits close to your skin tone, so nothing frames your face.',tryInstead:'Keep the trousers. Swap the blouse for deep navy or plum, and wear silver near the face instead of gold.',products:[{name:'Satin blouse in navy',url:'https://www.shein.com',store:'shein.com'}]}},
+    {id:'r8',kind:'hair',stylistId:'s11',clientId:'you',client:'Jamie',question:'I want a change but I am scared to go short.',keep:'Length past my shoulders',swap:'Color is open',aesthetic:'Soft and natural',art:['Chestnut','Caramel','Chocolate brown'],status:'done',amount:15,created:now-2*DAY,
+      feedback:{score:7,faceShape:'Oval',hairType:'Wavy',cuts:['Long layers','Curtain bangs'],hairColors:['Espresso brown','Ash brown'],notes:'One length all over flattens your natural wave and hides your cheekbones.',tryInstead:'Ask for long layers starting at the chin and soft curtain bangs. Go one shade cooler with an espresso gloss.',products:[]}},
+    {id:'r9',kind:'nails',stylistId:'s10',clientId:'you',client:'Jamie',question:'Nail shape and color for a June wedding? My dress is navy.',keep:'',swap:'',aesthetic:'Clean and elegant',art:['Ballet nude'],status:'pending',amount:0,created:now-.3*DAY},
+    {id:'r3',kind:'outfit',stylistId:'s1',clientId:'u3',client:'Sofia',question:'First interview at a law firm. Is a grey suit too boring?',keep:'The blazer, it was my mom’s',swap:'Shoes and blouse',aesthetic:'Modest and polished',art:['Dove grey','Optic white','Ink','Plum'],status:'pending',amount:15,created:now-.2*DAY,profile:makeProfile('Soft Summer','Neutral','Combination')},
+    {id:'r4',kind:'outfit',stylistId:'s1',clientId:'u2',client:'Jordan',question:'Green overshirt or black? Which suits me better?',keep:'The cargo pants',swap:'The overshirt',aesthetic:'Streetwear',art:['Olive','Ink','Ecru','Camel'],status:'pending',amount:15,created:now-1.1*DAY,profile:makeProfile('Deep Autumn','Olive','Oily',['Breakouts'])},
+    {id:'r7',kind:'makeup',stylistId:'s1',clientId:'u1',client:'Ari',question:'What eyeshadow goes with an emerald dress and brown eyes?',keep:'My winged liner',swap:'Lip color',aesthetic:'Soft glam',art:['Bronze','Champagne','Mauve','Pine'],status:'pending',amount:15,created:now-.6*DAY,profile:makeProfile('Warm Spring','Warm','Normal',['Dullness'])}
   ],
-  me:{stylistId:'s1'},
-  profile:null
+  posts:[
+    {id:'p1',authorId:'you',kind:'outfit',caption:'Office look, round two. Be honest!',aesthetic:'Quiet luxury',art:['Camel','Ecru','Chocolate','Dove grey'],created:now-3*DAY,ratings:{u1:8,u2:7,u4:8,u5:9},comments:[{by:'u4',text:'The trousers are perfect.'},{by:'s1',pro:true,text:'Try a navy top with these and you will glow.'}]},
+    {id:'p2',authorId:'u1',kind:'outfit',caption:'Brunch fit. Too many bows?',aesthetic:'Coquette',art:['Soft pink','Optic white','Rose','Cherry'],created:now-.5*DAY,ratings:{u2:9,u3:8,u5:10},comments:[{by:'u5',text:'Never too many bows.'}]},
+    {id:'p3',authorId:'u2',kind:'outfit',caption:'Thrifted the jacket for $12.',aesthetic:'Streetwear',art:['Olive','Ink','Optic white','True red'],created:now-1.2*DAY,ratings:{u1:8,u4:7},comments:[{by:'s2',pro:true,text:'Great find. Cuff the pants once to show the sneakers.'}]},
+    {id:'p4',authorId:'u5',kind:'makeup',caption:'Testing a berry lip for winter.',aesthetic:'Soft glam',art:['Berry','Mauve','Taupe','Champagne'],created:now-.8*DAY,ratings:{u1:9,u3:9,u4:8},comments:[]},
+    {id:'p5',authorId:'u3',kind:'outfit',caption:'Eid outfit, first try with green.',aesthetic:'Modest',art:['Pine','Ecru','Camel','Chocolate'],created:now-2*DAY,ratings:{u1:10,u2:9,u5:9},comments:[{by:'u1',text:'This green is stunning on you.'}]},
+    {id:'p6',authorId:'u4',kind:'nails',caption:'Chrome or too much for work?',aesthetic:'Minimal',art:['Silver chrome','Silver chrome','Milky white','Silver chrome','Silver chrome'],created:now-.1*DAY,ratings:{u5:7},comments:[]}
+  ],
+  applications:[
+    {id:'a1',stylistId:'s4',experience:'Working stylist',link:'instagram.com/thriftedbysam',note:'Five years running a thrift styling account.',portfolio:[['outfit',['Rust','Mustard','Ecru','Chocolate']],['outfit',['Olive','Ink','Optic white','Camel']],['outfit',['Teal','Ecru','Camel','Chocolate']]],status:'pending',created:now-1*DAY},
+    {id:'a2',stylistId:'s10',experience:'Licensed professional',link:'kikinails.com',note:'Licensed nail technician, 4 years in a salon.',portfolio:[['nails',['Cherry']],['nails',['Silver chrome']],['nails',['Milky white','Ballet nude']]],status:'pending',created:now-.4*DAY}
+  ],
+  profile:makeProfile('Deep Winter','Cool','Combination',['Large pores','Dullness'],'Confirmed by Maya Okafor',{confirmed:true,faceShape:'Oval',hairType:'Wavy'}),
+  me:{stylistId:'s1'}
 };
+const KEY='lookover.v3';
 let db;
-try{db=JSON.parse(localStorage.getItem('lookover.v1'))||structuredClone(seed)}catch(e){db=structuredClone(seed)}
-if(db.profile===null&&!db.seeded){db.profile=makeProfile('Deep Winter','Cool','Combination',['Large pores','Dullness'],'Confirmed by Maya Okafor',{confirmed:true});db.seeded=true}
-const save=()=>{try{localStorage.setItem('lookover.v1',JSON.stringify(db))}catch(e){}};
-const state={role:'client',view:'browse',filter:'All',cat:'all'};
-const kindOf=r=>r.kind||'outfit';
-const svc=s=>s.services?.length?s.services:['outfit'];
+try{db=JSON.parse(localStorage.getItem(KEY))||structuredClone(seed)}catch(e){db=structuredClone(seed)}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Storage is full. Try smaller photos.')}};
+const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null};
 
+/* ================= Helpers ================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const initials=n=>n.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const initials=n=>String(n||'?').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 const stylist=id=>db.stylists.find(s=>s.id===id);
-const hexes=names=>(names||[]).map(n=>HEX[n]||n);
-const stripes=names=>hexes(names).map(h=>`<span style="background:${h}"></span>`).join('');
-const priceTxt=p=>p>0?`$${p} per review`:'Free';
+const me=()=>db.users.you;
+const svc=s=>s.services?.length?s.services:['outfit'];
+const isTop=s=>s.verified&&s.rating>=4.8&&s.reviews>=50;
+const priceOf=s=>!s.verified?0:isTop(s)?15:10;
+const tierOf=s=>!s.verified?'Community':isTop(s)?'Top verified':'Verified';
 const ago=t=>{const h=Math.round((Date.now()-t)/3600000);return h<1?'Just now':h<24?`${h}h ago`:`${Math.round(h/24)}d ago`};
-const chips=(names,cls='')=>`<div class="chips">${(names||[]).map(n=>`<span class="chip ${cls}"><i style="background:${HEX[n]||n}"></i>${esc(n)}</span>`).join('')}</div>`;
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
-function openSheet(html){$('#sheet-body').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');$('#sheet').scrollTop=0;setTimeout(()=>$('#sheet-x').focus(),50)}
+const chips=(names,cls='')=>`<div class="chips">${(names||[]).map(n=>`<span class="chip c ${cls}"><i style="background:${HEX[n]||n}"></i>${esc(n)}</span>`).join('')}</div>`;
+const tags=l=>`<div class="chips">${(l||[]).map(c=>`<span class="chip tag">${esc(c)}</span>`).join('')}</div>`;
+const stripes=names=>(names||[]).map(n=>`<span style="background:${HEX[n]||n}"></span>`).join('');
+const TONES=['#2b2f3a','#3a2f3f','#2f3d39','#3d3330','#30364a','#463a33','#2d3b46','#41303a','#363636'];
+function face(p,label){
+  if(p?.photo)return `<img src="${p.photo}" alt="${esc(p.name)}">`;
+  const t=p?.favColor||TONES[[...String(p?.id||'x')].reduce((a,c)=>a+c.charCodeAt(0),0)%TONES.length];
+  return `<div class="mono" style="background:radial-gradient(120% 90% at 30% 20%,${mix(t,'#ffffff',.3)},${t})"><b>${esc(initials(p?.name))}</b>${label?'<small>Photo coming soon</small>':''}</div>`;
+}
+const personOf=id=>id==='you'?me():db.users[id]||stylist(id)||{id,name:'Someone'};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600)}
+function openSheet(html){$('#sheet-body').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');$('#sheet').scrollTop=0;setTimeout(()=>$('#sheet-x').focus(),60)}
 function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open')}
 $('#scrim').onclick=closeSheet;$('#sheet-x').onclick=closeSheet;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
-$('#home').onclick=e=>{e.preventDefault();state.role='client';go('browse')};
+function swatchPicker(id,selected,set=SWATCHES){return `<div class="chips" id="${id}">${set.map(([n,h])=>`<button type="button" class="chip c" data-sw="${esc(n)}" aria-pressed="${(selected||[]).includes(n)}"><i style="background:${h}"></i>${esc(n)}</button>`).join('')}</div>`}
+function toggles(id,opts,sel=[]){return `<div class="chips" id="${id}">${opts.map(o=>`<button type="button" class="chip" data-sw="${esc(o)}" aria-pressed="${(sel||[]).includes(o)}">${esc(o)}</button>`).join('')}</div>`}
+const picked=id=>[...document.querySelectorAll(`#${id} [aria-pressed="true"]`)].map(b=>b.dataset.sw);
+function readPhoto(file,max=900,portrait=false){
+  return new Promise(res=>{if(!file)return res(null);
+    const img=new Image(),r=new FileReader();
+    r.onload=()=>{img.onload=()=>{const c=document.createElement('canvas');let sx=0,sy=0,sw=img.width,sh=img.height;
+      if(portrait){const want=1;if(sw/sh>want){sw=sh*want;sx=(img.width-sw)/2}else{sh=sw/want;sy=(img.height-sh)/4}}
+      const k=Math.min(1,max/sw);c.width=sw*k;c.height=sh*k;c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};
+      img.onerror=()=>res(null);img.src=r.result};
+    r.onerror=()=>res(null);r.readAsDataURL(file)});
+}
+const ICON={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  community:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8" height="10" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>',
+  reviews:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>',
+  profile:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  feed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="14" rx="2"/><path d="M3 20h18"/></svg>',
+  studio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  verify:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.5 2 3.2-.4.9 3.1 2.6 1.9-1.3 3 1.3 3-2.6 1.9-.9 3.1-3.2-.4L12 23l-2.5-2-3.2.4-.9-3.1L2.8 16.4l1.3-3-1.3-3 2.6-1.9.9-3.1 3.2.4z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>',
+  pros:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M15 15c3 0 5 1.3 6 4"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></svg>',
+  gallery:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>'
+};
 
-const NAV={client:[['browse','Stylists'],['colors','My colors'],['mine','My reviews']],stylist:[['inbox','Studio'],['profile','Profile'],['join','New stylist']]};
-document.querySelectorAll('.role button').forEach(b=>b.onclick=()=>{state.role=b.dataset.role;go(NAV[state.role][0][0])});
-function go(v){pfPhoto=null;state.view=v;render();window.scrollTo({top:0})}
-function render(){
-  document.querySelectorAll('.role button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===state.role));
-  const nav=NAV[state.role].map(([v,l])=>`<button data-go="${v}" ${state.view===v?'aria-current="page"':''}>${l}</button>`).join('');
-  $('#links').innerHTML=nav;
-  $('#app').innerHTML=`<div class="mobile-links">${nav}</div>`+VIEWS[state.view]();
-  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+/* ================= Shell: dock, menu, header ================= */
+const DOCK={
+  client:[['browse','Home','home'],['community','Community','community'],['+'],['mine','Reviews','reviews'],['me','Profile','profile']],
+  stylist:[['feed','Review','feed'],['community','Community','community'],['+'],['studio','Studio','studio'],['sprofile','Profile','profile']],
+  admin:[['admin','Verify','verify'],['community','Community','community'],['+'],['browse','Pros','pros'],['me','Profile','profile']]
+};
+function renderShell(){
+  applyTheme(me().favColor||'#8c1238');
+  $('#dock').innerHTML=DOCK[state.role].map(([v,l,ic])=>v==='+'?`<button class="plus" id="plus" aria-label="New review request">${ICON.plus}</button>`
+    :`<button data-go="${v}" ${state.view===v||(v==='me'&&state.view==='colors')?'aria-current="page"':''}>${ICON[ic]}<span>${l}</span></button>`).join('');
+  $('#me-btn').innerHTML=face(state.role==='stylist'?stylist(db.me.stylistId):me());
+  const v=$('#viewing');v.hidden=state.role==='client';v.textContent=state.role==='stylist'?'Viewing as stylist':'Viewing as admin';
+  $('#menu').innerHTML=`
+    <div class="menu-col"><h4>Get feedback</h4>${Object.entries(KINDS).map(([k,v])=>`<button data-compose="${k}"><i>+</i>${v.ask}</button>`).join('')}</div>
+    <div class="menu-col"><h4>Discover</h4>
+      <button data-quiz="1"><i>◐</i>Take the color quiz</button>
+      <button data-go="colors"><i>●</i>My color palette</button>
+      <button data-go="community"><i>♥</i>Community looks</button>
+      <button data-go="browse"><i>★</i>Find a stylist</button>
+      <h4>You</h4>
+      <button data-go="me"><i>☺</i>My profile & mood board</button>
+      <button data-go="mine"><i>✎</i>My reviews</button>
+      <button data-go="join"><i>✓</i>Become a stylist</button></div>
+    <div class="roles"><span class="hint">Prototype · view as</span>${['client','stylist','admin'].map(r=>`<button data-role="${r}" aria-pressed="${state.role===r}">${r[0].toUpperCase()+r.slice(1)}</button>`).join('')}</div>`;
 }
+function setMenu(open){$('#menu').hidden=!open;$('#explore-btn').setAttribute('aria-expanded',open)}
+$('#explore-btn').onclick=e=>{e.stopPropagation();setMenu($('#menu').hidden)};
+document.addEventListener('click',e=>{if(!e.target.closest('.explore'))setMenu(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();setMenu(false)}});
+const goHome=()=>go(state.role==='stylist'?'feed':state.role==='admin'?'admin':'browse');
+$('#home').onclick=goHome;$('#home').onkeydown=e=>{if(e.key==='Enter')goHome()};
+$('#me-btn').onclick=()=>go(state.role==='stylist'?'sprofile':'me');
 
-/* ---------- Pieces ---------- */
-const TONES=['#2b2f3a','#3a2f3f','#2f3d39','#3d3330','#30364a','#463a33','#2d3b46','#41303a','#363636'];
-function face(s,label){
-  if(s.photo)return `<img src="${s.photo}" alt="${esc(s.name)}">`;
-  const t=TONES[[...s.id].reduce((a,c)=>a+c.charCodeAt(0),0)%TONES.length];
-  return `<div class="mono" style="background:radial-gradient(120% 90% at 30% 20%,color-mix(in srgb,${t} 70%,#fff),${t})"><b>${esc(initials(s.name))}</b>${label?'<small>Photo coming soon</small>':''}</div>`;
+function go(v){state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
+function render(){renderShell();$('#app').innerHTML=(VIEWS[state.view]||VIEWS.browse)();afterRender()}
+
+/* ================= Feedback rendering ================= */
+function picksBlock(f){
+  return f.products?.length?`<div><h4>Shop the picks</h4><div class="picks">${f.products.map(p=>`<a class="pick" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer sponsored"><span>${esc(p.name)}</span><span class="pick-store">${esc(p.store)} ↗</span></a>`).join('')}</div><p class="disclose" style="margin-top:6px">Your stylist may earn a commission on purchases.</p></div>`:'';
 }
-function stylistCard(s,i){
-  const free=s.price===0;
-  return `<button class="stylist" data-stylist="${s.id}" aria-label="View ${esc(s.name)}">
-    <div class="portrait">${face(s,true)}
-      <span class="price-badge ${free?'free':''}">${free?'Free':'$'+s.price}</span>
-    </div>
-    <div class="stylist-info">
-      <h3>${esc(s.name)}</h3>
-      <div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div>
-      <div class="spec">${esc(s.title)}</div>
-      <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">Replies in ${esc(s.turnaround)}</span></div>
-    </div></button>`;
+function feedbackBlock(f,kind){
+  const fact=(l,v)=>v?`<div><h4>${l}</h4><b>${esc(v)}</b></div>`:'';
+  const head=kind==='skin'?`<div><h4>Skin type</h4><div class="score" style="font-size:32px;font-style:italic;font-weight:400">${esc(f.skinType||'–')}</div></div>`
+    :`<div class="score num">${f.score}<small>/10</small></div>`;
+  const facts={outfit:fact('Color season',f.season),makeup:fact('Undertone',f.undertone)+fact('Season',f.season),skin:'',nails:fact('Shape',f.shape)+fact('Length',f.length),hair:fact('Face shape',f.faceShape)+fact('Texture',f.hairType)}[kind];
+  let body='';
+  if(kind==='outfit')body=(f.palette?.length?`<div><h4>Wear more</h4>${chips(f.palette)}</div>`:'')+(f.avoid?.length?`<div><h4>Keep away from your face</h4>${chips(f.avoid,'avoid')}</div>`:'');
+  if(kind==='makeup')body=['lips','cheeks','eyes'].map(k=>f[k]?.length?`<div><h4>${k[0].toUpperCase()+k.slice(1)}</h4>${chips(f[k])}</div>`:'').join('')+(f.avoid?.length?`<div><h4>Skip these shades</h4>${chips(f.avoid,'avoid')}</div>`:'');
+  if(kind==='nails')body=(f.nailShades?.length?`<div><h4>Shades</h4>${chips(f.nailShades)}</div>`:'')+(f.finishes?.length?`<div><h4>Finish</h4>${tags(f.finishes)}</div>`:'');
+  if(kind==='hair')body=(f.cuts?.length?`<div><h4>Cuts to ask for</h4>${tags(f.cuts)}</div>`:'')+(f.hairColors?.length?`<div><h4>Hair colors</h4>${chips(f.hairColors)}</div>`:'');
+  if(kind==='skin'){const steps=t=>`<ol>${String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
+    body=(f.concerns?.length?`<div><h4>Focus on</h4>${tags(f.concerns)}</div>`:'')+((f.am||f.pm)?`<div class="routine"><div><h4>Morning</h4>${steps(f.am)}</div><div><h4>Evening</h4>${steps(f.pm)}</div></div>`:'')+`<p class="note">General skincare guidance, not medical advice. See a dermatologist for persistent acne, rashes or changing moles.</p>`}
+  return `<div class="fb"><div class="fb-score">${head}<div class="facts">${facts}</div></div>
+    <div class="fb-main"><div><h4>The verdict</h4><p>${esc(f.notes)}</p></div><div><h4>${kind==='skin'?'Also try':'Try instead'}</h4><p>${esc(f.tryInstead)}</p></div>${body}${picksBlock(f)}</div></div>`;
 }
-function profileMini(P,who='Your'){
+const notesBlock=r=>{const n=[['Must stay',r.keep],['Willing to swap',r.swap],['Aesthetic',r.aesthetic]].filter(x=>x[1]);
+  return n.length?`<div class="notes">${n.map(([l,v])=>`<div class="note-box"><h4>${l}</h4><p>${esc(v)}</p></div>`).join('')}</div>`:''};
+function profileMini(P,who='Your',hint=''){
   if(!P)return '';
   return `<div class="mini"><div class="mini-top"><span class="eyebrow">${who} color profile</span><span class="source ${P.confirmed?'ok':''}">${P.confirmed?'✓ ':''}${esc(P.source)}</span></div>
-    <div><b>${esc(P.season)}</b> <span class="muted">· ${esc(P.undertone)} undertone${P.skinType?` · ${esc(P.skinType)} skin`:''}</span></div>
-    ${chips(P.wear)}</div>`;
+    <div><b class="s">${esc(P.season)}</b> <span class="muted">· ${esc(P.undertone)} undertone${P.skinType?` · ${esc(P.skinType)} skin`:''}</span></div>${chips(P.wear)}${hint?`<span class="hint">${hint}</span>`:''}</div>`;
 }
-function computeProfile(a){
-  let w={cool:-1.5,warm:1.5,mixed:0,olive:.5}[a.veins]+{silver:-1,gold:1,both:0}[a.metal]+{optic:-1,cream:1,both:0}[a.white];
-  const undertone=a.veins==='olive'?'Olive':w>=1?'Warm':w<=-1?'Cool':'Neutral';
-  const warm=undertone==='Warm'||(undertone!=='Cool'&&w>0);
-  const d=({light:0,medium:1,dark:2}[a.hair]+{light:0,medium:1,dark:2}[a.eyes])/2;
-  let season;
-  if(warm){season=d<=.5?(a.contrast==='high'?'Clear Spring':'Light Spring'):d>=1.5?'Deep Autumn':a.contrast==='low'?'Soft Autumn':a.contrast==='high'?'Clear Spring':'Warm Autumn'}
-  else{season=d<=.5?'Light Summer':d>=1.5?(a.contrast==='high'?'Clear Winter':'Deep Winter'):a.contrast==='low'?'Soft Summer':a.contrast==='high'?'Cool Winter':'Cool Summer'}
-  return makeProfile(season,undertone,a.skin,a.concerns||[],'From the color quiz');
+
+/* ================= Views ================= */
+function stylistCard(s){
+  const p=priceOf(s);
+  return `<button class="stylist" data-stylist="${s.id}" aria-label="View ${esc(s.name)}">
+    <div class="portrait">${face(s,true)}<span class="badge ${s.verified?'v':''}">${s.verified?`<span class="vcheck">✓</span>$${p}`:'Free'}</span></div>
+    <div class="stylist-info"><div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div><h3>${esc(s.name)}</h3>
+      <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${tierOf(s)}</span></div></div></button>`;
 }
+const VIEWS={
+  browse(){
+    const inCat=db.stylists.filter(s=>state.cat==='all'||svc(s).includes(state.cat));
+    const list=inCat.filter(s=>state.filter==='All'||(state.filter==='Free'?!s.verified:s.verified));
+    const free=db.stylists.filter(s=>!s.verified).length;
+    return `<section class="hero"><div>
+        <div class="eyebrow">Outfits · Makeup · Skincare · Nails · Hair</div>
+        <h1>Send the look.<br><em>Get the verdict.</em></h1>
+        <p class="lede">Tap the + button, add a photo, say what has to stay and what you are going for. A stylist looks it over, and the community can rate it too.</p>
+        <div class="ctas"><button class="btn" data-compose="outfit">Rate my outfit</button><button class="btn line" data-quiz="1">Find my colors</button></div>
+        <div class="facts-row num"><div><b>${db.stylists.length}</b><span>stylists & pros</span></div><div><b>${free}</b><span>review for free</span></div><div><b>${db.posts.length}</b><span>looks in the community</span></div></div></div>
+      <article class="sample" aria-label="Example review"><div class="sample-art">${art('outfit',['Navy','Optic white','Camel','Chocolate'],'Example review')}</div>
+        <div class="sample-body"><div class="verdict"><div class="score num">8<small>/10</small></div><div style="text-align:right"><span class="eyebrow">Color season</span><div style="font-family:var(--display);font-style:italic;font-size:22px">Deep Winter</div></div></div>
+        <p class="quote">“Keep the trousers. Trade the beige for navy and you’ll look rested instead of washed out.”</p>${chips(['Navy','Plum','Optic white','Pine'])}
+        <div class="eyebrow">Maya Okafor · Verified stylist</div></div></article></section>
+    <div class="section-head" id="roster"><div><h2>Choose your <em>${({skin:'skincare pro',makeup:'makeup artist',nails:'nail artist',hair:'hairstylist'})[state.cat]||'stylist'}</em></h2><p>Community stylists review for free. Verified pros have been checked by our team.</p></div><span class="muted">${list.length} available</span></div>
+    <div class="cats" role="group" aria-label="Type of review"><button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
+      ${Object.entries(KINDS).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
+    <div class="filters" role="group" aria-label="Filter">${['All','Verified','Free'].map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
+    <div class="roster">${list.map(stylistCard).join('')||'<div class="empty"><h3>No one here yet</h3>Try another filter.</div>'}</div>`;
+  },
+  community(){
+    const posts=db.posts.filter(p=>state.comCat==='all'||p.kind===state.comCat).sort((a,b)=>b.created-a.created);
+    return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Real people, honest ratings. Rate a look out of ten and leave a kind, useful comment.</p></div><button class="btn" id="plus2">Post a look</button></div>
+      <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...Object.entries(KINDS).map(([k,v])=>[k,v.label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
+      <div class="feed">${posts.map(postCard).join('')||'<div class="empty"><h3>No looks yet</h3>Be the first to post one.</div>'}</div>`;
+  },
+  mine(){
+    const list=db.requests.filter(r=>r.clientId==='you').sort((a,b)=>b.created-a.created);
+    return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>
+      <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
+        return `<article class="req"><div class="req-media">${media(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
+        <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div><h3>${esc(s?.name)}</h3>
+          <div class="meta"><span>${tierOf(s)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span><span class="dot">${ago(r.created)}</span></div></div>
+          <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'In review'}</span></div>
+          <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
+          ${f?feedbackBlock(f,r.kind):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
+          <div class="row-actions">${r.postId?`<span class="hint" style="flex:1">Posted to the community</span><button class="btn sm line" data-go="community">See ratings</button>`
+            :`<span class="hint" style="flex:1">Want more opinions?</span><button class="btn sm soft" data-share="${r.id}">Post to community</button>`}
+            ${f&&(f.season||f.skinType||f.lips?.length||f.nailShades?.length||f.faceShape)?`<button class="btn sm line" data-adopt="${r.id}">Save to my colors</button>`:''}</div>
+        </div></article>`}).join('')||'<div class="empty"><h3>No reviews yet</h3>Tap the + button to send your first look.</div>'}</div>`;
+  },
+  me(){
+    const u=me(),P=db.profile;
+    const unlocked=Math.min(STICKERS.length,3+2*(u.submissions||0));
+    const head=`<section class="prof-head"><button class="prof-avatar" id="avatar-btn" aria-label="Change profile photo">${face(u)}</button>
+      <div><div class="eyebrow">My profile</div><h1>${esc(u.name)}</h1>
+        <div style="margin:10px 0 8px">${tags(u.keywords)}</div>
+        <span class="fav"><i></i>Favorite color · sets the app’s accent</span></div>
+      <div class="edit"><button class="btn line" id="edit-me">Edit profile</button></div>
+      <input type="file" id="avatar-input" accept="image/*" hidden></section>
+      <div class="tabs" role="tablist"><button role="tab" data-tab="board" aria-selected="${state.meTab==='board'}">Mood board</button><button role="tab" data-tab="colors" aria-selected="${state.meTab==='colors'}">My colors</button></div>`;
+    if(state.meTab==='colors')return head+colorsTab(P);
+    return head+`<div class="board-tools"><p class="muted" style="margin:0">Looks you love and styles you have done. ${state.placing?'<b style="color:var(--accent-text)">Tap the board to place your sticker.</b>':'Drag stickers to move them, double-click to remove.'}</p><button class="btn" id="add-board">Add to board</button></div>
+      <div class="tray" aria-label="Your stickers"><span class="hint" style="margin-right:6px">Stickers ${unlocked}/${STICKERS.length}</span>
+        ${STICKERS.map((e,i)=>i<unlocked?`<button data-sticker="${e}" aria-pressed="${state.placing===e}" aria-label="Place sticker">${e}</button>`:`<button class="locked" disabled aria-label="Locked sticker">${e}</button>`).join('')}
+        <span class="hint" style="margin-left:auto">Earn 2 more with every look you submit</span></div>
+      <div class="board ${state.placing?'placing':''}" id="board">
+        ${u.board.map((t,i)=>`<div class="tile ${i%3===1?'sq':''}">${t.photo?`<img src="${t.photo}" alt="Mood board photo">`:art(PRESETS[t.preset]?.[0]||'outfit',PRESETS[t.preset]?.[1],t.preset)}<button class="x" data-unpin="${t.id}" aria-label="Remove from board">×</button></div>`).join('')}
+        ${(u.stickers||[]).map(k=>`<span class="stk" data-stk="${k.id}" style="left:${k.x}%;top:${k.y}%">${k.e}</span>`).join('')}
+      </div>`;
+  },
+  feed(){
+    const mine=stylist(db.me.stylistId);
+    const q=db.requests.filter(r=>r.stylistId===mine.id&&r.status==='pending').sort((a,b)=>a.created-b.created);
+    if(!q.length)return `<div class="desk-top"><h1>Review <em>feed</em></h1></div><div class="empty"><h3>All caught up</h3>New looks from clients appear here. <div style="margin-top:16px"><button class="btn line" data-go="community">Browse the community</button></div></div>`;
+    state.qi=Math.max(0,Math.min(state.qi,q.length-1));const r=q[state.qi];
+    return `<div class="desk-top"><div><div class="eyebrow">${q.length} waiting</div><h1>Review <em>feed</em></h1></div>
+      <div class="pager"><button id="q-prev" ${state.qi===0?'disabled':''} aria-label="Previous">←</button><span class="num">${state.qi+1} of ${q.length}</span><button id="q-next" ${state.qi>=q.length-1?'disabled':''} aria-label="Next">→</button></div></div>
+      <div class="progress"><span style="width:${(state.qi+1)/q.length*100}%"></span></div>
+      <div class="desk" data-rid="${r.id}">
+        <div class="desk-left"><div class="zoomer" id="zoomer" tabindex="0" aria-label="Photo, tap to zoom">${media(r,r.kind,r.art||r.profile?.wear,'Client photo')}<span class="zoom-hint">Tap to zoom</span></div>
+          <div class="client-box"><div class="who"><div class="avatar">${face(personOf(r.clientId))}</div><div><b>${esc(r.client)}</b><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
+            <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
+            ${r.profile?profileMini(r.profile,'Client’s'):'<p class="hint" style="margin:0">No color profile yet.</p>'}</div></div>
+        <div class="desk-form"><h3 style="font-size:24px;margin-bottom:16px">Your review</h3>${r.profile?'<p class="hint" style="margin:-8px 0 16px">Pre-filled from the client’s color profile. Change anything you disagree with.</p>':''}
+          ${kindFields(r.kind)}
+          <div class="field"><span class="label">Product links (optional)</span>${[0,1].map(i=>`<div class="cols" style="margin-bottom:8px"><input id="pn${i}" placeholder="Item name" aria-label="Item ${i+1} name"><input id="pu${i}" placeholder="https://" aria-label="Item ${i+1} link"></div>`).join('')}</div>
+          <div class="desk-actions"><button class="btn line" id="q-skip">Skip for now</button><button class="btn" id="q-send">Send & next →</button></div></div>
+      </div>`;
+  },
+  studio(){
+    const s=stylist(db.me.stylistId);const list=db.requests.filter(r=>r.stylistId===s.id);
+    const pending=list.filter(r=>r.status==='pending').length,done=list.filter(r=>r.status==='done');
+    const earned=done.reduce((a,r)=>a+(r.amount||0),0)*.8;const app=db.applications.find(a=>a.stylistId===s.id&&a.status==='pending');
+    return `<div class="section-head"><div><div class="eyebrow">Studio</div><h2>Welcome back, <em>${esc(s.name.split(' ')[0])}</em></h2></div><button class="btn" data-go="feed">Open review feed${pending?` · ${pending}`:''}</button></div>
+      <div class="stats num"><div class="stat"><b>${pending}</b><span>waiting for you</span></div><div class="stat"><b>${done.length}</b><span>reviews sent here</span></div>
+        <div class="stat"><b>★ ${s.rating||'–'}</b><span>${s.reviews} ratings</span></div><div class="stat"><b>$${earned.toFixed(0)}</b><span>you earned (80%)</span></div></div>
+      <div class="section-head" style="padding-top:8px"><div><h2 style="font-size:30px">Your <em>tier</em></h2><p>${s.verified?'You are verified. Your price is set by your tier, so clients always know what to expect.':app?'Your verification is being reviewed. We usually reply within 3 days.':'You review for free as a community stylist. Get verified to start earning.'}</p></div>
+        ${!s.verified&&!app?'<button class="btn soft" id="apply-v">Apply for verification</button>':''}</div>
+      ${tiersBlock(s)}
+      <div class="section-head" style="padding-top:36px"><h2 style="font-size:30px">Recently <em>sent</em></h2></div>
+      <div class="queue">${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${esc(r.client)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p></div><span class="pill done">${r.feedback?.score?r.feedback.score+'/10':'Sent'}</span></div>`).join('')||'<p class="muted">Nothing sent yet.</p>'}</div>`;
+  },
+  sprofile(){
+    const s=stylist(db.me.stylistId);
+    return `<section class="prof-head"><div class="prof-avatar" style="cursor:default">${face(s)}</div><div><div class="eyebrow">${tierOf(s)} stylist</div><h1>${esc(s.name)} ${s.verified?'<span class="vcheck" style="width:22px;height:22px;font-size:12px">✓</span>':''}</h1>
+      <p class="muted" style="margin:6px 0 10px">${esc(s.line||s.title)}</p>${tags(s.specialties)}</div><div class="edit"></div></section>
+      <div class="formcard" style="max-width:720px">${stylistForm(s)}<div class="actions"><button class="btn" id="save-stylist">Save profile</button></div></div>`;
+  },
+  join(){
+    return `<div class="section-head"><div><div class="eyebrow">Become a stylist</div><h2>Share your eye. <em>Get paid when you’re verified.</em></h2><p>Anyone can join and give free reviews. Build your ratings, then apply to get verified and start earning.</p></div></div>
+      ${tiersBlock(null)}
+      <div class="formcard" style="max-width:720px;margin-top:24px">${stylistForm({name:'',services:[],specialties:[],line:''})}
+        <div class="actions"><button class="btn" id="create-stylist">Create my stylist profile</button></div></div>`;
+  },
+  admin(){
+    const apps=db.applications.slice().sort((a,b)=>(a.status!=='pending')-(b.status!=='pending')||b.created-a.created);
+    return `<div class="section-head"><div><div class="eyebrow">Admin</div><h2>Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
+      <div class="list">${apps.map(a=>{const s=stylist(a.stylistId);return `<div class="app-card"><div class="avatar" style="width:72px;height:72px">${face(s)}</div>
+        <div><h3 style="font-size:24px">${esc(s?.name)}</h3><div class="meta"><span>${svc(s).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s.rating} (${s.reviews})</span></div>
+          <p style="margin:8px 0 4px">${esc(a.note)}</p><span class="hint">${esc(a.link)}</span>
+          <div class="portfolio">${a.portfolio.map(p=>`<div>${typeof p==='string'?`<img src="${p}" alt="Portfolio photo">`:art(p[0],p[1])}</div>`).join('')}</div></div>
+        <div class="actions" style="margin:0">${a.status==='pending'?`<button class="btn line sm" data-decline="${a.id}">Decline</button><button class="btn sm" data-approve="${a.id}">Approve</button>`:`<span class="pill ${a.status==='approved'?'done':'pending'}">${a.status}</span>`}</div></div>`}).join('')||'<div class="empty"><h3>No requests</h3></div>'}</div>`;
+  }
+};
+function colorsTab(P){
+  if(!P)return `<div class="empty"><h3>No color profile yet</h3>Take the two-minute quiz to find your season, undertone and best shades.<div style="margin-top:16px"><button class="btn" data-quiz="1">Take the quiz</button></div></div>`;
+  const sec=(t,rows)=>`<div class="pp-sec"><h3>${t}</h3><div class="pp-rows">${rows}</div></div>`,row=(l,c)=>c?`<div><h4 class="h4">${l}</h4>${c}</div>`:'';
+  return `<div class="passport"><div class="pp-side"><div class="stripes">${stripes(P.wear.slice(0,5))}</div>
+      <div class="pp-side-body"><div><div class="eyebrow">Color season</div><div class="pp-season" style="margin-top:6px">${esc(P.season)}</div></div>
+      <div class="facts"><div><h4 class="h4" style="margin:0">Undertone</h4><b>${esc(P.undertone)}</b></div><div><h4 class="h4" style="margin:0">Skin</h4><b>${esc(P.skinType||'–')}</b></div></div>
+      <span class="source ${P.confirmed?'ok':''}">${P.confirmed?'✓ ':''}${esc(P.source)}</span><p class="hint" style="margin:0">Sent with every review request.</p>
+      <div class="ctas"><button class="btn sm line" data-quiz="1">Retake quiz</button><button class="btn sm" id="ep-open">Edit</button></div></div></div>
+    <div class="pp-main">${sec('Clothes',row('Wear more',P.wear?.length&&chips(P.wear))+row('Keep away from your face',P.avoid?.length&&chips(P.avoid,'avoid')))}
+      ${sec('Makeup',row('Lips',P.lips?.length&&chips(P.lips))+row('Cheeks',P.cheeks?.length&&chips(P.cheeks))+row('Eyes',P.eyes?.length&&chips(P.eyes)))}
+      ${sec('Nails',row('Polish shades',P.nails?.length&&chips(P.nails)))}
+      ${sec('Hair',row('Face shape · texture',`<div>${esc(P.faceShape||'Not set')} · ${esc(P.hairType||'Not set')}</div>`)+row('Hair colors',P.hairColors?.length&&chips(P.hairColors)))}
+      ${sec('Skin',row('Type',`<div>${esc(P.skinType||'Not set')}</div>`)+row('Focus on',P.concerns?.length?tags(P.concerns):'<div class="muted">Nothing selected</div>'))}</div></div>`;
+}
+function tiersBlock(s){
+  const t=s?tierOf(s):null;
+  return `<div class="tiers"><div class="tier ${t==='Community'?'on':''}"><h3>Community stylist</h3><b>Free</b><p>Anyone can join. Give free reviews, build ratings and a following.</p></div>
+    <div class="tier ${t==='Verified'?'on':''}"><h3>Verified</h3><b>$10<small style="font-size:14px;color:var(--muted)"> / review</small></b><p>Approved after we check your portfolio and experience. You keep 80%.</p></div>
+    <div class="tier ${t==='Top verified'?'on':''}"><h3>Top verified</h3><b>$15<small style="font-size:14px;color:var(--muted)"> / review</small></b><p>Verified, with 4.8★ or higher across 50+ reviews. Unlocks automatically.</p></div></div>`;
+}
+function stylistForm(s){
+  return `<div class="field"><label for="sf-name">Your name</label><input id="sf-name" value="${esc(s.name)}" autocomplete="name"></div>
+    <div class="field"><span class="label">What do you review?</span>${toggles('sf-services',Object.values(KINDS).map(k=>k.label),svc(s).map(k=>KINDS[k].label).filter(()=>s.name))}</div>
+    <div class="field"><span class="label">Your specialties · pick up to 3</span>${toggles('sf-spec',SPECIALTIES,s.specialties)}</div>
+    <div class="field"><label for="sf-line">Your style in one line</label><input id="sf-line" maxlength="90" value="${esc(s.line)}" placeholder="I make basics look expensive."></div>`;
+}
+function readStylistForm(){
+  const v={name:$('#sf-name').value.trim(),line:$('#sf-line').value.trim(),specialties:picked('sf-spec'),
+    services:Object.keys(KINDS).filter(k=>picked('sf-services').includes(KINDS[k].label))};
+  if(!v.name){toast('Add your name');$('#sf-name').focus();return null}
+  if(!v.services.length){toast('Choose at least one thing you review');return null}
+  if(v.specialties.length>3){toast('Pick up to 3 specialties');return null}
+  v.title=v.specialties[0]||KINDS[v.services[0]].label+' reviews';return v;
+}
+
+/* ================= Community posts ================= */
+function postCard(p){
+  const a=personOf(p.authorId),vals=Object.values(p.ratings||{}),avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:0;
+  const mineR=p.ratings?.you;const cm=p.comments||[];
+  return `<article class="post" id="post-${p.id}"><div class="post-media">${media(p,p.kind,p.art,'')}${vals.length?`<span class="avgtag num"><b>${avg.toFixed(1)}</b>${vals.length} rating${vals.length>1?'s':''}</span>`:''}</div>
+    <div class="post-body"><div class="who"><div class="avatar">${face(a)}</div><div style="flex:1"><b>${esc(p.authorId==='you'?'You':a.name)}</b><div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
+      <p style="margin:0">${esc(p.caption)}</p>
+      ${p.authorId==='you'?'<span class="hint">You can’t rate your own look.</span>':`<div><span class="hint">${mineR?'Your rating':'Rate this look'}</span><div class="rate" role="group" aria-label="Rate out of 10">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-rate="${p.id}" data-n="${n}" aria-pressed="${mineR===n}">${n}</button>`).join('')}</div></div>`}
+      <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by==='you'?'You':w.name)}</b>${esc(c.text)}</div>`}).join('')}
+        ${cm.length>2?`<button class="textlink" data-allc="${p.id}">View all ${cm.length} comments</button>`:''}</div>
+      <form class="cmt-form" data-cform="${p.id}"><input name="c" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200"><button class="btn sm" type="submit">Post</button></form>
+    </div></article>`;
+}
+function addComment(pid,text){
+  const p=db.posts.find(x=>x.id===pid);if(!text.trim())return;
+  const by=state.role==='stylist'?db.me.stylistId:'you';
+  p.comments=[...(p.comments||[]),{by,text:text.trim(),pro:state.role==='stylist'}];save();
+}
+
+/* ================= Composer (+ button) ================= */
+function openComposer(opts={}){
+  state.compose={kind:opts.kind||'outfit',stylistId:opts.stylistId||'auto',photo:null,share:true,aesthetic:''};
+  renderComposer();
+}
+function renderComposer(){
+  const c=state.compose,pros=db.stylists.filter(s=>svc(s).includes(c.kind)).sort((a,b)=>b.verified-a.verified||b.rating-a.rating);
+  if(c.stylistId!=='auto'&&!pros.some(p=>p.id===c.stylistId))c.stylistId='auto';
+  const chosen=c.stylistId==='auto'?null:stylist(c.stylistId);
+  const keep=id=>$(id)?.value??'';const vals={q:keep('#cp-q'),keep:keep('#cp-keep'),swap:keep('#cp-swap'),aes:keep('#cp-aes')||c.aesthetic};
+  openSheet(`<div class="eyebrow">New request</div><h2 style="margin:6px 0 18px">${KINDS[c.kind].ask}</h2>
+    ${c.photo?`<div class="preview" style="margin-bottom:16px"><img src="${c.photo}" alt="Your photo"><button class="btn line sm" id="cp-clear">Change photo</button></div>`
+      :`<div class="pick-photo" style="margin-bottom:6px"><label for="cp-roll">${ICON.gallery}Camera roll<input type="file" id="cp-roll" accept="image/*"></label><label for="cp-cam">${ICON.camera}Take a photo<input type="file" id="cp-cam" accept="image/*" capture="environment"></label></div><p class="hint" style="margin:0 0 16px">Tip: ${KINDS[c.kind].photo.toLowerCase()}.</p>`}
+    <div class="field"><span class="label">What should they look at?</span><div class="chips">${Object.entries(KINDS).map(([k,v])=>`<button type="button" class="chip" data-ckind="${k}" aria-pressed="${c.kind===k}">${v.label}</button>`).join('')}</div></div>
+    <div class="field"><label for="cp-q">Your question</label><textarea id="cp-q" placeholder="Does this work for a wedding? What would you change?">${esc(vals.q)}</textarea></div>
+    <div class="cols"><div class="field"><label for="cp-keep">Must stay</label><input id="cp-keep" value="${esc(vals.keep)}" placeholder="The vintage jacket"></div>
+      <div class="field"><label for="cp-swap">Willing to swap</label><input id="cp-swap" value="${esc(vals.swap)}" placeholder="Shoes, bag"></div></div>
+    <div class="field"><label for="cp-aes">The aesthetic I’m going for</label><input id="cp-aes" value="${esc(vals.aes)}" placeholder="Quiet luxury, but warmer" maxlength="60">
+      <div class="chips" style="margin-top:6px">${AESTHETICS.slice(0,8).map(a=>`<button type="button" class="chip" data-aes="${a}">${a}</button>`).join('')}</div></div>
+    <div class="field"><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great ${KINDS[c.kind].label.toLowerCase()} pro</option>
+      ${pros.map(s=>`<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${s.verified?'Verified $'+priceOf(s):'Free'} · ★ ${s.rating}</option>`).join('')}</select>
+      <span class="hint">${chosen&&priceOf(chosen)?`$${priceOf(chosen)} per review. Payment is simulated in this prototype.`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
+    ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
+    <label class="switch"><span><b>Also post to the community</b><span class="hint">Let other people rate it out of 10 and comment</span></span><input type="checkbox" id="cp-share" ${c.share?'checked':''}></label>
+    <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send">Send for review</button></div>`);
+  const onFile=async e=>{const f=e.target.files?.[0];if(!f)return;state.compose.photo=await readPhoto(f,1000);if(!state.compose.photo){toast('That photo could not be read. Try another one.');return}snapshotCompose();renderComposer()};
+  $('#cp-roll')&&($('#cp-roll').onchange=onFile);$('#cp-cam')&&($('#cp-cam').onchange=onFile);
+  $('#cp-clear')&&($('#cp-clear').onclick=()=>{snapshotCompose();state.compose.photo=null;renderComposer()});
+  $('#cp-pro').onchange=e=>{snapshotCompose();state.compose.stylistId=e.target.value;renderComposer()};
+  $('#cp-cancel').onclick=closeSheet;$('#cp-send').onclick=submitCompose;
+  if(vals.q){$('#cp-q').value=vals.q}
+}
+function snapshotCompose(){const c=state.compose;if(!$('#cp-q'))return;c._q=$('#cp-q').value;c._keep=$('#cp-keep').value;c._swap=$('#cp-swap').value;c.aesthetic=$('#cp-aes').value;c.share=$('#cp-share').checked;
+  setTimeout(()=>{if($('#cp-q')){$('#cp-q').value=c._q||'';$('#cp-keep').value=c._keep||'';$('#cp-swap').value=c._swap||''}},0)}
+function submitCompose(){
+  const c=state.compose,q=$('#cp-q').value.trim();
+  if(!c.photo){toast('Add a photo first');return}
+  if(!q){toast('Write a short question for your stylist');$('#cp-q').focus();return}
+  let s=c.stylistId==='auto'?null:stylist(c.stylistId);
+  if(!s){const pool=db.stylists.filter(x=>svc(x).includes(c.kind));const tt=t=>parseInt(t.turnaround)||48;s=(pool.filter(x=>!x.verified).sort((a,b)=>tt(a)-tt(b)||b.rating-a.rating)[0])||pool.sort((a,b)=>tt(a)-tt(b))[0]}
+  const id='r'+Date.now(),u=me();
+  const r={id,kind:c.kind,stylistId:s.id,clientId:'you',client:u.name,question:q,keep:$('#cp-keep').value.trim(),swap:$('#cp-swap').value.trim(),aesthetic:$('#cp-aes').value.trim(),photo:c.photo,profile:db.profile?structuredClone(db.profile):null,status:'pending',amount:priceOf(s),created:Date.now()};
+  if($('#cp-share').checked){const pid='p'+Date.now();db.posts.push({id:pid,authorId:'you',kind:c.kind,caption:q,aesthetic:r.aesthetic,photo:c.photo,created:Date.now(),ratings:{},comments:[],requestId:id});r.postId=pid}
+  db.requests.push(r);const before=Math.min(STICKERS.length,3+2*(u.submissions||0));u.submissions=(u.submissions||0)+1;
+  save();closeSheet();const gained=Math.min(STICKERS.length,3+2*u.submissions)-before;
+  toast(`Sent to ${s.name}.${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go('mine');
+}
+
+/* ================= Review form for stylists ================= */
+function kindFields(k){
+  const score=`<div class="field"><label for="fb-score">Score · <span id="sc-v" class="num">7</span> / 10</label><input type="range" id="fb-score" min="1" max="10" value="7"></div>`;
+  const sel=(id,label,opts,blank)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${blank?`<option value="">${blank}</option>`:''}${opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+  const verdict=(ph,tl,tph)=>`<div class="field"><label for="fb-notes">Your comments</label><textarea id="fb-notes" placeholder="${ph}"></textarea></div><div class="field"><label for="fb-try">${tl}</label><textarea id="fb-try" placeholder="${tph}"></textarea></div>`;
+  if(k==='skin')return `<div class="cols">${sel('fb-type','Skin type',SKIN_TYPES)}<div></div></div><div class="field"><span class="label">Concerns to focus on</span>${toggles('fb-concerns',CONCERNS)}</div>
+    ${verdict('What you see and what is likely causing it','Also try','Habits, timelines, what to stop using')}
+    <div class="cols"><div class="field"><label for="fb-am">Morning routine</label><textarea id="fb-am" placeholder="One step per line"></textarea></div><div class="field"><label for="fb-pm">Evening routine</label><textarea id="fb-pm" placeholder="One step per line"></textarea></div></div>`;
+  if(k==='makeup')return `${score}<div class="cols">${sel('fb-under','Undertone',UNDERTONES)}${sel('fb-season','Color season',SEASONS,'Not assessed')}</div>
+    <div class="field"><span class="label">Lips</span>${swatchPicker('fb-lips',[],SHADES)}</div><div class="field"><span class="label">Cheeks</span>${swatchPicker('fb-cheeks',[],SHADES)}</div>
+    <div class="field"><span class="label">Eyes</span>${swatchPicker('fb-eyes',[],SHADES)}</div><div class="field"><span class="label">Skip these shades</span>${swatchPicker('fb-avoid',[],SHADES)}</div>
+    ${verdict('What is working and what is not','Try instead','Shade swaps, placement, technique')}`;
+  if(k==='nails')return `${score}<div class="cols">${sel('fb-shape','Nail shape',NAIL_SHAPES)}${sel('fb-length','Length',NAIL_LENGTHS)}</div>
+    <div class="field"><span class="label">Shades</span>${swatchPicker('fb-polish',[],POLISH)}</div><div class="field"><span class="label">Finish</span>${toggles('fb-finish',FINISHES)}</div>
+    ${verdict('What suits their hands and what does not','Try instead','Shape, length, shade or design ideas')}`;
+  if(k==='hair')return `${score}<div class="cols">${sel('fb-face','Face shape',FACE_SHAPES)}${sel('fb-htype','Hair texture',HAIR_TYPES)}</div>
+    <div class="field"><span class="label">Cuts to ask for</span>${toggles('fb-cuts',CUTS)}</div><div class="field"><span class="label">Hair colors</span>${swatchPicker('fb-haircol',[],HAIRC)}</div>
+    ${verdict('What is working and what is not','Try instead','What to ask the salon or barber for')}`;
+  return `${score}${sel('fb-season','Color season',SEASONS,'Not assessed')}
+    <div class="field"><span class="label">Wear more</span>${swatchPicker('fb-palette',[])}</div><div class="field"><span class="label">Keep away from the face</span>${swatchPicker('fb-avoid',[])}</div>
+    ${verdict('What is working and what is not. Mention the pieces they want to keep.','Try instead','Specific swaps for the pieces they are willing to change')}`;
+}
+function prefillDesk(r){
+  const sc=$('#fb-score');if(sc)sc.oninput=e=>$('#sc-v').textContent=e.target.value;
+  const P=r.profile;if(!P)return;
+  const setv=(id,v)=>{const el=$(id);if(el&&v)el.value=v};
+  setv('#fb-season',P.season);setv('#fb-under',P.undertone);setv('#fb-type',P.skinType);setv('#fb-face',P.faceShape);setv('#fb-htype',P.hairType);
+  const press=(id,list)=>(list||[]).forEach(n=>{const b=document.querySelector(`#${id} [data-sw="${CSS.escape(n)}"]`);if(b)b.setAttribute('aria-pressed','true')});
+  press('fb-palette',P.wear);if(r.kind==='outfit')press('fb-avoid',P.avoid);press('fb-lips',P.lips);press('fb-cheeks',P.cheeks);press('fb-eyes',P.eyes);press('fb-concerns',P.concerns);press('fb-polish',P.nails);press('fb-haircol',P.hairColors);
+}
+function sendReview(rid){
+  const notes=$('#fb-notes').value.trim(),tryInstead=$('#fb-try').value.trim();
+  if(!notes){toast('Add your comments first');$('#fb-notes').focus();return}
+  if(!tryInstead){toast('Add at least one suggestion');$('#fb-try').focus();return}
+  const products=[0,1].map(i=>({name:$('#pn'+i).value.trim(),url:$('#pu'+i).value.trim()})).filter(x=>x.name&&/^https?:\/\/\S+$/i.test(x.url))
+    .map(x=>{try{return {...x,store:new URL(x.url).hostname.replace(/^www\./,'')}}catch(e){return null}}).filter(Boolean);
+  const r=db.requests.find(x=>x.id===rid),k=r.kind,val=id=>$(id)?.value,score=+val('#fb-score');
+  r.feedback=k==='skin'?{skinType:val('#fb-type'),concerns:picked('fb-concerns'),am:val('#fb-am').trim(),pm:val('#fb-pm').trim(),notes,tryInstead,products}
+    :k==='makeup'?{score,undertone:val('#fb-under'),season:val('#fb-season'),lips:picked('fb-lips'),cheeks:picked('fb-cheeks'),eyes:picked('fb-eyes'),avoid:picked('fb-avoid'),notes,tryInstead,products}
+    :k==='nails'?{score,shape:val('#fb-shape'),length:val('#fb-length'),nailShades:picked('fb-polish'),finishes:picked('fb-finish'),notes,tryInstead,products}
+    :k==='hair'?{score,faceShape:val('#fb-face'),hairType:val('#fb-htype'),cuts:picked('fb-cuts'),hairColors:picked('fb-haircol'),notes,tryInstead,products}
+    :{score,season:val('#fb-season'),palette:picked('fb-palette'),avoid:picked('fb-avoid'),notes,tryInstead,products};
+  r.status='done';save();toast(`Review sent to ${r.client}`);render();window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ================= Color quiz + profile editing ================= */
 const QUIZ=[
   ['veins','Look at the veins on your inner wrist in daylight. What color are they?',[['cool','Blue or purple'],['warm','Green'],['olive','Blue-green'],['mixed','Hard to tell']]],
   ['metal','Which jewelry looks better against your skin?',[['silver','Silver'],['gold','Gold'],['both','Both look fine']]],
   ['white','Hold a bright white and a cream top to your face. Which looks better?',[['optic','Bright white'],['cream','Cream'],['both','About the same']]],
   ['hair','Your natural hair color',[['light','Blonde or light'],['medium','Light to medium brown, or red'],['dark','Dark brown or black']]],
   ['eyes','Your eye color',[['light','Blue, green or grey'],['medium','Hazel or light brown'],['dark','Dark brown or black']]],
-  ['contrast','How strong is the contrast between your hair, skin and eyes?',[['low','Soft, everything blends'],['medium','Somewhere in between'],['high','Striking, very different']]],
-  ['skin','A few hours after washing your face, your skin feels',[['Dry','Tight or flaky'],['Oily','Shiny all over'],['Combination','Shiny T-zone, dry cheeks'],['Normal','Comfortable'],['Sensitive','Red or irritated easily']]]
+  ['contrast','How strong is the contrast between your hair, skin and eyes?',[['low','Soft, everything blends'],['medium','In between'],['high','Striking']]],
+  ['face','Pull your hair back. Your face shape is closest to',FACE_SHAPES.map(f=>[f,f])],
+  ['hairtype','Your natural hair texture',HAIR_TYPES.map(h=>[h,h])],
+  ['skin','A few hours after washing your face, your skin feels',[['Dry','Tight or flaky'],['Oily','Shiny all over'],['Combination','Shiny T-zone, dry cheeks'],['Normal','Comfortable'],['Sensitive','Easily irritated']]]
 ];
 let quizAns={};
+function computeProfile(a){
+  const w={cool:-1.5,warm:1.5,mixed:0,olive:.5}[a.veins]+{silver:-1,gold:1,both:0}[a.metal]+{optic:-1,cream:1,both:0}[a.white];
+  const undertone=a.veins==='olive'?'Olive':w>=1?'Warm':w<=-1?'Cool':'Neutral',warm=undertone==='Warm'||(undertone!=='Cool'&&w>0);
+  const d=({light:0,medium:1,dark:2}[a.hair]+{light:0,medium:1,dark:2}[a.eyes])/2;let season;
+  if(warm)season=d<=.5?(a.contrast==='high'?'Clear Spring':'Light Spring'):d>=1.5?'Deep Autumn':a.contrast==='low'?'Soft Autumn':a.contrast==='high'?'Clear Spring':'Warm Autumn';
+  else season=d<=.5?'Light Summer':d>=1.5?(a.contrast==='high'?'Clear Winter':'Deep Winter'):a.contrast==='low'?'Soft Summer':a.contrast==='high'?'Cool Winter':'Cool Summer';
+  return makeProfile(season,undertone,a.skin,a.concerns||[],'From the color quiz',{faceShape:a.face,hairType:a.hairtype});
+}
 function openQuiz(){
   quizAns={};
-  openSheet(`<div class="eyebrow">Two-minute color quiz</div><h2 style="margin:8px 0 6px">Find your colors</h2>
-    <p class="muted" style="margin:0 0 8px">Answer in natural daylight with no makeup if you can. A stylist can confirm or adjust the result later.</p>
-    ${QUIZ.map(([k,q,opts],i)=>`<div class="quiz-q"><h3><span class="num-q">${i+1}.</span>${q}</h3><div class="chips">${opts.map(([v,l])=>`<button type="button" class="chip" style="padding-left:12px" data-qk="${k}" data-qv="${v}" aria-pressed="false">${l}</button>`).join('')}</div></div>`).join('')}
-    <div class="quiz-q"><h3><span class="num-q">${QUIZ.length+1}.</span>Anything you want help with? <span class="muted" style="font-weight:400">Optional</span></h3>${toggles('qz-concerns',CONCERNS)}</div>
-    <div id="quiz-result"></div>
-    <div class="actions" id="quiz-actions" style="margin-top:20px"><button class="btn line" id="qz-cancel">Cancel</button><button class="btn" id="qz-go">See my colors</button></div>`);
+  openSheet(`<div class="eyebrow">Two-minute color quiz</div><h2 style="margin:6px 0 6px">Find your colors</h2><p class="muted" style="margin:0 0 6px">Answer in daylight, with no makeup if you can. A stylist can confirm it later.</p>
+    ${QUIZ.map(([k,q,o],i)=>`<div class="quiz-q"><h3><span class="n">${i+1}.</span>${q}</h3><div class="chips">${o.map(([v,l])=>`<button type="button" class="chip" data-qk="${k}" data-qv="${v}" aria-pressed="false">${l}</button>`).join('')}</div></div>`).join('')}
+    <div class="quiz-q"><h3><span class="n">${QUIZ.length+1}.</span>Anything you want help with? <span class="muted" style="font-weight:400">Optional</span></h3>${toggles('qz-concerns',CONCERNS)}</div>
+    <div id="quiz-result"></div><div class="actions" id="quiz-actions" style="margin-top:20px"><button class="btn line" id="qz-cancel">Cancel</button><button class="btn" id="qz-go">See my colors</button></div>`);
   $('#qz-cancel').onclick=closeSheet;
   $('#qz-go').onclick=()=>{
-    const missing=QUIZ.filter(([k])=>!quizAns[k]);
-    if(missing.length){toast(`Answer ${missing.length} more question${missing.length>1?'s':''}`);return}
+    const miss=QUIZ.filter(([k])=>!quizAns[k]).length;if(miss){toast(`Answer ${miss} more question${miss>1?'s':''}`);return}
     const P=computeProfile({...quizAns,concerns:picked('qz-concerns')});
-    $('#quiz-result').innerHTML=`<div class="mini" style="margin-top:24px"><span class="eyebrow">Your result</span>
-      <div class="pp-season">${esc(P.season)}</div><div class="muted">${esc(P.undertone)} undertone · ${esc(P.skinType)} skin</div>
-      <div><h4 class="eyebrow" style="margin:8px 0 6px">Wear more</h4>${chips(P.wear)}</div>
-      <div><h4 class="eyebrow" style="margin:8px 0 6px">Lips</h4>${chips(P.lips)}</div></div>`;
-    $('#quiz-actions').innerHTML='<button class="btn line" id="qz-again">Change answers</button><button class="btn accent" id="qz-save">Save to my profile</button>';
-    $('#qz-again').onclick=()=>{$('#quiz-result').innerHTML='';openQuiz()};
+    $('#quiz-result').innerHTML=`<div class="mini" style="margin-top:22px"><span class="eyebrow">Your result</span><div class="pp-season">${esc(P.season)}</div><div class="muted">${esc(P.undertone)} undertone · ${esc(P.skinType)} skin · ${esc(P.faceShape)} face</div>
+      <div><h4 class="h4" style="margin-top:6px">Wear more</h4>${chips(P.wear)}</div><div><h4 class="h4" style="margin-top:6px">Lips & nails</h4>${chips([...P.lips,...P.nails.slice(0,2)])}</div></div>`;
+    $('#quiz-actions').innerHTML='<button class="btn line" id="qz-again">Change answers</button><button class="btn" id="qz-save">Save to my profile</button>';
+    $('#qz-again').onclick=openQuiz;
     $('#qz-save').onclick=()=>{db.profile=P;save();closeSheet();toast('Saved. Your colors now go with every request.');state.role='client';go('colors')};
     $('#quiz-result').scrollIntoView({behavior:'smooth'});
   };
 }
-function editProfile(){
+function editColors(){
   const P=db.profile||makeProfile('Cool Summer','Cool','Normal',[],'Edited by you');
-  openSheet(`<div class="eyebrow">My colors</div><h2 style="margin:8px 0 20px">Edit your profile</h2>
-    <div class="cols"><div class="field"><label for="ep-season">Color season</label><select id="ep-season">${SEASONS.map(x=>`<option ${x===P.season?'selected':''}>${x}</option>`).join('')}</select></div>
-    <div class="field"><label for="ep-under">Undertone</label><select id="ep-under">${UNDERTONES.map(x=>`<option ${x===P.undertone?'selected':''}>${x}</option>`).join('')}</select></div></div>
-    <div class="field"><span class="label">Clothes · wear more</span>${swatchPicker('ep-wear',P.wear)}</div>
-    <div class="field"><span class="label">Clothes · keep away from the face</span>${swatchPicker('ep-avoid',P.avoid)}</div>
-    <div class="field"><span class="label">Lips</span>${swatchPicker('ep-lips',P.lips,SHADES)}</div>
-    <div class="field"><span class="label">Cheeks</span>${swatchPicker('ep-cheeks',P.cheeks,SHADES)}</div>
-    <div class="field"><span class="label">Eyes</span>${swatchPicker('ep-eyes',P.eyes,SHADES)}</div>
-    <div class="cols"><div class="field"><label for="ep-skin">Skin type</label><select id="ep-skin">${SKIN_TYPES.map(x=>`<option ${x===P.skinType?'selected':''}>${x}</option>`).join('')}</select></div><div></div></div>
-    <div class="field"><span class="label">Skin concerns</span>${toggles('ep-concerns',CONCERNS,P.concerns||[])}</div>
-    <div class="actions"><button class="btn line" id="ep-cancel">Cancel</button><button class="btn" id="ep-save">Save profile</button></div>`);
+  const sel=(id,l,o,v)=>`<div class="field"><label for="${id}">${l}</label><select id="${id}"><option value="">Not set</option>${o.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select></div>`;
+  openSheet(`<div class="eyebrow">My colors</div><h2 style="margin:6px 0 18px">Edit your palette</h2>
+    <div class="cols">${sel('ep-season','Color season',SEASONS,P.season)}${sel('ep-under','Undertone',UNDERTONES,P.undertone)}</div>
+    <div class="field"><span class="label">Clothes · wear more</span>${swatchPicker('ep-wear',P.wear)}</div><div class="field"><span class="label">Clothes · keep away from the face</span>${swatchPicker('ep-avoid',P.avoid)}</div>
+    <div class="field"><span class="label">Lips</span>${swatchPicker('ep-lips',P.lips,SHADES)}</div><div class="field"><span class="label">Cheeks</span>${swatchPicker('ep-cheeks',P.cheeks,SHADES)}</div><div class="field"><span class="label">Eyes</span>${swatchPicker('ep-eyes',P.eyes,SHADES)}</div>
+    <div class="field"><span class="label">Nail polish</span>${swatchPicker('ep-nails',P.nails,POLISH)}</div>
+    <div class="cols">${sel('ep-face','Face shape',FACE_SHAPES,P.faceShape)}${sel('ep-htype','Hair texture',HAIR_TYPES,P.hairType)}</div>
+    <div class="field"><span class="label">Hair colors</span>${swatchPicker('ep-hair',P.hairColors,HAIRC)}</div>
+    <div class="cols">${sel('ep-skin','Skin type',SKIN_TYPES,P.skinType)}<div></div></div><div class="field"><span class="label">Skin concerns</span>${toggles('ep-concerns',CONCERNS,P.concerns)}</div>
+    <div class="actions"><button class="btn line" id="ep-cancel">Cancel</button><button class="btn" id="ep-save">Save</button></div>`);
   $('#ep-cancel').onclick=closeSheet;
-  $('#ep-save').onclick=()=>{
-    db.profile={season:$('#ep-season').value,undertone:$('#ep-under').value,skinType:$('#ep-skin').value,concerns:picked('ep-concerns'),
-      wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),source:'Edited by you',updated:Date.now()};
-    save();closeSheet();toast('Profile saved');render();
-  };
+  $('#ep-save').onclick=()=>{const v=id=>$(id).value||null;
+    db.profile={season:v('#ep-season')||P.season,undertone:v('#ep-under')||P.undertone,skinType:v('#ep-skin'),concerns:picked('ep-concerns'),wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),nails:picked('ep-nails'),hairColors:picked('ep-hair'),faceShape:v('#ep-face'),hairType:v('#ep-htype'),source:'Edited by you',updated:Date.now()};
+    save();closeSheet();toast('Palette saved');render()};
 }
 function adoptReview(rid){
   const r=db.requests.find(x=>x.id===rid),f=r.feedback,s=stylist(r.stylistId),P={...(db.profile||makeProfile(f.season||'Cool Summer','Neutral','Normal'))};
-  if(f.season)P.season=f.season; if(f.undertone)P.undertone=f.undertone;
-  if(f.palette?.length)P.wear=f.palette; if(f.avoid?.length&&kindOf(r)==='outfit')P.avoid=f.avoid;
-  ['lips','cheeks','eyes'].forEach(k=>{if(f[k]?.length)P[k]=f[k]});
-  if(f.skinType)P.skinType=f.skinType; if(f.concerns?.length)P.concerns=f.concerns;
-  P.source=`Confirmed by ${s.name}`;P.confirmed=true;P.updated=Date.now();
-  db.profile=P;save();toast('Your color profile is updated');render();
+  if(f.season)P.season=f.season;if(f.undertone)P.undertone=f.undertone;if(f.palette?.length)P.wear=f.palette;if(f.avoid?.length&&r.kind==='outfit')P.avoid=f.avoid;
+  ['lips','cheeks','eyes'].forEach(k=>{if(f[k]?.length)P[k]=f[k]});if(f.skinType)P.skinType=f.skinType;if(f.concerns?.length)P.concerns=f.concerns;
+  if(f.nailShades?.length)P.nails=f.nailShades;if(f.hairColors?.length)P.hairColors=f.hairColors;if(f.faceShape)P.faceShape=f.faceShape;if(f.hairType)P.hairType=f.hairType;
+  P.source=`Confirmed by ${s.name}`;P.confirmed=true;P.updated=Date.now();db.profile=P;save();toast('Saved to your colors');render();
 }
-function picksBlock(f){
-  return f.products?.length?`<div><h4>Shop the picks</h4><div class="picks">${f.products.map(p=>`<a class="pick" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer sponsored"><span>${esc(p.name)}</span><span class="pick-store">${esc(p.store)} ↗</span></a>`).join('')}</div><p class="disclose" style="margin-top:6px">Your stylist may earn a commission on purchases.</p></div>`:'';
+function editMe(){
+  const u=me();let fav=u.favColor||FAV_COLORS[0];
+  openSheet(`<div class="eyebrow">My profile</div><h2 style="margin:6px 0 18px">Edit profile</h2>
+    <div class="field"><label for="em-name">Name</label><input id="em-name" value="${esc(u.name)}" maxlength="40"></div>
+    <div class="field"><span class="label">Words that describe your style</span>${toggles('em-words',STYLE_WORDS,u.keywords)}
+      <div class="cmt-form" style="margin-top:8px"><input id="em-custom" placeholder="Add your own, like “all black”" maxlength="24"><button type="button" class="btn sm line" id="em-add">Add</button></div></div>
+    <div class="field"><span class="label">Favorite color</span><div class="swatch-row" id="em-fav">${FAV_COLORS.map(c=>`<button type="button" data-fav="${c}" style="background:${c}" aria-label="Choose ${c}" aria-pressed="${c===fav}"></button>`).join('')}
+      <input type="color" id="em-wheel" value="${fav}" aria-label="Pick any color"></div><span class="hint">Your color becomes the accent across the app, only for you.</span></div>
+    <div class="actions"><button class="btn line" id="em-cancel">Cancel</button><button class="btn" id="em-save">Save</button></div>`);
+  const pick=c=>{fav=c;applyTheme(c);document.querySelectorAll('#em-fav [data-fav]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.fav===c));$('#em-wheel').value=c};
+  document.querySelectorAll('#em-fav [data-fav]').forEach(b=>b.onclick=()=>pick(b.dataset.fav));$('#em-wheel').oninput=e=>pick(e.target.value);
+  $('#em-add').onclick=()=>{const v=$('#em-custom').value.trim();if(!v)return;const box=$('#em-words');const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.sw=v;b.setAttribute('aria-pressed','true');b.textContent=v;box.appendChild(b);$('#em-custom').value=''};
+  $('#em-cancel').onclick=()=>{applyTheme(u.favColor);closeSheet()};
+  $('#em-save').onclick=()=>{u.name=$('#em-name').value.trim()||u.name;u.keywords=picked('em-words').slice(0,8);u.favColor=fav;save();closeSheet();toast('Profile saved');render()};
 }
-function feedbackBlock(f,kind){
-  if(kind==='skin'){
-    const steps=t=>`<ol>${String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
-    return `<div class="fb">
-      <div class="fb-score"><div><h4>Skin type</h4><div class="score" style="font-size:34px;font-style:italic;font-weight:400">${esc(f.skinType||'–')}</div></div>
-        ${f.concerns?.length?`<div><h4>Focus on</h4><div class="chips">${f.concerns.map(c=>`<span class="chip" style="padding-left:10px">${esc(c)}</span>`).join('')}</div></div>`:''}</div>
-      <div class="fb-main">
-        <div><h4>The verdict</h4><p>${esc(f.notes)}</p></div>
-        ${(f.am||f.pm)?`<div class="routine"><div><h4>Morning</h4>${steps(f.am)}</div><div><h4>Evening</h4>${steps(f.pm)}</div></div>`:''}
-        <div><h4>Also try</h4><p>${esc(f.tryInstead)}</p></div>
-        ${picksBlock(f)}
-        <p class="note">General skincare guidance, not medical advice. See a dermatologist for persistent acne, rashes or changing moles.</p>
-      </div></div>`;
-  }
-  if(kind==='makeup'){
-    return `<div class="fb">
-      <div class="fb-score"><div class="score num">${f.score}<small>/10</small></div>
-        <div class="facts">${f.undertone?`<div><h4>Undertone</h4><b>${esc(f.undertone)}</b></div>`:''}${f.season?`<div><h4>Color season</h4><b>${esc(f.season)}</b></div>`:''}</div></div>
-      <div class="fb-main">
-        <div><h4>The verdict</h4><p>${esc(f.notes)}</p></div>
-        <div><h4>Try instead</h4><p>${esc(f.tryInstead)}</p></div>
-        ${f.lips?.length?`<div><h4>Lips</h4>${chips(f.lips)}</div>`:''}
-        ${f.cheeks?.length?`<div><h4>Cheeks</h4>${chips(f.cheeks)}</div>`:''}
-        ${f.eyes?.length?`<div><h4>Eyes</h4>${chips(f.eyes)}</div>`:''}
-        ${f.avoid?.length?`<div><h4>Skip these shades</h4>${chips(f.avoid,'avoid')}</div>`:''}
-        ${picksBlock(f)}
-      </div></div>`;
-  }
-  return `<div class="fb">
-    <div class="fb-score">
-      <div class="score num">${f.score}<small>/10</small></div>
-      ${f.season?`<div><h4>Color season</h4><div style="font-family:var(--display);font-style:italic;font-size:19px">${esc(f.season)}</div></div>`:''}
-    </div>
-    <div class="fb-main">
-      <div><h4>The verdict</h4><p>${esc(f.notes)}</p></div>
-      <div><h4>Try instead</h4><p>${esc(f.tryInstead)}</p></div>
-      ${f.palette?.length?`<div><h4>Wear more</h4>${chips(f.palette)}</div>`:''}
-      ${f.avoid?.length?`<div><h4>Keep away from your face</h4>${chips(f.avoid,'avoid')}</div>`:''}
-      ${picksBlock(f)}
-    </div></div>`;
+function addToBoard(){
+  const u=me();let chosen=new Set();
+  openSheet(`<div class="eyebrow">Mood board</div><h2 style="margin:6px 0 18px">Add to your board</h2>
+    <div class="pick-photo" style="margin-bottom:20px"><label for="mb-roll">${ICON.gallery}From camera roll<input type="file" id="mb-roll" accept="image/*" multiple></label><label for="mb-cam">${ICON.camera}Take a photo<input type="file" id="mb-cam" accept="image/*" capture="environment"></label></div>
+    <div class="field"><span class="label">Or pick some inspiration</span><div class="presets">${Object.keys(PRESETS).map(n=>`<button type="button" data-preset="${esc(n)}" aria-pressed="false" aria-label="${esc(n)}">${art(PRESETS[n][0],PRESETS[n][1],n)}</button>`).join('')}</div></div>
+    <div class="actions"><button class="btn line" id="mb-cancel">Cancel</button><button class="btn" id="mb-add">Add selected</button></div>`);
+  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const n=b.dataset.preset;chosen.has(n)?chosen.delete(n):chosen.add(n);b.setAttribute('aria-pressed',chosen.has(n))});
+  const onFiles=async e=>{const files=[...e.target.files].slice(0,6);for(const f of files){const p=await readPhoto(f,700);if(p)u.board.unshift({id:'b'+Date.now()+Math.random().toString(36).slice(2,6),photo:p})}save();closeSheet();toast(`Added ${files.length} photo${files.length>1?'s':''}`);render()};
+  $('#mb-roll').onchange=onFiles;$('#mb-cam').onchange=onFiles;$('#mb-cancel').onclick=closeSheet;
+  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>u.board.push({id:'b'+Date.now()+n.length+Math.random().toString(36).slice(2,5),preset:n}));save();closeSheet();toast('Added to your board');render()};
 }
-function photoBlock(r,cls){
-  const s=stylist(r.stylistId);
-  if(r.photo)return `<img src="${r.photo}" alt="Outfit photo for ${esc(r.occasion)}">`;
-  const icon=`<svg viewBox="0 0 24 24" width="${cls==='thumb'?22:40}" height="${cls==='thumb'?22:40}" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><circle cx="12" cy="12" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>`;
-  return `<div style="flex:1;display:grid;place-items:center;color:var(--muted)">${icon}</div>${cls==='thumb'?'':'<div class="nophoto">Example · no photo</div>'}`;
-}
-
-/* ---------- Views ---------- */
-const VIEWS={
-  browse(){
-    const inCat=db.stylists.map((s,i)=>[s,i]).filter(([s])=>state.cat==='all'||svc(s).includes(state.cat));
-    const specs=[...new Set(inCat.flatMap(([s])=>s.specialties))].slice(0,7);
-    const filters=['All','Free',...specs];if(!filters.includes(state.filter))state.filter='All';
-    const list=inCat.filter(([s])=>state.filter==='All'||(state.filter==='Free'?s.price===0:s.specialties.includes(state.filter)));
-    const count=k=>db.stylists.filter(s=>svc(s).includes(k)).length;
-    const free=db.stylists.filter(s=>s.price===0).length;
-    return `<section class="hero">
-      <div>
-        <div class="eyebrow">Outfits · Makeup · Skincare</div>
-        <h1>Send the look.<br><em>Get the verdict.</em></h1>
-        <p class="lede">Find your colors once with a two-minute quiz. Then send a photo to a stylist, makeup artist or skincare pro, and your color profile goes with it, so you get a faster, sharper answer.</p>
-        <div class="hero-ctas"><button class="btn" data-quiz="1">Find my colors</button><button class="btn line" id="cta-browse">Browse stylists</button><button class="textlink" id="cta-join" style="align-self:center;margin-left:6px">Become a stylist</button></div>
-        <div class="hero-facts num"><div><b>${db.stylists.length}</b><span>pros</span></div><div><b>${free}</b><span>review for free</span></div><div><b>24h</b><span>fastest reply</span></div></div>
-      </div>
-      <article class="sample" aria-label="Example review">
-        <div class="sample-top"><span class="eyebrow">Example review</span><span class="eyebrow num">No. 0142</span></div>
-        <div class="drape">${stripes(['Navy','Plum','Optic white','Pine','Ink'])}</div>
-        <div class="eyebrow" style="padding:10px 22px 0">The client’s best colors</div>
-        <div class="sample-body">
-          <div class="verdict"><div class="score num">8<small>/10</small></div><div class="season"><span class="eyebrow">Color season</span><b>Deep Winter</b></div></div>
-          <p class="quote">“The tailoring is right. Trade the beige for navy and you’ll look rested instead of washed out.”</p>
-          ${chips(['Navy','Plum','Optic white','Pine'])}
-          <div class="eyebrow">Maya Okafor · Color analyst</div>
-        </div>
-      </article>
-    </section>
-    <div class="section-head" id="roster"><h2>Choose your <em>${state.cat==='skin'?'skincare pro':state.cat==='makeup'?'artist':'stylist'}</em></h2><span class="muted">${list.length} available</span></div>
-    <div class="cats" role="group" aria-label="Type of review">
-      <button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
-      ${Object.entries(KINDS).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb} · ${count(k)}</span></button>`).join('')}
-    </div>
-    <div class="filters" role="group" aria-label="Filter stylists">${filters.map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
-    <div class="roster">${list.map(([s,i])=>stylistCard(s,i)).join('')||'<div class="empty"><h3>No one matches yet</h3>Try another filter.</div>'}</div>`;
-  },
-  colors(){
-    const P=db.profile;
-    if(!P)return `<section class="findcolors"><div><div class="eyebrow">My colors</div><h1 style="font-size:clamp(40px,6vw,72px);font-weight:400;margin:14px 0 20px">Know your colors <em style="color:var(--accent)">before</em> you ask.</h1>
-      <p class="lede muted" style="font-size:17px;max-width:46ch">Take a two-minute quiz to find your color season, undertone and skin type. Your profile goes with every request, so stylists can answer faster.</p>
-      <div class="hero-ctas"><button class="btn" data-quiz="1">Take the quiz</button><button class="btn line" id="ep-open">Fill it in myself</button></div></div>
-      <div class="drape" style="height:360px">${stripes(['Navy','Plum','Rose','Teal','Camel','Rust'])}</div></section>`;
-    const sec=(t,rows)=>`<div class="pp-sec"><h3>${t}</h3><div class="pp-rows">${rows}</div></div>`;
-    const row=(l,c)=>c?`<div><h4>${l}</h4>${c}</div>`:'';
-    return `<div class="section-head"><h2>My <em>colors</em></h2><div class="hero-ctas"><button class="btn line sm" data-quiz="1">Retake quiz</button><button class="btn sm" id="ep-open">Edit</button></div></div>
-      <div class="passport">
-        <div class="pp-side"><div class="drape">${stripes(P.wear.slice(0,5))}</div>
-          <div class="pp-side-body"><div><div class="eyebrow">Color season</div><div class="pp-season" style="margin-top:6px">${esc(P.season)}</div></div>
-          <div class="facts"><div><h4 class="eyebrow" style="margin:0">Undertone</h4><b>${esc(P.undertone)}</b></div><div><h4 class="eyebrow" style="margin:0">Skin</h4><b>${esc(P.skinType||'–')}</b></div></div>
-          <span class="source ${P.confirmed?'ok':''}">${P.confirmed?'✓ ':''}${esc(P.source)}</span>
-          <p class="hint" style="margin:0">Attached to every review request you send.</p></div></div>
-        <div class="pp-main">
-          ${sec('Clothes',row('Wear more',P.wear?.length&&chips(P.wear))+row('Keep away from your face',P.avoid?.length&&chips(P.avoid,'avoid')))}
-          ${sec('Makeup',row('Lips',P.lips?.length&&chips(P.lips))+row('Cheeks',P.cheeks?.length&&chips(P.cheeks))+row('Eyes',P.eyes?.length&&chips(P.eyes)))}
-          ${sec('Skin',row('Type',`<div>${esc(P.skinType||'Not set')}</div>`)+row('Focus on',P.concerns?.length?`<div class="chips">${P.concerns.map(c=>`<span class="chip" style="padding-left:10px">${esc(c)}</span>`).join('')}</div>`:'<div class="muted">Nothing selected</div>'))}
-        </div>
-      </div>`;
-  },
-  mine(){
-    const list=db.requests.filter(r=>r.client==='You').sort((a,b)=>b.created-a.created);
-    return `<div class="section-head"><h2>My <em>reviews</em></h2><span class="muted">${list.length} total</span></div>
-      <div class="list">${list.map(r=>{const s=stylist(r.stylistId);return `<article class="req">
-        <div class="req-photo">${photoBlock(r)}</div>
-        <div class="req-body">
-          <div class="req-head"><div><div class="kind">${KINDS[kindOf(r)].label}</div><h3>${esc(s?.name)}</h3><div class="meta"><span>${esc(r.occasion)}</span><span class="dot">${r.paid?'$'+r.amount:'Free'}</span><span class="dot">${ago(r.created)}</span></div></div>
-          <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'In review'}</span></div>
-          <p class="ask">“${esc(r.question)}”</p>
-          ${r.feedback?feedbackBlock(r.feedback,kindOf(r))+((r.feedback.season||r.feedback.skinType||r.feedback.lips?.length)?`<div class="adopt"><span class="small" style="flex:1;font-size:13px">Use ${esc(s?.name.split(' ')[0])}’s assessment as your color profile?</span><button class="btn sm line" data-adopt="${r.id}">Update my colors</button></div>`:''):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
-        </div></article>`}).join('')||'<div class="empty"><h3>No reviews yet</h3>Pick a stylist and send your first outfit.</div>'}</div>`;
-  },
-  inbox(){
-    const me=stylist(db.me.stylistId);
-    const list=db.requests.filter(r=>r.stylistId===me.id).sort((a,b)=>(a.status==='done')-(b.status==='done')||b.created-a.created);
-    const pending=list.filter(r=>r.status==='pending').length;
-    const earned=list.filter(r=>r.paid&&r.status==='done').reduce((a,r)=>a+(r.amount||0),0);
-    const avg=list.filter(r=>r.feedback?.score).reduce((a,r,_,arr)=>a+r.feedback.score/arr.length,0);
-    return `<div class="studio-head"><div><div class="eyebrow">Studio</div><h1>Welcome back, <em>${esc(me.name.split(' ')[0])}</em></h1></div>
-      <button class="btn line" data-go="profile">Edit profile</button></div>
-      <div class="stats num">
-        <div class="stat"><b>${pending}</b><span>waiting for you</span></div>
-        <div class="stat"><b>${list.length-pending}</b><span>reviews sent</span></div>
-        <div class="stat"><b>${avg?avg.toFixed(1):'–'}</b><span>average score given</span></div>
-        <div class="stat"><b>$${earned}</b><span>earned (simulated)</span></div>
-      </div>
-      <div class="queue">${list.map(r=>`<div class="qrow">
-        <div class="thumb">${photoBlock(r,'thumb')}</div>
-        <div><div class="meta" style="margin-bottom:4px"><span class="kind" style="align-self:center">${KINDS[kindOf(r)].label}</span><span class="dot">${esc(r.client)}</span><span class="dot">${esc(r.occasion)}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.paid?'$'+r.amount:'Free'}</span></div>
-          <p class="ask">“${esc(r.question)}”</p></div>
-        <div class="qrow-right">${r.status==='done'?`<span class="pill done">Sent${r.feedback.score?` · ${r.feedback.score}/10`:''}</span>`:`<button class="btn sm accent" data-respond="${r.id}">Write review</button>`}</div>
-      </div>`).join('')||'<div class="empty"><h3>Your queue is empty</h3>New requests from clients appear here.</div>'}</div>`;
-  },
-  profile(){
-    const s=stylist(db.me.stylistId);
-    return `<div class="section-head"><h2>Your <em>profile</em></h2><span class="muted">Clients see this when choosing a stylist</span></div>
-      <div style="display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:40px;align-items:start" class="profile-grid">
-        <div>${stylistCard(s,db.stylists.indexOf(s))}</div>
-        <div class="formcard">${profileForm(s)}<div class="actions"><button class="btn" id="save-profile">Save profile</button></div></div>
-      </div>`;
-  },
-  join(){
-    return `<div class="section-head"><h2>Become a <em>stylist</em></h2></div>
-      <div class="formcard"><p class="muted" style="margin-top:0">Offer free reviews to build a following, or set a price per review. You can change both at any time.</p>
-      ${profileForm({name:'',title:'',bio:'',specialties:[],price:0,turnaround:'48h',colors:[],services:['outfit']})}
-      <div class="actions"><button class="btn" id="save-profile" data-new="1">Create profile</button></div></div>`;
-  }
-};
-
-function swatchPicker(id,selected,set=SWATCHES){
-  return `<div class="chips" id="${id}">${set.map(([n,h])=>`<button type="button" class="chip" data-sw="${n}" aria-pressed="${selected.includes(n)}"><i style="background:${h}"></i>${n}</button>`).join('')}</div>`;
-}
-function profileForm(s){
-  return `<div class="field"><label for="pf-photo">Profile photo</label><div class="photo-edit"><div class="avatar" id="pf-preview">${face(s.id?s:{...s,id:'new',name:s.name||'You'})}</div>
-      <div style="flex:1"><input type="file" id="pf-photo" accept="image/*"><span class="hint">A clear, well-lit photo of your face. Clients are more likely to book stylists with a photo.</span></div></div></div>
-    <div class="field"><label for="pf-name">Name</label><input id="pf-name" value="${esc(s.name)}" autocomplete="name"></div>
-    <div class="field"><label for="pf-title">Headline</label><input id="pf-title" value="${esc(s.title)}" placeholder="Color analyst & personal stylist"></div>
-    <div class="field"><label for="pf-bio">About you</label><textarea id="pf-bio" placeholder="What you are known for and how you work">${esc(s.bio)}</textarea></div>
-    <div class="field"><span class="label">What you review</span>${toggles('pf-services',Object.keys(KINDS).map(k=>KINDS[k].label),svc(s).map(k=>KINDS[k].label))}</div>
-    <div class="field"><label for="pf-spec">Specialties</label><input id="pf-spec" value="${esc(s.specialties.join(', '))}" placeholder="Color analysis, Workwear"><span class="hint">Separate with commas</span></div>
-    <div class="cols"><div class="field"><label for="pf-price">Price per review (USD)</label><input id="pf-price" type="number" min="0" step="1" value="${s.price}"><span class="hint">Use 0 to review for free</span></div>
-    <div class="field"><label for="pf-turn">Reply time</label><select id="pf-turn">${['24h','48h','72h'].map(t=>`<option ${t===s.turnaround?'selected':''}>${t}</option>`).join('')}</select></div></div>`;
-
-}
-function toggles(id,opts,sel=[]){return `<div class="chips" id="${id}">${opts.map(o=>`<button type="button" class="chip" style="padding-left:10px" data-sw="${esc(o)}" aria-pressed="${sel.includes(o)}">${esc(o)}</button>`).join('')}</div>`}
-function picked(id){return [...document.querySelectorAll(`#${id} [aria-pressed="true"]`)].map(b=>b.dataset.sw)}
-let pfPhoto=null;
-document.addEventListener('change',async e=>{
-  if(e.target.id!=='pf-photo')return;
-  pfPhoto=await readPhoto(e.target,480,true);
-  if(pfPhoto)$('#pf-preview').innerHTML=`<img src="${pfPhoto}" alt="Your photo" style="width:100%;height:100%;object-fit:cover">`;
-});
-function saveProfile(isNew){
-  const v={name:$('#pf-name').value.trim(),title:$('#pf-title').value.trim(),bio:$('#pf-bio').value.trim(),
-    specialties:$('#pf-spec').value.split(',').map(x=>x.trim()).filter(Boolean),price:Math.max(0,Math.round(+$('#pf-price').value||0)),
-    turnaround:$('#pf-turn').value,
-    services:Object.keys(KINDS).filter(k=>picked('pf-services').includes(KINDS[k].label))};
-  if(!v.services.length){toast('Choose at least one type of review');return}
-  if(!v.name){toast('Add your name to continue');$('#pf-name').focus();return}
-  if(!v.title){toast('Add a headline so clients know your focus');$('#pf-title').focus();return}
-  if(pfPhoto)v.photo=pfPhoto;
-  if(isNew){const id='s'+Date.now();db.stylists.push({id,...v,rating:0,reviews:0});db.me.stylistId=id;toast('Profile created. Welcome to Lookover.')}
-  else{Object.assign(stylist(db.me.stylistId),v);toast('Profile saved')}
-  save();go('inbox');
-}
-
 function viewStylist(id){
-  const s=stylist(id),first=s.name.split(' ')[0];
-  openSheet(`<div class="photo-edit" style="margin-bottom:20px"><div class="avatar" style="width:96px;height:96px">${face(s)}</div>
-    <div><div class="eyebrow">${esc(s.title)}</div><h2 style="margin:6px 0 0">${esc(s.name)}</h2></div></div>
-    <div class="meta num" style="margin-bottom:16px"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews} reviews)`:''}</span><span class="dot">Replies in ${esc(s.turnaround)}</span><span class="dot">${priceTxt(s.price)}</span></div>
-    <p class="bio">${esc(s.bio)}</p>
-    <div class="chips">${s.specialties.map(t=>`<span class="chip" style="padding-left:10px">${esc(t)}</span>`).join('')}</div>
-    <hr class="divider">
-    <h3 style="font-size:24px;margin-bottom:18px">Ask ${esc(first)} for a review</h3>
-    ${db.profile?profileMini(db.profile).replace('</div></div>','</div><span class="hint">Sent with your request so '+esc(first)+' can answer faster.</span></div>'):`<div class="mini"><span class="eyebrow">No color profile yet</span><span>Stylists answer faster when they know your season, undertone and skin type.</span><div><button class="btn sm line" data-quiz="1">Take the two-minute quiz</button></div></div>`}<input type="hidden" id="rq-k" value="${svc(s)[0]}">
-    ${svc(s).length>1?`<div class="field"><span class="label">Type of review</span><div class="chips" id="rq-kind">${svc(s).map((k,i)=>`<button type="button" class="chip" style="padding-left:10px" data-kind="${k}" aria-pressed="${i===0}">${KINDS[k].label}</button>`).join('')}</div></div>`:''}
-    <div class="field"><label for="rq-photo">Photo</label><input type="file" id="rq-photo" accept="image/*"><span class="hint" id="rq-hint">${KINDS[svc(s)[0]].photo}</span></div>
-    <div class="field"><label for="rq-occ">Occasion</label><select id="rq-occ">${OCCASIONS.map(o=>`<option>${o}</option>`).join('')}</select></div>
-    <div class="field"><label for="rq-q">Your question</label><textarea id="rq-q" placeholder="Do these colors suit me? Which shoes would work better?"></textarea></div>
-    ${s.price>0?`<p class="hint">You are charged $${s.price} when ${esc(first)} accepts. Payment is simulated in this prototype.</p>`:''}
-    <div class="actions"><button class="btn line" id="rq-cancel">Cancel</button><button class="btn" id="rq-send">${s.price>0?`Request review · $${s.price}`:'Request free review'}</button></div>`);
-  $('#rq-cancel').onclick=closeSheet;
-  $('#rq-send').onclick=()=>submitRequest(id);
+  const s=stylist(id),p=priceOf(s);
+  openSheet(`<div class="who" style="gap:16px;margin-bottom:18px"><div class="avatar" style="width:84px;height:84px">${face(s)}</div><div><div class="eyebrow">${tierOf(s)} ${s.verified?'<span class="vcheck">✓</span>':''}</div><h2 style="margin:4px 0 0">${esc(s.name)}</h2></div></div>
+    <p style="font-size:17px;margin:0 0 12px">${esc(s.line||s.title)}</p>
+    <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${p?'$'+p+' per review':'Free'}</span></div>
+    ${tags(s.specialties)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
+    <div class="actions" style="justify-content:stretch">${svc(s).map(k=>`<button class="btn ${k===svc(s)[0]?'':'line'}" data-compose="${k}" data-to="${s.id}" style="flex:1">${KINDS[k].ask}</button>`).join('')}</div>`);
 }
-function readPhoto(input,max=700,portrait=false){
-  return new Promise(res=>{const f=input.files?.[0];if(!f)return res(null);
-    const img=new Image(),r=new FileReader();
-    r.onload=()=>{img.onload=()=>{const c=document.createElement('canvas');
-      let sx=0,sy=0,sw=img.width,sh=img.height;
-      if(portrait){const want=4/5;if(sw/sh>want){sw=sh*want;sx=(img.width-sw)/2}else{sh=sw/want;sy=(img.height-sh)/4}}
-      const k=Math.min(1,max/sw);c.width=sw*k;c.height=sh*k;
-      c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};img.onerror=()=>res(null);img.src=r.result};
-    r.onerror=()=>res(null);r.readAsDataURL(f)});
-}
-async function submitRequest(sid){
-  const q=$('#rq-q').value.trim();if(!q){toast('Write a question for your stylist');$('#rq-q').focus();return}
-  const s=stylist(sid),photo=await readPhoto($('#rq-photo'));
-  db.requests.push({id:'r'+Date.now(),kind:$('#rq-k').value,profile:db.profile?structuredClone(db.profile):null,stylistId:sid,client:'You',occasion:$('#rq-occ').value,question:q,photo,paid:s.price>0,amount:s.price,status:'pending',created:Date.now()});
-  save();closeSheet();toast('Request sent. Switch to Stylist to see the other side.');go('mine');
+function applyVerification(){
+  const s=stylist(db.me.stylistId);let photos=[];
+  openSheet(`<div class="eyebrow">Get verified</div><h2 style="margin:6px 0 10px">Show us your work</h2><p class="muted" style="margin:0 0 18px">Three quick things. We review every application by hand.</p>
+    <div class="field"><label for="av-exp">Your experience</label><select id="av-exp"><option>Hobbyist with a following</option><option>Working stylist</option><option>Licensed professional</option></select></div>
+    <div class="field"><span class="label">Portfolio · up to 6 photos</span><div class="pick-photo" style="grid-template-columns:1fr"><label for="av-photos">${ICON.gallery}Choose photos of looks you’ve done<input type="file" id="av-photos" accept="image/*" multiple></label></div><div class="portfolio" id="av-prev"></div></div>
+    <div class="field"><label for="av-link">Instagram, TikTok or website</label><input id="av-link" placeholder="instagram.com/yourname"></div>
+    <div class="actions"><button class="btn line" id="av-cancel">Cancel</button><button class="btn" id="av-send">Send application</button></div>`);
+  $('#av-photos').onchange=async e=>{for(const f of [...e.target.files].slice(0,6-photos.length)){const p=await readPhoto(f,500);if(p)photos.push(p)}$('#av-prev').innerHTML=photos.map(p=>`<div><img src="${p}" alt="Portfolio photo"></div>`).join('')};
+  $('#av-cancel').onclick=closeSheet;
+  $('#av-send').onclick=()=>{if(!photos.length){toast('Add at least one portfolio photo');return}
+    db.applications.push({id:'a'+Date.now(),stylistId:s.id,experience:$('#av-exp').value,link:$('#av-link').value.trim(),note:s.line||'',portfolio:photos,status:'pending',created:Date.now()});
+    save();closeSheet();toast('Application sent. We will review it soon.');render()};
 }
 
-function respond(rid){
-  const r=db.requests.find(x=>x.id===rid);
-  openSheet(`<div class="eyebrow">Review for ${esc(r.client)} · ${esc(r.occasion)}</div>
-    <h2 style="margin:8px 0 16px">“${esc(r.question)}”</h2>
-    ${r.photo?`<img src="${r.photo}" alt="Client outfit" style="max-height:360px;margin:0 auto 20px">`:''}
-    ${r.profile?profileMini(r.profile,'Client’s').replace('</div></div>','</div><span class="hint">Fields below are pre-filled from this profile. Change anything you disagree with.</span></div>'):'<div class="mini"><span class="eyebrow">No color profile</span><span class="hint">This client has not set up their colors yet.</span></div>'}
-    ${kindFields(kindOf(r))}
-    <div class="field"><span class="label">Shop the picks (optional)</span>
-      ${[0,1,2].map(i=>`<div class="cols" style="margin-bottom:8px"><input id="pn${i}" placeholder="Item name" aria-label="Item ${i+1} name"><input id="pu${i}" placeholder="https://" aria-label="Item ${i+1} link"></div>`).join('')}
-      <span class="hint">Links to any store. Clients see that you may earn a commission.</span></div>
-    <div class="actions"><button class="btn line" id="fb-cancel">Cancel</button><button class="btn accent" id="fb-send">Send review</button></div>`);
-  const sc=$('#fb-score');if(sc)sc.oninput=e=>$('#sc-v').textContent=e.target.value;
-  const P=r.profile;
-  if(P){
-    const setv=(id,v)=>{const el=$(id);if(el&&v)el.value=v};
-    setv('#fb-season',P.season);setv('#fb-under',P.undertone);setv('#fb-type',P.skinType);
-    const press=(id,list)=>(list||[]).forEach(n=>{const b=document.querySelector(`#${id} [data-sw="${n}"]`);if(b)b.setAttribute('aria-pressed','true')});
-    press('fb-palette',P.wear);press('fb-avoid',kindOf(r)==='makeup'?[]:P.avoid);press('fb-lips',P.lips);press('fb-cheeks',P.cheeks);press('fb-eyes',P.eyes);press('fb-concerns',P.concerns);
+/* ================= After render: wire per-view behavior ================= */
+function afterRender(){
+  if(state.view==='feed'){
+    const desk=document.querySelector('.desk');if(desk){const r=db.requests.find(x=>x.id===desk.dataset.rid);prefillDesk(r);
+      const z=$('#zoomer');z.onclick=()=>z.classList.toggle('z');z.onkeydown=e=>{if(e.key==='Enter')z.classList.toggle('z')};
+      $('#q-send').onclick=()=>sendReview(r.id);$('#q-skip').onclick=()=>{state.qi++;render()};
+      $('#q-prev').onclick=()=>{state.qi--;render()};$('#q-next').onclick=()=>{state.qi++;render()}}
   }
-  $('#fb-cancel').onclick=closeSheet;
-  $('#fb-send').onclick=()=>sendFeedback(rid);
-}
-function kindFields(k){
-  const score=`<div class="field"><label for="fb-score">Score · <span id="sc-v" class="num">7</span> / 10</label><input type="range" id="fb-score" min="1" max="10" value="7"></div>`;
-  const season=`<div class="field"><label for="fb-season">Color season</label><select id="fb-season"><option value="">Not assessed</option>${SEASONS.map(s=>`<option>${s}</option>`).join('')}</select></div>`;
-  const verdict=(ph,tl,tph)=>`<div class="field"><label for="fb-notes">The verdict</label><textarea id="fb-notes" placeholder="${ph}"></textarea></div>
-    <div class="field"><label for="fb-try">${tl}</label><textarea id="fb-try" placeholder="${tph}"></textarea></div>`;
-  if(k==='skin')return `<div class="cols"><div class="field"><label for="fb-type">Skin type</label><select id="fb-type">${SKIN_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div><div></div></div>
-    <div class="field"><span class="label">Concerns to focus on</span>${toggles('fb-concerns',CONCERNS)}</div>
-    ${verdict('What you see and what is likely causing it','Also try','Habits, timelines, what to stop using')}
-    <div class="cols"><div class="field"><label for="fb-am">Morning routine</label><textarea id="fb-am" placeholder="One step per line"></textarea></div>
-    <div class="field"><label for="fb-pm">Evening routine</label><textarea id="fb-pm" placeholder="One step per line"></textarea></div></div>
-    <p class="note" style="margin-top:0">Clients see a note that this is not medical advice. Refer anything that looks clinical to a dermatologist.</p>`;
-  if(k==='makeup')return `${score}<div class="cols"><div class="field"><label for="fb-under">Undertone</label><select id="fb-under">${UNDERTONES.map(t=>`<option>${t}</option>`).join('')}</select></div>${season}</div>
-    <div class="field"><span class="label">Lips</span>${swatchPicker('fb-lips',[],SHADES)}</div>
-    <div class="field"><span class="label">Cheeks</span>${swatchPicker('fb-cheeks',[],SHADES)}</div>
-    <div class="field"><span class="label">Eyes</span>${swatchPicker('fb-eyes',[],SHADES)}</div>
-    <div class="field"><span class="label">Skip these shades</span>${swatchPicker('fb-avoid',[],SHADES)}</div>
-    ${verdict('What is working and what is not','Try instead','Shade swaps, placement, technique')}`;
-  return `${score}${season}
-    <div class="field"><span class="label">Wear more</span>${swatchPicker('fb-palette',[])}</div>
-    <div class="field"><span class="label">Keep away from the face</span>${swatchPicker('fb-avoid',[])}</div>
-    ${verdict('What is working and what is not','Try instead','Specific swaps: pieces, colors, fit, accessories')}`;
-}
-function sendFeedback(rid){
-  const notes=$('#fb-notes').value.trim(),tryInstead=$('#fb-try').value.trim();
-  if(!notes){toast('Write your verdict first');$('#fb-notes').focus();return}
-  if(!tryInstead){toast('Add at least one suggestion for the client');$('#fb-try').focus();return}
-  const products=[0,1,2].map(i=>({name:$('#pn'+i).value.trim(),url:$('#pu'+i).value.trim()}))
-    .filter(x=>x.name&&/^https?:\/\/[^\s]+$/i.test(x.url))
-    .map(x=>{try{return {...x,store:new URL(x.url).hostname.replace(/^www\./,'')}}catch(e){return null}}).filter(Boolean);
-  const r=db.requests.find(x=>x.id===rid);
-  const k=kindOf(r);
-  if(k==='skin')r.feedback={skinType:$('#fb-type').value,concerns:picked('fb-concerns'),am:$('#fb-am').value.trim(),pm:$('#fb-pm').value.trim(),notes,tryInstead,products};
-  else if(k==='makeup')r.feedback={score:+$('#fb-score').value,undertone:$('#fb-under').value,season:$('#fb-season').value,lips:picked('fb-lips'),cheeks:picked('fb-cheeks'),eyes:picked('fb-eyes'),avoid:picked('fb-avoid'),notes,tryInstead,products};
-  else r.feedback={score:+$('#fb-score').value,season:$('#fb-season').value,palette:picked('fb-palette'),avoid:picked('fb-avoid'),notes,tryInstead,products};
-  r.status='done';save();closeSheet();toast(`Review sent to ${r.client}`);render();
+  if(state.view==='me'){
+    $('#avatar-btn').onclick=()=>$('#avatar-input').click();
+    $('#avatar-input').onchange=async e=>{const p=await readPhoto(e.target.files?.[0],400,true);if(p){me().photo=p;save();render()}};
+    $('#edit-me').onclick=editMe;
+    const board=$('#board');if(board){
+      board.onclick=e=>{if(!state.placing||e.target.closest('.x,.stk'))return;const b=board.getBoundingClientRect();
+        me().stickers.push({id:'k'+Date.now(),e:state.placing,x:+((e.clientX-b.left)/b.width*100).toFixed(1),y:+((e.clientY-b.top)/b.height*100).toFixed(1)});state.placing=null;save();render()};
+      board.querySelectorAll('.stk').forEach(el=>{
+        el.ondblclick=()=>{me().stickers=me().stickers.filter(k=>k.id!==el.dataset.stk);save();render()};
+        el.onpointerdown=e=>{e.preventDefault();el.setPointerCapture(e.pointerId);const b=board.getBoundingClientRect();
+          const move=ev=>{el.style.left=Math.max(0,Math.min(100,(ev.clientX-b.left)/b.width*100))+'%';el.style.top=Math.max(0,Math.min(100,(ev.clientY-b.top)/b.height*100))+'%'};
+          const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);const k=me().stickers.find(x=>x.id===el.dataset.stk);if(k){k.x=parseFloat(el.style.left);k.y=parseFloat(el.style.top);save()}};
+          el.addEventListener('pointermove',move);el.addEventListener('pointerup',up)};
+      });
+    }
+    const ab=$('#add-board');if(ab)ab.onclick=addToBoard;
+  }
+  document.querySelectorAll('[data-cform]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.elements.c.value;if(!t.trim())return;addComment(f.dataset.cform,t);render();const el=document.getElementById('post-'+f.dataset.cform);el&&el.scrollIntoView({block:'center'})});
+  const as=$('#apply-v');if(as)as.onclick=applyVerification;
 }
 
-/* Delegated clicks */
+/* ================= Global click handling ================= */
 document.addEventListener('click',e=>{
-  const t=e.target.closest('button,a');if(!t)return;
-  if(t.dataset.stylist)return viewStylist(t.dataset.stylist);
-  if(t.dataset.filter){state.filter=t.dataset.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
-  if(t.dataset.respond)return respond(t.dataset.respond);
-  if(t.dataset.cat){state.cat=t.dataset.cat;state.filter='All';render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
-  if(t.dataset.kind){t.parentElement.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',b===t));$('#rq-k').value=t.dataset.kind;$('#rq-hint').textContent=KINDS[t.dataset.kind].photo;return}
-  if(t.dataset.sw){const g=t.parentElement;const on=t.getAttribute('aria-pressed')!=='true';
-    t.setAttribute('aria-pressed',on);return}
-  if(t.dataset.quiz)return openQuiz();
-  if(t.dataset.qk){t.parentElement.querySelectorAll('[data-qk]').forEach(b=>b.setAttribute('aria-pressed',b===t));quizAns[t.dataset.qk]=t.dataset.qv;return}
-  if(t.id==='ep-open')return editProfile();
-  if(t.dataset.adopt)return adoptReview(t.dataset.adopt);
-  if(t.id==='cta-browse')return document.getElementById('roster').scrollIntoView({behavior:'smooth'});
-  if(t.id==='cta-join'){state.role='stylist';return go('join')}
-  if(t.id==='save-profile')return saveProfile(!!t.dataset.new);
+  const t=e.target.closest('button,a[role=button]');if(!t)return;const d=t.dataset;
+  if(d.go){setMenu(false);closeSheet();return go(d.go)}
+  if(d.role){state.role=d.role;setMenu(false);return go(DOCK[d.role][0][0])}
+  if(t.id==='plus'||t.id==='plus2'||t.id==='plus3'){return openComposer()}
+  if(d.compose){setMenu(false);return openComposer({kind:d.compose,stylistId:d.to})}
+  if(d.quiz){setMenu(false);return openQuiz()}
+  if(d.stylist)return viewStylist(d.stylist);
+  if(d.cat){state.cat=d.cat;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
+  if(d.filter){state.filter=d.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
+  if(d.comcat){state.comCat=d.comcat;return render()}
+  if(d.tab){state.meTab=d.tab;return render()}
+  if(d.sticker){state.placing=state.placing===d.sticker?null:d.sticker;return render()}
+  if(d.unpin){me().board=me().board.filter(b=>b.id!==d.unpin);save();return render()}
+  if(d.rate){const p=db.posts.find(x=>x.id===d.rate);p.ratings={...(p.ratings||{}),[state.role==='stylist'?db.me.stylistId:'you']:+d.n};save();render();document.getElementById('post-'+p.id)?.scrollIntoView({block:'center'});return}
+  if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by==='you'?'You':personOf(c.by).name)}</b>${esc(c.text)}</div>`).join('')}</div>`);return}
+  if(d.share){const r=db.requests.find(x=>x.id===d.share);const pid='p'+Date.now();db.posts.push({id:pid,authorId:'you',kind:r.kind,caption:r.question,aesthetic:r.aesthetic,photo:r.photo||null,art:r.art,created:Date.now(),ratings:{},comments:[],requestId:r.id});r.postId=pid;save();toast('Posted to the community');return render()}
+  if(d.adopt)return adoptReview(d.adopt);
+  if(d.ckind){snapshotCompose();state.compose.kind=d.ckind;return renderComposer()}
+  if(d.aes){$('#cp-aes').value=d.aes;return}
+  if(d.qk){t.parentElement.querySelectorAll('[data-qk]').forEach(b=>b.setAttribute('aria-pressed',b===t));quizAns[d.qk]=d.qv;return}
+  if(d.sw!==undefined&&!t.closest('#em-fav')){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
+  if(t.id==='ep-open')return editColors();
+  if(d.approve||d.decline){const a=db.applications.find(x=>x.id===(d.approve||d.decline));a.status=d.approve?'approved':'declined';if(d.approve)stylist(a.stylistId).verified=true;save();toast(d.approve?`${stylist(a.stylistId).name} is now verified`:'Application declined');return render()}
+  if(t.id==='save-stylist'){const v=readStylistForm();if(!v)return;Object.assign(stylist(db.me.stylistId),v);save();toast('Profile saved');return render()}
+  if(t.id==='create-stylist'){const v=readStylistForm();if(!v)return;const id='s'+Date.now();db.stylists.push({id,...v,rating:0,reviews:0,turnaround:'48h',verified:false});db.me.stylistId=id;save();state.role='stylist';toast('Welcome! You can start reviewing for free.');return go('studio')}
 });
 render();
 </script>
-<style>@media (max-width:760px){.profile-grid{grid-template-columns:1fr!important}}</style>
 </body>
 </html>
