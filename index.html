@@ -819,11 +819,11 @@ const VIEWS={
   studio(){
     const s=stylist(db.me.stylistId);const list=db.requests.filter(r=>r.stylistId===s.id);
     const pending=list.filter(r=>r.status==='pending').length,done=list.filter(r=>r.status==='done');
-    const earned=done.reduce((a,r)=>a+(r.amount||0),0)*.8;const app=db.applications.find(a=>a.stylistId===s.id&&a.status==='pending');
+    const earned=done.reduce((a,r)=>a+(r.amount||0),0)*.8;const app=db.applications.find(a=>a.stylistId===s.id&&a.status==='pending');const revoked=!s.verified&&!app&&db.applications.find(a=>a.stylistId===s.id)?.status==='revoked';
     return `<div class="section-head"><div><div class="eyebrow">Studio</div><h2>Welcome back, <em>${esc(s.name.split(' ')[0])}</em></h2></div><button class="btn" data-go="feed">Open review feed${pending?` · ${pending}`:''}</button></div>
       <div class="stats num"><div class="stat"><b>${pending}</b><span>waiting for you</span></div><div class="stat"><b>${done.length}</b><span>reviews sent here</span></div>
         <div class="stat"><b>★ ${s.rating||'–'}</b><span>${s.reviews} ratings</span></div><div class="stat"><b>$${earned.toFixed(0)}</b><span>you earned (80%)</span></div></div>
-      <div class="section-head" style="padding-top:8px"><div><h2 style="font-size:30px">Your <em>tier</em></h2><p>${s.verified?'You are verified. Your price is set by your tier, so clients always know what to expect.':app?'Your verification is being reviewed. We usually reply within 3 days.':'You review for free as a community stylist. Get verified to start earning.'}</p></div>
+      <div class="section-head" style="padding-top:8px"><div><h2 style="font-size:30px">Your <em>tier</em></h2><p>${revoked?'Your verification was removed by the Lookover team, so your reviews are free for now. You can apply again when you are ready.':s.verified?'You are verified. Your price is set by your tier, so clients always know what to expect.':app?'Your verification is being reviewed. We usually reply within 3 days.':'You review for free as a community stylist. Get verified to start earning.'}</p></div>
         ${!s.verified&&!app?'<button class="btn soft" id="apply-v">Apply for verification</button>':''}</div>
       ${tiersBlock(s)}
       <div class="section-head" style="padding-top:36px"><h2 style="font-size:30px">Recently <em>sent</em></h2></div>
@@ -843,12 +843,17 @@ const VIEWS={
   },
   admin(){
     const apps=db.applications.slice().sort((a,b)=>(a.status!=='pending')-(b.status!=='pending')||b.created-a.created);
-    return `<div class="section-head"><div><div class="eyebrow">Admin</div><h2>Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
+    const ver=db.stylists.filter(x=>x.verified);
+    return `<div class="section-head"><div><div class="eyebrow">Admin</div><h2>Verified <em>stylists</em></h2><p>Revoking moves a stylist back to free community reviews. They can apply again later.</p></div><span class="muted">${ver.length} verified</span></div>
+      <div class="queue">${ver.map(x=>`<div class="qrow"><div class="avatar" style="width:56px;height:56px">${face(x)}</div>
+        <div><b style="font-size:16px">${esc(x.name)}</b><div class="meta"><span>${svc(x).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${tierOf(x)} · $${priceOf(x)}</span><span class="dot">★ ${x.rating||0} (${x.reviews||0})</span></div></div>
+        <button class="btn sm line" data-revoke="${x.id}">Revoke verification</button></div>`).join('')||'<p class="muted">No verified stylists yet.</p>'}</div>
+      <div class="section-head"><div><h2>Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
       <div class="list">${apps.map(a=>{const s=stylist(a.stylistId);return `<div class="app-card"><div class="avatar" style="width:72px;height:72px">${face(s)}</div>
         <div><h3 style="font-size:24px">${esc(s?.name)}</h3><div class="meta"><span>${s?svc(s).map(k=>KINDS[k].label).join(' · '):''}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s?.rating||0} (${s?.reviews||0})</span></div>
           <p style="margin:8px 0 4px">${esc(a.note)}</p><span class="hint">${esc(a.link)}</span>
           <div class="portfolio">${a.portfolio.map(p=>`<div>${typeof p==='string'?`<img src="${p}" alt="Portfolio photo">`:art(p[0],p[1])}</div>`).join('')}</div></div>
-        <div class="actions" style="margin:0">${a.status==='pending'?`<button class="btn line sm" data-decline="${a.id}">Decline</button><button class="btn sm" data-approve="${a.id}">Approve</button>`:`<span class="pill ${a.status==='approved'?'done':'pending'}">${a.status}</span>`}</div></div>`}).join('')||'<div class="empty"><h3>No requests</h3></div>'}</div>`;
+        <div class="actions" style="margin:0">${a.status==='pending'?`<button class="btn line sm" data-decline="${a.id}">Decline</button><button class="btn sm" data-approve="${a.id}">Approve</button>`:`<span class="pill ${a.status==='approved'?'done':'pending'}">${a.status}</span>${a.status==='approved'&&s?.verified?`<button class="btn sm line" data-revoke="${a.stylistId}">Revoke</button>`:''}`}</div></div>`}).join('')||'<div class="empty"><h3>No requests</h3></div>'}</div>`;
   }
 };
 function colorsTab(P){
@@ -1196,6 +1201,12 @@ document.addEventListener('click',e=>{
   if(d.qk){t.parentElement.querySelectorAll('[data-qk]').forEach(b=>b.setAttribute('aria-pressed',b===t));quizAns[d.qk]=d.qv;return}
   if(d.sw!==undefined&&!t.closest('#em-fav')){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
   if(t.id==='ep-open')return editColors();
+  if(d.revoke){const x=stylist(d.revoke);if(!x)return;
+    openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Revoke ${esc(x.name)}’s verification?</h2>
+      <p class="muted" style="margin:0 0 18px">They go back to free community reviews right away. Requests already sent keep the price they were sent at. They can apply to be verified again.</p>
+      <div class="actions"><button class="btn line" id="rv-keep">Keep verified</button><button class="btn" id="rv-ok">Revoke verification</button></div>`);
+    $('#rv-keep').onclick=closeSheet;
+    $('#rv-ok').onclick=()=>run(async()=>{must(await sb.rpc('revoke_verification',{target:x.id}));closeSheet();await load();render()},`${x.name} is no longer verified`);return}
   if(d.approve||d.decline){const id=d.approve||d.decline,ok=!!d.approve;return run(async()=>{must(await sb.rpc('review_application',{app_id:id,approve:ok}));await load();render()},ok?'Stylist verified':'Application declined')}
   if(t.id==='save-stylist'){const v=readStylistForm();if(!v)return;return run(async()=>{must(await sb.from('stylists').update(v).eq('id',ME));await load();render()},'Profile saved')}
   if(t.id==='create-stylist'){if(!requireAuth())return;const v=readStylistForm();if(!v)return;return run(async()=>{must(await sb.from('stylists').insert({id:ME,...v}));await load();state.role='stylist';go('studio')},'Welcome! You can start reviewing for free.')}
