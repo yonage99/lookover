@@ -375,6 +375,7 @@ button.avatar{border:0;padding:0;cursor:pointer}
 .badges span.on{background:var(--accent-soft);color:var(--accent-text)}
 .search{max-width:360px}
 /* Photo carousel */
+.kp[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .car{position:relative}
 .car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .car-track::-webkit-scrollbar{display:none}
@@ -580,6 +581,8 @@ function art(kind,names,label){
   const lab=label?`<rect x="16" y="330" width="${Math.min(268,label.length*9+28)}" height="30" rx="15" fill="#ffffff" opacity=".94"/><text x="30" y="350" font-family="Instrument Sans, Arial, sans-serif" font-size="14" font-weight="600" fill="#111114">${esc(label)}</text>`:'';
   return `<svg viewBox="0 0 300 375" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(label||KINDS[kind]?.label+' example')}" preserveAspectRatio="xMidYMid slice"><rect width="300" height="375" fill="${mix(c[0],'#f1f2f5',.86)}"/>${g}${lab}</svg>`;
 }
+const kindsOf=x=>x?.kinds?.length?x.kinds:[x?.kind||'outfit'];
+const kl=x=>kindsOf(x).map(k=>KINDS[k]?.label||k).join(' + ');
 const photosOf=x=>x?.photos?.length?x.photos:(x?.photo?[x.photo]:[]);
 function gallery(x,kind,cols,alt){const ph=photosOf(x);if(ph.length<2)return media(x,kind,cols,alt);
   return `<div class="car" data-car><div class="car-track">${ph.map((u,i)=>`<img src="${esc(u)}" alt="${esc(alt||'Photo')} ${i+1} of ${ph.length}" loading="lazy">`).join('')}</div><span class="car-count">1/${ph.length}</span><div class="car-dots">${ph.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`}
@@ -596,9 +599,9 @@ let db={memberships:[],freeFrom:[],friends:[],users:{},stylists:[],requests:[],p
 const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null,person:null,adminTab:'people',people:null};
 const ts=t=>Date.parse(t)||Date.now();
 const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,price:r.price??null,bio:r.bio||'',rating:+r.rating,reviews:r.reviews,firstFree:!!r.first_free,planPrice:r.plan_price,planSubs:r.plan_submissions});
-const mapPost=r=>({photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,status:r.status||'approved',authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,stylistId:r.stylist_id,stylistScore:r.stylist_score,created:ts(r.created_at),
+const mapPost=r=>({kinds:r.kinds?.length?r.kinds:[r.kind],photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,status:r.status||'approved',authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,stylistId:r.stylist_id,stylistScore:r.stylist_score,created:ts(r.created_at),
   ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro}))});
-const mapReq=r=>({photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,shareWhenDone:!!r.share_when_done,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
+const mapReq=r=>({kinds:r.kinds?.length?r.kinds:[r.kind],photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,shareWhenDone:!!r.share_when_done,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
 const mapApp=r=>({id:r.id,stylistId:r.stylist_id,experience:r.experience,link:r.link,note:r.note,portfolio:r.portfolio||[],status:r.status,created:ts(r.created_at)});
 const mapUser=r=>({id:r.id,name:r.name,photo:r.photo_url,favColor:r.fav_color,keywords:r.keywords||[],board:r.board||[],stickers:r.stickers||[],submissions:r.submissions||0});
 async function load(){
@@ -858,11 +861,11 @@ function render(){
 function picksBlock(f){
   return f.products?.length?`<div><h4>Shop the picks</h4><div class="picks">${f.products.map(p=>`<a class="pick" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer sponsored"><span>${esc(p.name)}</span><span class="pick-store">${esc(p.store)} ↗</span></a>`).join('')}</div><p class="disclose" style="margin-top:6px">Your stylist may earn a commission on purchases.</p></div>`:'';
 }
-function feedbackBlock(f,kind){
+function fbParts(f,kind){
   const fact=(l,v)=>v?`<div><h4>${l}</h4><b>${esc(v)}</b></div>`:'';
   const head=kind==='skin'?`<div><h4>Skin type</h4><div class="score" style="font-size:32px;font-style:italic;font-weight:400">${esc(f.skinType||'–')}</div></div>`
-    :`<div class="score num">${f.score}<small>/10</small></div>`;
-  const facts={outfit:fact('Color season',f.season),makeup:fact('Undertone',f.undertone)+fact('Season',f.season),skin:'',nails:fact('Shape',f.shape)+fact('Length',f.length),hair:fact('Face shape',f.faceShape)+fact('Texture',f.hairType)}[kind];
+    :f.score?`<div class="score num">${f.score}<small>/10</small></div>`:'';
+  const facts={outfit:fact('Color season',f.season),makeup:fact('Undertone',f.undertone)+fact('Season',f.season),skin:'',nails:fact('Shape',f.shape)+fact('Length',f.length),hair:fact('Face shape',f.faceShape)+fact('Texture',f.hairType)}[kind]||'';
   let body='';
   if(kind==='outfit')body=(f.palette?.length?`<div><h4>Wear more</h4>${chips(f.palette)}</div>`:'')+(f.avoid?.length?`<div><h4>Keep away from your face</h4>${chips(f.avoid,'avoid')}</div>`:'');
   if(kind==='makeup')body=['lips','cheeks','eyes'].map(k=>f[k]?.length?`<div><h4>${k[0].toUpperCase()+k.slice(1)}</h4>${chips(f[k])}</div>`:'').join('')+(f.avoid?.length?`<div><h4>Skip these shades</h4>${chips(f.avoid,'avoid')}</div>`:'');
@@ -870,8 +873,14 @@ function feedbackBlock(f,kind){
   if(kind==='hair')body=(f.cuts?.length?`<div><h4>Cuts to ask for</h4>${tags(f.cuts)}</div>`:'')+(f.hairColors?.length?`<div><h4>Hair colors</h4>${chips(f.hairColors)}</div>`:'');
   if(kind==='skin'){const steps=t=>`<ol>${String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
     body=(f.concerns?.length?`<div><h4>Focus on</h4>${tags(f.concerns)}</div>`:'')+((f.am||f.pm)?`<div class="routine"><div><h4>Morning</h4>${steps(f.am)}</div><div><h4>Evening</h4>${steps(f.pm)}</div></div>`:'')+`<p class="note">General skincare guidance, not medical advice. See a dermatologist for persistent acne, rashes or changing moles.</p>`}
-  return `<div class="fb"><div class="fb-score">${head}<div class="facts">${facts}</div></div>
-    <div class="fb-main"><div><h4>The verdict</h4><p>${esc(f.notes)}</p></div><div><h4>${kind==='skin'?'Also try':'Try instead'}</h4><p>${esc(f.tryInstead)}</p></div>${body}${picksBlock(f)}</div></div>`;
+  return {head,facts,body};
+}
+function feedbackBlock(f,kinds){
+  kinds=Array.isArray(kinds)?kinds:[kinds];
+  const verdict=`<div><h4>The verdict</h4><p>${esc(f.notes)}</p></div><div><h4>${kinds[0]==='skin'?'Also try':'Try instead'}</h4><p>${esc(f.tryInstead)}</p></div>`;
+  if(kinds.length<2||!f.parts){const x=fbParts(f,kinds[0]);return `<div class="fb"><div class="fb-score">${x.head}<div class="facts">${x.facts}</div></div><div class="fb-main">${verdict}${x.body}${picksBlock(f)}</div></div>`}
+  return kinds.map(k=>{const x=fbParts(f.parts[k]||{},k);return `<div class="fb"><div class="fb-score"><div class="kind">${KINDS[k].label}</div>${x.head}<div class="facts">${x.facts}</div></div><div class="fb-main">${x.body||'<p class="muted" style="margin:0">See the overall verdict below.</p>'}</div></div>`}).join('')
+    +`<div class="fb"><div class="fb-score"><div class="kind">Overall</div></div><div class="fb-main">${verdict}${picksBlock(f)}</div></div>`;
 }
 const notesBlock=r=>{const n=[['Must stay',r.keep],['Willing to swap',r.swap],['Aesthetic',r.aesthetic]].filter(x=>x[1]);
   return n.length?`<div class="notes">${n.map(([l,v])=>`<div class="note-box"><h4>${l}</h4><p>${esc(v)}</p></div>`).join('')}</div>`:''};
@@ -930,7 +939,7 @@ function ratingsLog(list){
   const dd=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   return `<details class="mini" style="margin-bottom:22px"><summary style="cursor:pointer;font-weight:600">Ratings you’ve given · ${rated.length}</summary>
     <div class="queue" style="gap:6px;margin-top:10px">${rated.map(r=>`<div class="who" style="justify-content:space-between;flex-wrap:wrap">
-      <span>${pName(r.stylistId,stylist(r.stylistId)?.name)} <span class="hint">· ${KINDS[r.kind].label} · ${dd(r.created)}</span></span>
+      <span>${pName(r.stylistId,stylist(r.stylistId)?.name)} <span class="hint">· ${kl(r)} · ${dd(r.created)}</span></span>
       <span><b style="color:var(--accent-text);letter-spacing:1px">${starsTxt(r.stars)}</b> <span class="hint">${COUNTS(r)?'counted':r.reason==='friend'?'friend · not counted':'not counted'}</span></span></div>`).join('')}</div></details>`;
 }
 function signInPrompt(h,t){return `<div class="empty" style="padding:90px 0"><h3>${h}</h3><p style="max-width:44ch;margin:8px auto 18px">${t}</p><div class="ctas" style="justify-content:center"><button class="btn" data-signup="1">Create account</button><button class="btn line" id="login">Log in</button></div></div>`}
@@ -945,7 +954,7 @@ const VIEWS={
       <div><div class="eyebrow">${st?'Stylist':'Member'} · Joined ${day}</div><h1>${esc(u.name)} ${st?.verified?'<span class="vcheck" style="width:22px;height:22px;font-size:12px">✓</span>':''}</h1>
         ${st?`<p class="muted" style="margin:6px 0 8px">${esc(st.line||st.title)}</p>${st.bio?`<p style="max-width:60ch;margin:0 0 10px">${esc(st.bio)}</p>`:''}<div class="meta num" style="margin-bottom:8px"><span>★ ${st.rating||'New'} (${st.reviews} ratings)</span><span class="dot">${svc(st).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${esc(quote(st).label)}</span></div>${offersBlock(st)}`:''}
         <div style="margin:8px 0 0">${tags(u.keywords)}</div></div>
-      <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map((k,i)=>`<button class="btn soft sm" data-compose="${k}" data-to="${st.id}">${KINDS[k].ask}</button>`).join('')}</div>`:''}</div></section>
+      <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map(k=>`<button class="btn line sm kp" data-kpick="${k}" aria-pressed="false">${KINDS[k].ask}</button>`).join('')}<button class="btn sm" data-sendpick="${st.id}">Send my look</button></div>`:''}</div></section>
       <div class="tabs" role="tablist"><button role="tab" data-ptab="collage" aria-selected="${P.tab==='collage'}">Collage</button><button role="tab" data-ptab="looks" aria-selected="${P.tab==='looks'}">Looks · ${P.posts.length}</button></div>`;
     if(P.tab==='looks')return head+(P.posts.length?`<div class="feed">${P.posts.map(postCard).join('')}</div>`:`<div class="empty"><h3>No public looks yet</h3>${esc(u.name)} hasn’t shared anything with the community.</div>`);
     const c=collageOf(u);
@@ -974,7 +983,7 @@ const VIEWS={
     <div class="roster">${list.map(stylistCard).join('')||`<div class="empty" style="grid-column:1/-1"><h3>${db.stylists.length?'No one here yet':'Be the first stylist on Lookover'}</h3>${db.stylists.length?'Try another filter.':'Lookover just launched. Join as a stylist and start reviewing looks for free.'}<div style="margin-top:16px"><button class="btn" data-go="join">Become a stylist</button></div></div>`}</div>`;
   },
   community(){
-    const posts=db.posts.filter(p=>(p.status==='approved'||p.authorId===ME)&&p.status!=='rejected'&&(state.comCat==='all'||p.kind===state.comCat)).sort((a,b)=>b.created-a.created);
+    const posts=db.posts.filter(p=>(p.status==='approved'||p.authorId===ME)&&p.status!=='rejected'&&(state.comCat==='all'||kindsOf(p).includes(state.comCat))).sort((a,b)=>b.created-a.created);
     return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Every look here was reviewed by a stylist first. Everyone sees the median score. Comments go only to the person who posted. See something that isn’t a look, or an ad? Tap Report.</p></div><button class="btn" id="plus2">Get a look reviewed</button></div>
       <div class="mini" style="margin-bottom:22px"><span class="eyebrow">How to post your look</span><span>1. Tap <b>+</b> and send your look to a stylist. &nbsp;2. When the review is back, tap <b>Share to community</b> in My reviews, or choose it when you send. It goes up right away.</span></div>
       <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...ACTIVE_KINDS.map(k=>[k,KINDS[k].label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
@@ -990,7 +999,7 @@ const VIEWS={
     if(state.mineTab==='log')return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>${tabs}
       <div class="queue">${list.map(r=>{const s=stylist(r.stylistId)||personOf(r.stylistId);return `<button class="qrow" data-viewrev="${r.id}" style="text-align:left;cursor:pointer;width:100%">
         <div class="thumb">${media(r,r.kind,r.art)}</div>
-        <div style="min-width:0"><div class="meta"><span>${dl(r.created)}</span><span class="dot kind">${KINDS[r.kind]?.label||''}</span><span class="dot">to ${esc(s.name)}</span><span class="dot">${photosOf(r).length} photo${photosOf(r).length===1?'':'s'}</span></div>
+        <div style="min-width:0"><div class="meta"><span>${dl(r.created)}</span><span class="dot kind">${kl(r)||''}</span><span class="dot">to ${esc(s.name)}</span><span class="dot">${photosOf(r).length} photo${photosOf(r).length===1?'':'s'}</span></div>
           <p class="ask" style="font-size:16px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">“${esc(r.question)}”</p>
           <div class="meta" style="margin-top:4px"><span>${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}</span><span class="dot">${r.postId?'Public':'Private'}</span>${r.stars?`<span class="dot">You rated ${starsTxt(r.stars)}</span>`:''}</div></div>
         <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'Waiting'}</span></button>`}).join('')||'<div class="empty"><h3>Nothing sent yet</h3>Tap + to send your first look.</div>'}</div>`;
@@ -1001,11 +1010,11 @@ const VIEWS={
         ${m.status==='active'?`<button class="btn sm line" data-cancelm="${m.id}">Cancel</button>`:'<span class="pill pending">Ending</span>'}</div>`}).join('')}</div>`:''}
       <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
         return `<article class="req"><div class="req-media">${gallery(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
-        <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div>${pName(r.stylistId,s?.name,'h3')}
+        <div class="req-body"><div class="req-head"><div><div class="kind">${kl(r)}</div>${pName(r.stylistId,s?.name,'h3')}
           <div class="meta"><span>${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.postId?'Public':'Private'}</span></div></div>
           <span class="pill ${r.status}">${r.status==='done'?(fresh.has(r.id)?'New review':'Reviewed'):'In review'}</span></div>
           <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
-          ${f?feedbackBlock(f,r.kind):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
+          ${f?feedbackBlock(f,kindsOf(r)):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
           ${f?`<div class="row-actions"><span class="hint" style="flex:1">${r.stars?'You rated this review':'How helpful was this review? Your rating helps stylists grow.'}<br><span style="opacity:.8">${countNote(r)}</span></span><div class="chips">${[1,2,3,4,5].map(n=>`<button class="chip" ${r.stars?'disabled':''} data-stars="${r.id}" data-n="${n}" aria-pressed="${(r.stars||0)>=n}" aria-label="${n} star${n>1?'s':''}">★</button>`).join('')}</div></div>`:''}
           <div class="row-actions">${r.postId?(()=>{const ps=db.posts.find(x=>x.id===r.postId)?.status;return ps==='pending'?'<span class="hint" style="flex:1">Hidden while our team reviews reports about this look.</span>':ps==='rejected'?'<span class="hint" style="flex:1">This look was removed from the community.</span>':'<span class="hint" style="flex:1">Posted to the community</span><button class="btn sm line" data-go="community">See ratings</button>'})()
             :r.status==='done'?`<span class="hint" style="flex:1">Private. Only you and your stylist can see it.</span><button class="btn sm soft" data-share="${r.id}">Share to community</button>`
@@ -1051,11 +1060,11 @@ const VIEWS={
       <div class="desk" data-rid="${r.id}">
         <div class="desk-left"><div class="zoomer" id="zoomer" tabindex="0" aria-label="Photo, tap to zoom">${(()=>{const ph=photosOf(r);state.zi=Math.min(state.zi||0,Math.max(0,ph.length-1));return media(ph.length?{photo:ph[state.zi]}:r,r.kind,r.art||r.profile?.wear,'Client photo')})()}<span class="zoom-hint">Tap to zoom</span></div>
           ${photosOf(r).length>1?`<div class="ctas">${photosOf(r).map((u,i)=>`<button class="thumb" data-zi="${i}" style="padding:0;border:2px solid ${i===state.zi?'var(--accent)':'transparent'};cursor:pointer" aria-label="Photo ${i+1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}
-          <div class="client-box"><div class="who">${pAvatar(r.clientId)}<div>${pName(r.clientId,r.client)}<div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
+          <div class="client-box"><div class="who">${pAvatar(r.clientId)}<div>${pName(r.clientId,r.client)}<div class="meta"><span class="kind">${kl(r)}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
             <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
             ${r.profile?profileMini(r.profile,'Client’s'):'<p class="hint" style="margin:0">No color profile yet.</p>'}</div></div>
         <div class="desk-form"><h3 style="font-size:24px;margin-bottom:16px">Your review</h3>${r.profile?'<p class="hint" style="margin:-8px 0 16px">Pre-filled from the client’s color profile. Change anything you disagree with.</p>':''}
-          ${kindFields(r.kind)}
+          ${deskFields(kindsOf(r))}
           <div class="field"><span class="label">Product links (optional)</span>${[0,1].map(i=>`<div class="cols" style="margin-bottom:8px"><input id="pn${i}" placeholder="Item name" aria-label="Item ${i+1} name"><input id="pu${i}" placeholder="https://" aria-label="Item ${i+1} link"></div>`).join('')}</div>
           <div class="desk-actions"><button class="btn line" id="q-skip">Skip for now</button><button class="btn" id="q-send">Send & next →</button></div></div>
       </div>`;
@@ -1076,10 +1085,10 @@ const VIEWS={
         <div class="tier"><h3>How ratings work</h3><p>Paid reviews count toward your score. For free reviews, only the first one from each person counts. Extra free reviews from the same person don’t.</p></div></div>
       ${offersEditor(s,members)}
       <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your reviews & <em>ratings</em></h2><p>Paid reviews and each person’s first free review count toward your score. Extra free reviews from the same person don’t.</p></div></div>
-      <div class="queue">${done.length?'':'<p class="muted">No reviews sent yet.</p>'}${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${esc(r.client)}</span><span class="dot">${ago(r.created)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p><button class="textlink" data-viewrev="${r.id}">Read your review</button></div><div style="text-align:right">${r.stars?`<b style="color:var(--accent-text);letter-spacing:1px">${starsTxt(r.stars)}</b>`:'<span class="hint">Not rated yet</span>'}<div class="hint">${r.stars?(COUNTS(r)?'Counts toward your score':'Extra free review · not counted'):(REASON[r.reason]||('$'+r.amount))}</div></div></div>`).join('')||''}</div>
+      <div class="queue">${done.length?'':'<p class="muted">No reviews sent yet.</p>'}${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${kl(r)}</span><span class="dot">${esc(r.client)}</span><span class="dot">${ago(r.created)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p><button class="textlink" data-viewrev="${r.id}">Read your review</button></div><div style="text-align:right">${r.stars?`<b style="color:var(--accent-text);letter-spacing:1px">${starsTxt(r.stars)}</b>`:'<span class="hint">Not rated yet</span>'}<div class="hint">${r.stars?(COUNTS(r)?'Counts toward your score':'Extra free review · not counted'):(REASON[r.reason]||('$'+r.amount))}</div></div></div>`).join('')||''}</div>
       <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your community <em>comments</em></h2><p>Comments you left on community looks. Only you and the person who posted can see them.</p></div></div>
       <div class="queue">${(db.myComments||[]).map(c=>`<div class="qrow"><div class="thumb">${media(c.post,c.post.kind)}</div>
-        <div><div class="meta"><span class="kind">${KINDS[c.post.kind]?.label||''}</span><span class="dot">${pName(c.post.authorId)}</span><span class="dot">${ago(c.created)}</span></div><p class="ask" style="font-size:15px">“${esc(c.post.caption)}”</p><p style="margin:4px 0 0">${esc(c.text)}</p></div>
+        <div><div class="meta"><span class="kind">${kl(c.post)}</span><span class="dot">${pName(c.post.authorId)}</span><span class="dot">${ago(c.created)}</span></div><p class="ask" style="font-size:15px">“${esc(c.post.caption)}”</p><p style="margin:4px 0 0">${esc(c.text)}</p></div>
         <button class="btn sm line" data-person="${c.post.authorId}">View</button></div>`).join('')||'<p class="muted">No community comments yet.</p>'}</div>`;
   },
   sprofile(){
@@ -1130,7 +1139,7 @@ function approvalsTab(){
   return sec('New accounts',A.members.length,`<div class="people">${A.members.map(x=>`<div class="person" style="cursor:default"><div class="avatar">${face(x)}</div>
       <div><b>${esc(x.name)}</b><div class="meta"><span>Joined ${new Date(x.joined).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>${btns('member',x.id)}</div></div>`).join('')}</div>`)
    +sec('Reported looks',A.reported.length,`<div class="people">${A.reported.map(({post:p,flags})=>`<div class="person" style="grid-template-columns:96px minmax(0,1fr);cursor:default"><div class="thumb" style="width:96px;height:120px">${media(p,p.kind,p.art)}</div>
-      <div><div class="kind">${KINDS[p.kind].label}${p.status==='pending'?' · hidden':''}</div>${pName(p.authorId)}<p style="margin:4px 0 6px;font-size:14px">${esc(p.caption)}</p>
+      <div><div class="kind">${kl(p)}${p.status==='pending'?' · hidden':''}</div>${pName(p.authorId)}<p style="margin:4px 0 6px;font-size:14px">${esc(p.caption)}</p>
       <div class="badges" style="margin-bottom:8px">${flags.map(f=>`<span class="on">${esc(PFLAG_LABEL[f.reason]||f.reason)}${f.reporter_id?' · '+esc(personOf(f.reporter_id).name):''}</span>`).join('')}</div>
       <div class="actions" style="margin:0"><button class="btn sm line" data-mod="post" data-id="${p.id}" data-ok="0">Remove</button><button class="btn sm" data-mod="post" data-id="${p.id}" data-ok="1">Keep</button></div></div></div>`).join('')}</div>`)
    +sec('Profile photos',A.photos.length,`<div class="people">${A.photos.map(x=>`<div class="person" style="grid-template-columns:96px minmax(0,1fr);cursor:default"><div class="avatar" style="width:96px;height:96px"><img src="${esc(x.url)}" alt="Photo to review"></div>
@@ -1225,7 +1234,7 @@ function postCard(p){
   const a=personOf(p.authorId),n=p.nratings||0,mine=p.authorId===ME;
   const mineR=ME?p.ratings?.[ME]:null;const cm=p.comments||[];
   return `<article class="post" id="post-${p.id}"><div class="post-media">${p.status==='pending'?'<span class="badge" style="left:12px;right:auto">Hidden while we review reports · only you see it</span>':''}${gallery(p,p.kind,p.art,'')}${n?`<span class="avgtag num" title="Median score"><b>${p.median.toFixed(1)}</b>median · ${n} rating${n>1?'s':''}</span>`:''}</div>
-    <div class="post-body"><div class="who">${pAvatar(p.authorId)}<div style="flex:1">${pName(p.authorId,p.authorId===ME?'You':a.name)}<div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
+    <div class="post-body"><div class="who">${pAvatar(p.authorId)}<div style="flex:1">${pName(p.authorId,p.authorId===ME?'You':a.name)}<div class="meta"><span class="kind">${kl(p)}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
       <p style="margin:0">${esc(p.caption)}</p>
       ${p.stylistId?`<div class="who" style="gap:8px;font-size:13px"><span class="pro-tag">Stylist</span>${p.stylistScore?`<b>${p.stylistScore}/10</b>`:''}<span class="muted">reviewed by</span>${pName(p.stylistId,stylist(p.stylistId)?.name||personOf(p.stylistId).name)}</div>`:''}
       ${ME&&p.authorId!==ME?`<div style="text-align:right;margin:-4px 0 -6px"><button class="textlink" data-flagp="${p.id}">Report</button></div>`:''}
@@ -1244,27 +1253,28 @@ function addComment(pid,text){
 
 /* ================= Composer (+ button) ================= */
 function openComposer(opts={}){
-  state.compose={kind:ACTIVE_KINDS.includes(opts.kind)?opts.kind:'outfit',stylistId:opts.stylistId||'auto',photos:[],shape:'portrait',vis:'private',aesthetic:''};
+  const ks=(opts.kinds||(opts.kind?[opts.kind]:[])).filter(k=>ACTIVE_KINDS.includes(k));
+  state.compose={kinds:ks,kind:ks[0]||'outfit',stylistId:opts.stylistId||'auto',photos:[],shape:'portrait',vis:'private',aesthetic:''};
   renderComposer();
 }
 function renderComposer(){
-  const c=state.compose,pros=db.stylists.filter(s=>svc(s).includes(c.kind)&&s.id!==ME).sort((a,b)=>b.verified-a.verified||b.rating-a.rating);
+  const c=state.compose;c.kind=c.kinds[0]||'outfit';const pros=db.stylists.filter(s=>c.kinds.every(k=>svc(s).includes(k))&&s.id!==ME).sort((a,b)=>b.verified-a.verified||b.rating-a.rating);
   if(c.stylistId!=='auto'&&!pros.some(p=>p.id===c.stylistId))c.stylistId='auto';
   const chosen=c.stylistId==='auto'?null:stylist(c.stylistId);
   const keep=id=>$(id)?.value??'';const vals={q:keep('#cp-q')||c._q||'',keep:keep('#cp-keep')||c._keep||'',swap:keep('#cp-swap')||c._swap||'',aes:keep('#cp-aes')||c.aesthetic||''};
-  openSheet(`<div class="eyebrow">New request</div><h2 style="margin:6px 0 18px">${KINDS[c.kind].ask}</h2>
+  openSheet(`<div class="eyebrow">New request</div><h2 style="margin:6px 0 18px">${c.kinds.length===1?KINDS[c.kind].ask:c.kinds.length?'Review my '+c.kinds.map(k=>KINDS[k].label.toLowerCase()).join(' + '):'Get a review'}</h2>
     <div class="strip">${c.photos.map((ph,i)=>`<div class="ph"><img src="${ph.out}" alt="Photo ${i+1}"><button class="x" data-phdel="${i}" aria-label="Remove photo ${i+1}">×</button><button class="ed" data-phedit="${i}">Edit</button></div>`).join('')}
       ${c.photos.length<3?`<label class="add" for="cp-roll">${ICON.gallery}${c.photos.length?'Add another':'Camera roll'}<input type="file" id="cp-roll" accept="image/*" multiple></label>`:''}
       ${c.photos.length<2?`<label class="add" for="cp-cam">${ICON.camera}Take a photo<input type="file" id="cp-cam" accept="image/*" capture="environment"></label>`:''}</div>
     <p class="hint" style="margin:0 0 16px">Up to 3 photos · ${SHAPES[c.shape].label} card · Tap Edit to crop, resize or change the card shape. Tip: ${KINDS[c.kind].photo.toLowerCase()}.</p>
-    <div class="field"><span class="label">What should they look at?</span><div class="chips">${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button type="button" class="chip" data-ckind="${k}" aria-pressed="${c.kind===k}">${v.label}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">What should they look at? · pick one or more</span><div class="chips">${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button type="button" class="chip" data-ckind="${k}" aria-pressed="${c.kinds.includes(k)}">${v.label}</button>`).join('')}</div></div>
     <div class="field"><label for="cp-q">Your question</label><textarea id="cp-q" placeholder="Does this work for a wedding? What would you change?">${esc(vals.q)}</textarea></div>
     <div class="cols"><div class="field"><label for="cp-keep">Must stay</label><input id="cp-keep" value="${esc(vals.keep)}" placeholder="The vintage jacket"></div>
       <div class="field"><label for="cp-swap">Willing to swap</label><input id="cp-swap" value="${esc(vals.swap)}" placeholder="Shoes, bag"></div></div>
     <div class="field"><label for="cp-aes">The aesthetic I’m going for</label><input id="cp-aes" value="${esc(vals.aes)}" placeholder="Quiet luxury, but warmer" maxlength="60">
       <div class="chips" style="margin-top:6px">${AESTHETICS.slice(0,8).map(a=>`<button type="button" class="chip" data-aes="${a}">${a}</button>`).join('')}</div></div>
-    ${pros.length?'':`<div class="mini"><span class="eyebrow">No ${KINDS[c.kind].label.toLowerCase()} pros yet</span><span class="hint">Lookover is brand new, and no one reviews ${KINDS[c.kind].label.toLowerCase()} yet. Try another category, or check back soon.</span></div>`}
-    <div class="field" ${pros.length?'':'hidden'}><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great ${KINDS[c.kind].label.toLowerCase()} pro</option>
+    ${pros.length?'':`<div class="mini"><span class="eyebrow">No stylist for this yet</span><span class="hint">No one reviews ${c.kinds.map(k=>KINDS[k].label.toLowerCase()).join(' + ')||'this'} together yet. Try fewer categories, or check back soon.</span></div>`}
+    <div class="field" ${pros.length?'':'hidden'}><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great stylist</option>
       ${pros.map(s=>{const qq=quote(s);return `<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${qq.amount?'$'+qq.amount:'Free'}${s.verified?' · verified':''} · ★ ${s.rating}</option>`}).join('')}</select>
       <span class="hint">${chosen?`${esc(quote(chosen).label)}.${quote(chosen).amount?' Payments are not live yet, so it is free for now.':''}`:'Fastest match picks a top-rated stylist, using a free first review when one is offered.'}</span></div>
     ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
@@ -1287,10 +1297,11 @@ function submitCompose(){
   if(!ME){snapshotCompose();openAuth('signup',()=>renderComposer());return}
   if(!requireApproved())return;
   const c=state.compose,q=$('#cp-q').value.trim();
+  if(!c.kinds.length){toast('Choose what you want reviewed: outfit, makeup, nails or hair');return}
   if(!c.photos.length){toast('Add at least one photo');return}
   if(!q){toast('Write a short question for your stylist');$('#cp-q').focus();return}
   if([q,$('#cp-keep').value,$('#cp-swap').value,$('#cp-aes').value].some(hasContact)){toast('Please keep contact details, links and handles out of your request.');return}
-  const pool=db.stylists.filter(x=>svc(x).includes(c.kind)&&x.id!==ME);
+  const pool=db.stylists.filter(x=>c.kinds.every(k=>svc(x).includes(k))&&x.id!==ME);
   let s=c.stylistId==='auto'?null:stylist(c.stylistId);
   if(!s&&pool.length){const tt=t=>parseInt(t.turnaround)||48;const firstTime=x=>(x.firstFree||x.price===0)&&!db.requests.some(r=>r.clientId===ME&&r.stylistId===x.id);s=pool.filter(x=>x.price!=null||firstTime(x)).sort((a,b)=>firstTime(b)-firstTime(a)||b.rating-a.rating||tt(a)-tt(b))[0]}
   if(!s){toast('No one reviews this category yet');return}
@@ -1298,7 +1309,7 @@ function submitCompose(){
   run(async()=>{
     const urls=[];for(const ph of c.photos)urls.push(await upload(ph.out,c.kind));const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
     let req=null;
-    req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kind,question:q.slice(0,600),...fields,photo_url:urls[0],photo_urls:urls,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
+    req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kinds[0],kinds:c.kinds,question:q.slice(0,600),...fields,photo_url:urls[0],photo_urls:urls,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
     must(await sb.from('profiles').update({submissions:(u.submissions||0)+1}).eq('id',ME));
     closeSheet();await load();const gained=Math.min(STICKERS.length,3+2*me().submissions)-before;
     toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go('mine');
@@ -1307,47 +1318,55 @@ function submitCompose(){
 
 /* ================= Review form for stylists ================= */
 function kindFields(k){
-  const score=`<div class="field"><label for="fb-score">Score · <span id="sc-v" class="num">7</span> / 10</label><input type="range" id="fb-score" min="1" max="10" value="7"></div>`;
+  const P=`fb-${k}-`;
+  const score=`<div class="field"><label for="${P}score">${KINDS[k].label} score · <span id="${P}sv" class="num">7</span> / 10</label><input type="range" id="${P}score" data-sv="${P}sv" min="1" max="10" value="7"></div>`;
   const sel=(id,label,opts,blank)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${blank?`<option value="">${blank}</option>`:''}${opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;
-  const verdict=(ph,tl,tph)=>`<div class="field"><label for="fb-notes">Your comments</label><textarea id="fb-notes" placeholder="${ph}"></textarea></div><div class="field"><label for="fb-try">${tl}</label><textarea id="fb-try" placeholder="${tph}"></textarea></div>`;
-  if(k==='skin')return `<div class="cols">${sel('fb-type','Skin type',SKIN_TYPES)}<div></div></div><div class="field"><span class="label">Concerns to focus on</span>${toggles('fb-concerns',CONCERNS)}</div>
-    ${verdict('What you see and what is likely causing it','Also try','Habits, timelines, what to stop using')}
-    <div class="cols"><div class="field"><label for="fb-am">Morning routine</label><textarea id="fb-am" placeholder="One step per line"></textarea></div><div class="field"><label for="fb-pm">Evening routine</label><textarea id="fb-pm" placeholder="One step per line"></textarea></div></div>`;
-  if(k==='makeup')return `${score}<div class="cols">${sel('fb-under','Undertone',UNDERTONES)}${sel('fb-season','Color season',SEASONS,'Not assessed')}</div>
-    <div class="field"><span class="label">Lips</span>${swatchPicker('fb-lips',[],SHADES)}</div><div class="field"><span class="label">Cheeks</span>${swatchPicker('fb-cheeks',[],SHADES)}</div>
-    <div class="field"><span class="label">Eyes</span>${swatchPicker('fb-eyes',[],SHADES)}</div><div class="field"><span class="label">Skip these shades</span>${swatchPicker('fb-avoid',[],SHADES)}</div>
-    ${verdict('What is working and what is not','Try instead','Shade swaps, placement, technique')}`;
-  if(k==='nails')return `${score}<div class="cols">${sel('fb-shape','Nail shape',NAIL_SHAPES)}${sel('fb-length','Length',NAIL_LENGTHS)}</div>
-    <div class="field"><span class="label">Shades</span>${swatchPicker('fb-polish',[],POLISH)}</div><div class="field"><span class="label">Finish</span>${toggles('fb-finish',FINISHES)}</div>
-    ${verdict('What suits their hands and what does not','Try instead','Shape, length, shade or design ideas')}`;
-  if(k==='hair')return `${score}<div class="cols">${sel('fb-face','Face shape',FACE_SHAPES)}${sel('fb-htype','Hair texture',HAIR_TYPES)}</div>
-    <div class="field"><span class="label">Cuts to ask for</span>${toggles('fb-cuts',CUTS)}</div><div class="field"><span class="label">Hair colors</span>${swatchPicker('fb-haircol',[],HAIRC)}</div>
-    ${verdict('What is working and what is not','Try instead','What to ask the salon or barber for')}`;
-  return `${score}${sel('fb-season','Color season',SEASONS,'Not assessed')}
-    <div class="field"><span class="label">Wear more</span>${swatchPicker('fb-palette',[])}</div><div class="field"><span class="label">Keep away from the face</span>${swatchPicker('fb-avoid',[])}</div>
-    ${verdict('What is working and what is not. Mention the pieces they want to keep.','Try instead','Specific swaps for the pieces they are willing to change')}`;
+  if(k==='makeup')return `${score}<div class="cols">${sel(P+'under','Undertone',UNDERTONES)}${sel(P+'season','Color season',SEASONS,'Not assessed')}</div>
+    <div class="field"><span class="label">Lips</span>${swatchPicker(P+'lips',[],SHADES)}</div><div class="field"><span class="label">Cheeks</span>${swatchPicker(P+'cheeks',[],SHADES)}</div>
+    <div class="field"><span class="label">Eyes</span>${swatchPicker(P+'eyes',[],SHADES)}</div><div class="field"><span class="label">Skip these shades</span>${swatchPicker(P+'avoid',[],SHADES)}</div>`;
+  if(k==='nails')return `${score}<div class="cols">${sel(P+'shape','Nail shape',NAIL_SHAPES)}${sel(P+'length','Length',NAIL_LENGTHS)}</div>
+    <div class="field"><span class="label">Shades</span>${swatchPicker(P+'polish',[],POLISH)}</div><div class="field"><span class="label">Finish</span>${toggles(P+'finish',FINISHES)}</div>`;
+  if(k==='hair')return `${score}<div class="cols">${sel(P+'face','Face shape',FACE_SHAPES)}${sel(P+'htype','Hair texture',HAIR_TYPES)}</div>
+    <div class="field"><span class="label">Cuts to ask for</span>${toggles(P+'cuts',CUTS)}</div><div class="field"><span class="label">Hair colors</span>${swatchPicker(P+'haircol',[],HAIRC)}</div>`;
+  return `${score}${sel(P+'season','Color season',SEASONS,'Not assessed')}
+    <div class="field"><span class="label">Wear more</span>${swatchPicker(P+'palette',[])}</div><div class="field"><span class="label">Keep away from the face</span>${swatchPicker(P+'avoid',[])}</div>`;
+}
+const VERDICT_PH={outfit:['What is working and what is not. Mention the pieces they want to keep.','Specific swaps for the pieces they are willing to change'],
+  makeup:['What is working and what is not','Shade swaps, placement, technique'],nails:['What suits their hands and what does not','Shape, length, shade or design ideas'],
+  hair:['What is working and what is not','What to ask the salon or barber for']};
+function deskFields(kinds){
+  const multi=kinds.length>1,ph=multi?['Your overall take on everything they asked about','Specific swaps and next steps']:(VERDICT_PH[kinds[0]]||VERDICT_PH.outfit);
+  return kinds.map(k=>`<div style="${multi?'border-top:1px solid var(--line);padding-top:14px;margin-top:6px':''}">${multi?`<div class="kind" style="margin-bottom:10px">${KINDS[k].label}</div>`:''}${kindFields(k)}</div>`).join('')
+    +`<div style="${multi?'border-top:1px solid var(--line);padding-top:14px;margin-top:6px':''}">${multi?'<div class="kind" style="margin-bottom:10px">Overall</div>':''}
+      <div class="field"><label for="fb-notes">Your comments</label><textarea id="fb-notes" placeholder="${ph[0]}"></textarea></div><div class="field"><label for="fb-try">Try instead</label><textarea id="fb-try" placeholder="${ph[1]}"></textarea></div></div>`;
 }
 function prefillDesk(r){
-  const sc=$('#fb-score');if(sc)sc.oninput=e=>$('#sc-v').textContent=e.target.value;
+  document.querySelectorAll('[data-sv]').forEach(el=>el.oninput=()=>{document.getElementById(el.dataset.sv).textContent=el.value});
   const P=r.profile;if(!P)return;
-  const setv=(id,v)=>{const el=$(id);if(el&&v)el.value=v};
-  setv('#fb-season',P.season);setv('#fb-under',P.undertone);setv('#fb-type',P.skinType);setv('#fb-face',P.faceShape);setv('#fb-htype',P.hairType);
+  const setv=(id,v)=>{const el=$('#'+id);if(el&&v)el.value=v};
   const press=(id,list)=>(list||[]).forEach(n=>{const b=document.querySelector(`#${id} [data-sw="${CSS.escape(n)}"]`);if(b)b.setAttribute('aria-pressed','true')});
-  press('fb-palette',P.wear);if(r.kind==='outfit')press('fb-avoid',P.avoid);press('fb-lips',P.lips);press('fb-cheeks',P.cheeks);press('fb-eyes',P.eyes);press('fb-concerns',P.concerns);press('fb-polish',P.nails);press('fb-haircol',P.hairColors);
+  kindsOf(r).forEach(k=>{const q=`fb-${k}-`;
+    if(k==='outfit'){setv(q+'season',P.season);press(q+'palette',P.wear);press(q+'avoid',P.avoid)}
+    if(k==='makeup'){setv(q+'season',P.season);setv(q+'under',P.undertone);press(q+'lips',P.lips);press(q+'cheeks',P.cheeks);press(q+'eyes',P.eyes)}
+    if(k==='nails')press(q+'polish',P.nails);
+    if(k==='hair'){setv(q+'face',P.faceShape);setv(q+'htype',P.hairType);press(q+'haircol',P.hairColors)}});
 }
 function sendReview(rid){
   const notes=$('#fb-notes').value.trim(),tryInstead=$('#fb-try').value.trim();
   if(!notes){toast('Add your comments first');$('#fb-notes').focus();return}
   if(!tryInstead){toast('Add at least one suggestion');$('#fb-try').focus();return}
-  if([notes,tryInstead,$('#fb-am')?.value,$('#fb-pm')?.value].some(hasContact)){toast('Reviews can’t include contact details, handles or other apps. Use the product link boxes for links.');return}
+  if([notes,tryInstead].some(hasContact)){toast('Reviews can’t include contact details, handles or other apps. Use the product link boxes for links.');return}
   const products=[0,1].map(i=>({name:$('#pn'+i).value.trim(),url:$('#pu'+i).value.trim()})).filter(x=>x.name&&/^https?:\/\/\S+$/i.test(x.url))
     .map(x=>{try{return {...x,store:new URL(x.url).hostname.replace(/^www\./,'')}}catch(e){return null}}).filter(Boolean);
-  const r=db.requests.find(x=>x.id===rid),k=r.kind,val=id=>$(id)?.value,score=+val('#fb-score');
-  const feedback=k==='skin'?{skinType:val('#fb-type'),concerns:picked('fb-concerns'),am:val('#fb-am').trim(),pm:val('#fb-pm').trim(),notes,tryInstead,products}
-    :k==='makeup'?{score,undertone:val('#fb-under'),season:val('#fb-season'),lips:picked('fb-lips'),cheeks:picked('fb-cheeks'),eyes:picked('fb-eyes'),avoid:picked('fb-avoid'),notes,tryInstead,products}
-    :k==='nails'?{score,shape:val('#fb-shape'),length:val('#fb-length'),nailShades:picked('fb-polish'),finishes:picked('fb-finish'),notes,tryInstead,products}
-    :k==='hair'?{score,faceShape:val('#fb-face'),hairType:val('#fb-htype'),cuts:picked('fb-cuts'),hairColors:picked('fb-haircol'),notes,tryInstead,products}
-    :{score,season:val('#fb-season'),palette:picked('fb-palette'),avoid:picked('fb-avoid'),notes,tryInstead,products};
+  const r=db.requests.find(x=>x.id===rid),kinds=kindsOf(r),val=id=>$('#'+id)?.value;
+  const partOf=k=>{const q=`fb-${k}-`,score=+val(q+'score');
+    if(k==='makeup')return {score,undertone:val(q+'under'),season:val(q+'season'),lips:picked(q+'lips'),cheeks:picked(q+'cheeks'),eyes:picked(q+'eyes'),avoid:picked(q+'avoid')};
+    if(k==='nails')return {score,shape:val(q+'shape'),length:val(q+'length'),nailShades:picked(q+'polish'),finishes:picked(q+'finish')};
+    if(k==='hair')return {score,faceShape:val(q+'face'),hairType:val(q+'htype'),cuts:picked(q+'cuts'),hairColors:picked(q+'haircol')};
+    return {score,season:val(q+'season'),palette:picked(q+'palette'),avoid:picked(q+'avoid')}};
+  const parts=Object.fromEntries(kinds.map(k=>[k,partOf(k)]));
+  // Top-level fields mirror the first category, so older screens and "Save to my colors" keep working.
+  const feedback={...Object.assign({},...kinds.slice().reverse().map(k=>parts[k])),kinds,parts,notes,tryInstead,products};
   run(async()=>{must(await sb.from('requests').update({feedback}).eq('id',rid));await load();render();window.scrollTo({top:0,behavior:'smooth'})},`Review sent to ${r.client}`);
 }
 
@@ -1447,7 +1466,7 @@ function viewStylist(id){
     <p style="font-size:17px;margin:0 0 12px">${esc(s.line||s.title)}</p>${s.bio?`<p style="margin:0 0 14px;max-width:60ch">${esc(s.bio)}</p>`:''}
     <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${esc(quote(s).label)}</span></div>
     ${tags(s.specialties)}${offersBlock(s)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
-    <div class="actions" style="justify-content:stretch">${svc(s).map(k=>`<button class="btn soft" data-compose="${k}" data-to="${s.id}" style="flex:1">${KINDS[k].ask}</button>`).join('')}</div>`);
+    <div class="actions" style="justify-content:stretch"><p class="hint" style="width:100%;margin:0 0 4px">Tap everything you want ${esc(s.name.split(' ')[0])} to look at, then send it in one go.</p>${svc(s).map(k=>`<button class="btn line kp" data-kpick="${k}" aria-pressed="false">${KINDS[k].ask}</button>`).join('')}<button class="btn" data-sendpick="${s.id}" style="flex-basis:100%">Send my look</button></div>`);
 }
 function applyVerification(){
   const s=stylist(db.me.stylistId);let photos=[];
@@ -1637,10 +1656,10 @@ document.addEventListener('click',e=>{
       <div class="actions"><button class="btn line" id="cm-keep">Keep it</button><button class="btn" id="cm-ok">Cancel membership</button></div>`);
     $('#cm-keep').onclick=closeSheet;$('#cm-ok').onclick=()=>run(async()=>{must(await sb.rpc('cancel_membership',{mid:d.cancelm}));closeSheet();await load();render()},'Membership canceled');return}
   if(d.viewrev){const r=db.requests.find(x=>x.id===d.viewrev);if(!r)return;
-    openSheet(`<div class="eyebrow">${r.stylistId===ME?'Your review for '+esc(r.client):'Sent to '+esc(stylist(r.stylistId)?.name||personOf(r.stylistId).name)+' · '+new Date(r.created).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${KINDS[r.kind].label}</div>
+    openSheet(`<div class="eyebrow">${r.stylistId===ME?'Your review for '+esc(r.client):'Sent to '+esc(stylist(r.stylistId)?.name||personOf(r.stylistId).name)+' · '+new Date(r.created).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${kl(r)}</div>
       <h2 style="margin:6px 0 14px">“${esc(r.question)}”</h2>
       <div style="display:grid;gap:8px;margin-bottom:14px">${photosOf(r).length?photosOf(r).map((u,i)=>`<img src="${esc(u)}" alt="Photo ${i+1}" style="width:100%;max-height:420px;object-fit:contain;border-radius:14px;background:var(--soft)">`).join(''):media(r,r.kind,r.art)}</div>
-      ${notesBlock(r)}<div class="meta" style="margin:10px 0">${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}<span class="dot">${r.postId?'Shared to the community':'Private'}</span></div>${r.feedback?feedbackBlock(r.feedback,r.kind):'<p class="muted">Waiting for the stylist’s review.</p>'}
+      ${notesBlock(r)}<div class="meta" style="margin:10px 0">${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}<span class="dot">${r.postId?'Shared to the community':'Private'}</span></div>${r.feedback?feedbackBlock(r.feedback,kindsOf(r)):'<p class="muted">Waiting for the stylist’s review.</p>'}
       ${r.stars?`<p class="hint" style="margin-top:14px">Rated ${starsTxt(r.stars)} · ${countNote(r)}</p>`:''}`);return}
   if(d.delc){const id=d.delc;
     openSheet(`<div class="eyebrow">${db.isAdmin?'Admin':'Your comment'}</div><h2 style="margin:6px 0 10px">Delete this comment?</h2><p class="muted" style="margin:0 0 18px">It will be removed for everyone. This can’t be undone.</p>
@@ -1668,6 +1687,9 @@ document.addEventListener('click',e=>{
   if(d.dismiss){return run(async()=>{must(await sb.from('comment_flags').delete().eq('comment_id',d.dismiss));state.acomments=null;render()},'Flag dismissed')}
   if(d.zi!==undefined&&t.dataset.zi!==undefined&&state.view==='feed'){state.zi=+d.zi;return render()}
   if(d.mtab){state.mineTab=d.mtab;return render()}
+  if(d.kpick){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
+  if(d.sendpick){const box=t.parentElement,ks=[...box.querySelectorAll('[data-kpick][aria-pressed="true"]')].map(b=>b.dataset.kpick);
+    if(!ks.length){toast('Tap what you want reviewed first');return}if(ME&&!requireApproved())return;closeSheet();return openComposer({kinds:ks,stylistId:d.sendpick})}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
   if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;if(d.atab==='approvals')state.approvals=null;if(d.atab==='comments')state.acomments=null;return render()}
@@ -1705,7 +1727,7 @@ document.addEventListener('click',e=>{
     must(await sb.from('requests').update({post_id:post.id}).eq('id',r.id));await load();render()},'Posted to the community')}
   if(d.stars){return run(async()=>{must(await sb.from('requests').update({client_stars:+d.n}).eq('id',d.stars));await load();render()},'Thanks for rating your stylist')}
   if(d.adopt)return adoptReview(d.adopt);
-  if(d.ckind){snapshotCompose();state.compose.kind=d.ckind;return renderComposer()}
+  if(d.ckind){snapshotCompose();const c=state.compose,k=d.ckind;c.kinds=c.kinds.includes(k)?c.kinds.filter(x=>x!==k):[...c.kinds,k].sort((a,b)=>ACTIVE_KINDS.indexOf(a)-ACTIVE_KINDS.indexOf(b));return renderComposer()}
   if(d.aes){$('#cp-aes').value=d.aes;return}
   if(d.qk){t.parentElement.querySelectorAll('[data-qk]').forEach(b=>b.setAttribute('aria-pressed',b===t));quizAns[d.qk]=d.qv;return}
   if(d.sw!==undefined&&!t.closest('#em-fav')){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
