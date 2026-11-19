@@ -1078,7 +1078,7 @@ const VIEWS={
       :`<p class="muted" style="margin:0">Your collage. Mix photos, inspiration, stickers and words.</p><button class="btn" data-cb="edit">${c.items.length?'Edit collage':'Start my collage'}</button>`;
     return head+`<div class="board-tools">${tools}</div>
       ${edit?`<div class="tray" aria-label="Your stickers">
-        <div class="prog"><b style="white-space:nowrap">${unlocked} of ${STICKERS.length} stickers</b><i><b style="width:${nx?Math.max(4,Math.round(100*n/nx.at)):100}%"></b></i><span class="hint" style="white-space:nowrap">${nx?`${nx.at-n} more look${nx.at-n===1?'':'s'} to unlock ${esc(nx.name)}`:'Every pack unlocked'}</span></div>
+        <div class="prog"><b style="white-space:nowrap">${unlocked} of ${STICKERS.length} stickers</b><i><b style="width:${nx?Math.max(4,Math.round(100*n/nx.at)):100}%"></b></i><span class="hint" style="white-space:nowrap">${nx?'Upload more looks to unlock more sticker packs':'Every pack unlocked'}</span></div>
         <div class="packs" role="group" aria-label="Sticker packs">${PACKS.map(p=>`<button data-pack="${p.id}" aria-pressed="${p.id===pk.id}" class="${n>=p.at?'':'lk'}">${n>=p.at?'':'🔒 '}${esc(p.name)}</button>`).join('')}</div>
         <div class="grid">${pk.s.map(e=>open?`<button data-sticker="${esc(e)}" class="${isWord(e)?'w':''}" aria-label="Add ${isWord(e)?esc(e):'sticker'}">${esc(e)}</button>`:`<button class="locked ${isWord(e)?'w':''}" disabled aria-label="Locked sticker">${esc(e)}</button>`).join('')}</div>
         ${open?'':`<p class="hint" style="margin:0;width:100%">Send ${pk.at-n} more look${pk.at-n===1?'':'s'} for review to unlock the ${esc(pk.name)} pack.</p>`}
