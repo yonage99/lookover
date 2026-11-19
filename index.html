@@ -849,7 +849,7 @@ const goHome=()=>go(state.role==='stylist'?'feed':state.role==='admin'?'admin':'
 $('#home').onclick=goHome;$('#home').onkeydown=e=>{if(e.key==='Enter')goHome()};
 $('#me-btn').onclick=()=>{if(!ME)return openAuth('login');go(state.role==='stylist'?'sprofile':'me')};
 
-function go(v){if(v==='admin'){state.people=null;state.approvals=null;state.acomments=null}if(state.editBoard&&v!=='me'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe()}const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render();alertNewReviews()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
+function go(v){if(v==='admin'){state.people=null;state.approvals=null;state.acomments=null;state.alooks=null}if(state.editBoard&&v!=='me'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe()}const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render();alertNewReviews()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
 function render(){
   if(!db.loaded){$('#app').innerHTML='<div class="empty"><h3>Loading Lookover…</h3></div>';return}
   if(state.view==='feed'||state.view==='studio'||state.view==='sprofile'){if(!db.me.stylistId)state.view='join'}
@@ -1113,11 +1113,12 @@ const VIEWS={
         <div class="actions"><button class="btn" id="create-stylist">Create my stylist profile</button></div></div>`;
   },
   admin(){
-    const tabs=`<div class="section-head" style="padding-bottom:8px"><div><div class="eyebrow">Admin</div><h2>${state.adminTab==='people'?'Everyone on <em>Lookover</em>':state.adminTab==='approvals'?'Waiting for <em>approval</em>':state.adminTab==='comments'?'All <em>comments</em>':'Stylist <em>verification</em>'}</h2></div></div>
-      <div class="tabs" role="tablist"><button role="tab" data-atab="people" aria-selected="${state.adminTab==='people'}">People</button><button role="tab" data-atab="approvals" aria-selected="${state.adminTab==='approvals'}">Approvals</button><button role="tab" data-atab="comments" aria-selected="${state.adminTab==='comments'}">Comments</button><button role="tab" data-atab="verify" aria-selected="${state.adminTab==='verify'}">Verification</button></div>`;
+    const tabs=`<div class="section-head" style="padding-bottom:8px"><div><div class="eyebrow">Admin</div><h2>${state.adminTab==='people'?'Everyone on <em>Lookover</em>':state.adminTab==='approvals'?'Waiting for <em>approval</em>':state.adminTab==='comments'?'All <em>comments</em>':state.adminTab==='looks'?'Community <em>looks</em>':'Stylist <em>verification</em>'}</h2></div></div>
+      <div class="tabs" role="tablist"><button role="tab" data-atab="people" aria-selected="${state.adminTab==='people'}">People</button><button role="tab" data-atab="approvals" aria-selected="${state.adminTab==='approvals'}">Approvals</button><button role="tab" data-atab="looks" aria-selected="${state.adminTab==='looks'}">Looks</button><button role="tab" data-atab="comments" aria-selected="${state.adminTab==='comments'}">Comments</button><button role="tab" data-atab="verify" aria-selected="${state.adminTab==='verify'}">Verification</button></div>`;
     if(state.adminTab==='people')return tabs+peopleTab();
     if(state.adminTab==='approvals')return tabs+approvalsTab();
     if(state.adminTab==='comments')return tabs+commentsTab();
+    if(state.adminTab==='looks')return tabs+looksTab();
     return tabs+adminVerify();
   }
 };
@@ -1138,10 +1139,6 @@ function approvalsTab(){
   const sec=(t,n,body)=>`<div class="section-head" style="padding-top:28px"><h2 style="font-size:28px">${t} <em>· ${n}</em></h2></div>${n?body:'<p class="muted">Nothing waiting.</p>'}`;
   return sec('New accounts',A.members.length,`<div class="people">${A.members.map(x=>`<div class="person" style="cursor:default"><div class="avatar">${face(x)}</div>
       <div><b>${esc(x.name)}</b><div class="meta"><span>Joined ${new Date(x.joined).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div>${btns('member',x.id)}</div></div>`).join('')}</div>`)
-   +sec('Reported looks',A.reported.length,`<div class="people">${A.reported.map(({post:p,flags})=>`<div class="person" style="grid-template-columns:96px minmax(0,1fr);cursor:default"><div class="thumb" style="width:96px;height:120px">${media(p,p.kind,p.art)}</div>
-      <div><div class="kind">${kl(p)}${p.status==='pending'?' · hidden':''}</div>${pName(p.authorId)}<p style="margin:4px 0 6px;font-size:14px">${esc(p.caption)}</p>
-      <div class="badges" style="margin-bottom:8px">${flags.map(f=>`<span class="on">${esc(PFLAG_LABEL[f.reason]||f.reason)}${f.reporter_id?' · '+esc(personOf(f.reporter_id).name):''}</span>`).join('')}</div>
-      <div class="actions" style="margin:0"><button class="btn sm line" data-mod="post" data-id="${p.id}" data-ok="0">Remove</button><button class="btn sm" data-mod="post" data-id="${p.id}" data-ok="1">Keep</button></div></div></div>`).join('')}</div>`)
    +sec('Profile photos',A.photos.length,`<div class="people">${A.photos.map(x=>`<div class="person" style="grid-template-columns:96px minmax(0,1fr);cursor:default"><div class="avatar" style="width:96px;height:96px"><img src="${esc(x.url)}" alt="Photo to review"></div>
       <div>${pName(x.user_id)}<p class="hint" style="margin:4px 0 8px">Should be a clear photo of a real person. No text, logos or contact details.</p>${btns('photo',x.user_id)}</div></div>`).join('')}</div>`)
    +sec('Stylist bios',A.bios.length,`<div class="list">${A.bios.map(x=>`<div class="app-card" style="grid-template-columns:minmax(0,1fr) auto"><div>${pName(x.stylist_id)}<p style="margin:6px 0 0;max-width:65ch">${esc(x.text)}</p></div>${btns('bio',x.stylist_id)}</div>`).join('')}</div>`);
@@ -1156,6 +1153,34 @@ async function loadAdminComments(){
 }
 const PFLAG_LABEL={not_a_look:'Not an outfit or look',contact:'Advertising or contact details',inappropriate:'Inappropriate',spam:'Spam',other:'Other',auto:'Auto-flag: caption may be advertising'};
 const FLAG_LABEL={contact:'Trying to move someone off Lookover',harassment:'Harassment or bullying',spam:'Spam',other:'Other',auto:'Auto-flag: possible contact details'};
+async function loadAdminLooks(){
+  const {data,error}=await sb.from('posts').select('*,post_flags(reason,reporter_id,detail)').order('created_at',{ascending:false}).limit(500);
+  if(error)throw error;
+  const rows=(data||[]).map(r=>({...mapPost(r),reviewState:r.review_state||'pending',reviewedAt:r.reviewed_at?ts(r.reviewed_at):null,flags:r.post_flags||[]}));
+  const ids=[...new Set(rows.flatMap(r=>[r.authorId,r.stylistId,...r.flags.map(f=>f.reporter_id)]).filter(x=>x&&!db.users[x]))];
+  if(ids.length){const {data:pr}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords').in('id',ids);(pr||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})})}
+  state.alooks=rows;
+}
+function looksTab(){
+  if(!state.alooks){loadAdminLooks().then(()=>{if(state.view==='admin'&&state.adminTab==='looks')render()}).catch(e=>{console.error(e);toast('Could not load looks')});return '<div class="empty"><h3>Loading looks…</h3></div>'}
+  const by=k=>state.alooks.filter(x=>x.reviewState===k),f=state.looksFolder||'pending';
+  const folders=[['pending','To check'],['checked','Checked'],['hidden','Hidden']];
+  const list=by(f).sort((a,b)=>(b.flags.length>0)-(a.flags.length>0)||b.created-a.created);
+  const btn=(a,label,cls='line')=>`<button class="btn sm ${cls}" data-look="${a}" data-id="__ID__">${label}</button>`;
+  const acts={pending:[['approve','Approve','soft'],['hide','Hide'],['delete','Delete']],checked:[['hide','Hide'],['delete','Delete']],hidden:[['restore','Restore','soft'],['delete','Delete']]}[f];
+  const note={pending:'Live now and not checked yet. Approve what’s fine, hide anything you want to look at later.',checked:'Looks you’ve already approved. They stay live.',hidden:'Blocked from everyone. Restore them or delete them for good.'}[f];
+  return `<div class="filters" role="group" aria-label="Folder" style="margin-top:6px">${folders.map(([k,l])=>`<button data-lfolder="${k}" aria-pressed="${f===k}">${l} · ${by(k).length}</button>`).join('')}</div>
+    <p class="muted" style="margin:-10px 0 18px">${note}</p>
+    ${list.length?`<div class="people">${list.map(x=>`<div class="person" style="grid-template-columns:110px minmax(0,1fr);cursor:default;align-items:start">
+      <div style="width:110px;border-radius:10px;overflow:hidden;background:var(--soft)">${gallery(x,x.kind,x.art,'Look')}</div>
+      <div style="min-width:0"><div class="meta"><span class="kind">${kl(x)}</span><span class="dot">${ago(x.created)}</span>${f==='pending'?'<span class="dot"><span class="pill pending" style="padding:2px 8px">Pending</span></span>':''}</div>
+        ${pName(x.authorId)}<p style="margin:4px 0 6px;font-size:14px">${esc(x.caption)}</p>
+        ${x.stylistScore?`<p class="hint" style="margin:0 0 6px">Stylist ${x.stylistScore}/10${x.stylistId?' · '+esc(personOf(x.stylistId).name):''}</p>`:''}
+        ${x.flags.length?`<div class="badges" style="margin-bottom:8px">${x.flags.map(fl=>`<span class="on">${esc(PFLAG_LABEL[fl.reason]||fl.reason)}${fl.reporter_id?' · '+esc(personOf(fl.reporter_id).name):''}</span>`).join('')}</div>`:''}
+        ${x.status==='pending'?'<p class="hint" style="margin:0 0 6px">Hidden automatically after 3 reports</p>':''}
+        <div class="actions" style="margin:0;justify-content:flex-start">${acts.map(([a,l,c])=>btn(a,l,c).replace('__ID__',x.id)).join('')}</div></div></div>`).join('')}</div>`
+      :`<div class="empty"><h3>${f==='pending'?'All caught up':'Nothing here'}</h3>${f==='pending'?'Every look has been checked.':''}</div>`}`;
+}
 function commentsTab(){
   if(!state.acomments){loadAdminComments().then(()=>{if(state.view==='admin'&&state.adminTab==='comments')render()}).catch(e=>{console.error(e);toast('Could not load comments')});return '<div class="empty"><h3>Loading comments…</h3></div>'}
   const rows=state.acomments,flagged=rows.filter(r=>r.flags.length),rest=rows.filter(r=>!r.flags.length);
@@ -1684,6 +1709,12 @@ document.addEventListener('click',e=>{
     $('#pr-cancel').onclick=closeSheet;
     $('#pr-send').onclick=()=>run(async()=>{const r=await sb.from('post_flags').insert({post_id:id,reporter_id:ME,reason,detail:$('#pr-detail').value.trim().slice(0,300)});
       if(r.error?.code==='23505')throw Object.assign(new Error('You already reported this look.'),{code:'P0001'});must(r);closeSheet();await load();render()},'Thanks. Our team will take a look.');return}
+  if(d.lfolder){state.looksFolder=d.lfolder;return render()}
+  if(d.look){const a=d.look,id=d.id,done=()=>run(async()=>{must(await sb.rpc('moderate_look',{pid:id,action:a}));closeSheet();state.alooks=null;await load();render()},{approve:'Approved · moved to Checked',hide:'Hidden · moved to Hidden',restore:'Restored · moved to Checked',delete:'Look deleted'}[a]);
+    if(a!=='delete')return done();
+    openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Delete this look?</h2><p class="muted" style="margin:0 0 18px">It’s removed for everyone, with its ratings and comments. This can’t be undone. To decide later, hide it instead.</p>
+      <div class="actions"><button class="btn line" id="dl-keep">Keep it</button><button class="btn" id="dl-ok">Delete look</button></div>`);
+    $('#dl-keep').onclick=closeSheet;$('#dl-ok').onclick=done;return}
   if(d.dismiss){return run(async()=>{must(await sb.from('comment_flags').delete().eq('comment_id',d.dismiss));state.acomments=null;render()},'Flag dismissed')}
   if(d.zi!==undefined&&t.dataset.zi!==undefined&&state.view==='feed'){state.zi=+d.zi;return render()}
   if(d.mtab){state.mineTab=d.mtab;return render()}
@@ -1692,7 +1723,7 @@ document.addEventListener('click',e=>{
     if(!ks.length){toast('Tap what you want reviewed first');return}if(ME&&!requireApproved())return;closeSheet();return openComposer({kinds:ks,stylistId:d.sendpick})}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
-  if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;if(d.atab==='approvals')state.approvals=null;if(d.atab==='comments')state.acomments=null;return render()}
+  if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;if(d.atab==='approvals')state.approvals=null;if(d.atab==='comments')state.acomments=null;if(d.atab==='looks')state.alooks=null;return render()}
   if(d.mod){const ok=d.ok==='1',fn={member:['moderate_member','uid'],post:['moderate_post','pid'],photo:['moderate_photo','uid'],bio:['moderate_bio','sid']}[d.mod];
     return run(async()=>{must(await sb.rpc(fn[0],{[fn[1]]:d.id,approve:ok}));state.approvals=null;await load();render()},d.mod==='post'?(ok?'Look kept and reports cleared':'Look removed'):(ok?'Approved':'Rejected'))}
   if(d.vis){t.parentElement.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b===t));state.compose.vis=d.vis;return}
