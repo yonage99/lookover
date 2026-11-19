@@ -20,7 +20,7 @@
 /* Layout idea: a bright white app with an editorial masthead, a floating dock with a + button, and the user's favorite color as the only accent. */
 :root{
   --paper:#ffffff; --surface:#ffffff; --soft:#f5f5f7; --ink:#111114; --muted:#6b6b73; --line:#e7e7ec;
-  --accent:#8c1238; --accent-ink:#ffffff; --accent-text:#8c1238; --accent-soft:#f6e8ed;
+  --accent:#C2185B; --accent-ink:#ffffff; --accent-text:#C2185B; --accent-soft:#f9e3ec; --accent-deep:#4A1529;
   --ok:#2b6a4c; --ok-soft:#e3f1e9; --warn:#8a6100; --warn-soft:#f7eed6;
   --display:'Bodoni Moda',Didot,'Bodoni 72','Times New Roman',serif;
   --body:'Instrument Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -456,13 +456,13 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 <header class="mast">
   <div class="mast-in">
     <a class="wordmark" id="home" role="button" tabindex="0" aria-label="Lookover home"><svg class="logo-svg" viewBox="100 150 1360 700" aria-hidden="true">
-  <g fill="none" stroke="#C2185B" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" style="stroke:var(--accent-text)" stroke-linecap="round" stroke-linejoin="round">
     <path stroke-width="18" d="M686 238 C690 205 735 178 775 180 C820 182 850 212 848 245 C846 290 790 305 775 330 C770 340 768 345 770 352"/>
     <path stroke-width="17" d="M770 352 C700 388 430 420 336 498 C318 513 304 528 300 545"/>
     <path stroke-width="17" d="M770 352 C840 388 1110 420 1204 498 C1222 513 1234 528 1236 545"/>
     <path stroke-width="10" d="M300 818 C520 748 1020 748 1236 818"/>
   </g>
-  <text x="125" y="725" textLength="1310" lengthAdjust="spacingAndGlyphs" font-family="'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif" font-size="300" font-weight="600" fill="#4A1529">Look<tspan fill="#C2185B" font-style="italic" font-weight="500">over</tspan></text>
+  <text x="125" y="725" textLength="1310" lengthAdjust="spacingAndGlyphs" font-family="'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif" font-size="300" font-weight="600" style="fill:var(--accent-deep)">Look<tspan style="fill:var(--accent-text)" font-style="italic" font-weight="500">over</tspan></text>
 </svg></a>
     <div class="explore">
       <button class="explore-btn" id="explore-btn" aria-expanded="false" aria-controls="menu">Explore
@@ -519,7 +519,7 @@ const CUTS=['Long layers','Curtain bangs','Face-framing layers','Lob','Bob','Pix
 const AESTHETICS=['Quiet luxury','Minimal','Modest','Streetwear','Coquette','Old money','Y2K','Boho','Clean girl','Soft glam','Edgy','Preppy'];
 const STYLE_WORDS=['Modest','Minimal','Colorful','Vintage','Streetwear','Classic','Feminine','Edgy','Sporty','Boho','Preppy','Glam','Thrifted','Neutral tones','Bold prints','Gold jewelry','Silver jewelry'];
 const SPECIALTIES=['Color analysis','Modest fashion','Streetwear','Workwear','Menswear','Events & formal','Thrift & budget','Capsule wardrobes','Everyday makeup','Bridal makeup','Nail art','Gel & builder','Haircuts','Hair color','Curly hair','Barbering'];
-const FAV_COLORS=['#8c1238','#c2185b','#e0607e','#d9742b','#c9a227','#2e7d5b','#1f6f78','#2b59c3','#6a4cc2','#8a6f5a','#5f6670','#111114'];
+const FAV_COLORS=['#C2185B','#8c1238','#e0607e','#d9742b','#c9a227','#2e7d5b','#1f6f78','#2b59c3','#6a4cc2','#8a6f5a','#5f6670','#111114'];
 const STICKERS=['✨','🎀','🌸','💖','⭐','🦋','🍒','👑','🔥','🌈','💅','👗','💄','🕶️','👠','🧸'];
 const KINDS={
   outfit:{label:'Outfit',ask:'Rate my outfit',blurb:'Fit, color, what to swap',photo:'Full-length, in daylight'},
@@ -560,7 +560,7 @@ function applyTheme(c){
   const r=document.documentElement.style;let t=c,i=0;
   while(lum(t)>.16&&i++<12)t=mix(t,'#000000',.14);
   r.setProperty('--accent',c);r.setProperty('--accent-ink',lum(c)>.42?'#111114':'#ffffff');
-  r.setProperty('--accent-text',t);r.setProperty('--accent-soft',mix(c,'#ffffff',.88));
+  r.setProperty('--accent-text',t);r.setProperty('--accent-deep',mix(t,'#1a0610',.55));r.setProperty('--accent-soft',mix(c,'#ffffff',.88));
 }
 
 /* ================= Illustrations (used when there is no photo) ================= */
@@ -594,7 +594,7 @@ const media=(x,kind,cols,alt)=>x&&x.photo?`<img src="${x.photo}" alt="${esc(alt|
 const CFG={url:"https://stehllepbcppfkqmayfg.supabase.co",key:"sb_publishable_u_VjXnXUna6oQOrFJ7E4Pw_AxkzzxyA"};
 const sb=window.supabase.createClient(CFG.url,CFG.key);
 let ME=null;
-const GUEST={id:null,name:'Guest',keywords:[],favColor:'#8c1238',photo:null,board:[],stickers:[],submissions:0};
+const GUEST={id:null,name:'Guest',keywords:[],favColor:'#C2185B',photo:null,board:[],stickers:[],submissions:0};
 let db={memberships:[],freeFrom:[],friends:[],users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
 const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null,person:null,adminTab:'people',people:null};
 const ts=t=>Date.parse(t)||Date.now();
@@ -816,7 +816,7 @@ const DOCK={
   admin:[['admin','Verify','verify'],['community','Community','community'],['+'],['browse','Pros','pros'],['me','Profile','profile']]
 };
 function renderShell(){
-  applyTheme(me().favColor||'#8c1238');
+  applyTheme(me().favColor||'#C2185B');
   $('#dock').innerHTML=DOCK[state.role].map(([v,l,ic])=>v==='+'?`<button class="plus" id="plus" aria-label="New review request">${ICON.plus}</button>`
     :`<button data-go="${v}" ${state.view===v||(v==='me'&&state.view==='colors')?'aria-current="page"':''} style="position:relative">${ICON[ic]}<span>${l}</span>${v==='mine'&&unseenReviews().length?`<i class="dot-badge" aria-label="${unseenReviews().length} new">${unseenReviews().length}</i>`:''}</button>`).join('');
   $('#me-btn').innerHTML=ME?face(state.role==='stylist'?stylist(db.me.stylistId):me()):'<span style="font-size:12px;font-weight:600">Log in</span>';

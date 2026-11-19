@@ -49,3 +49,6 @@ grant execute on function public.moderate_look(uuid, text) to authenticated;
 create or replace function public.moderate_post(pid uuid, approve boolean) returns void
 language plpgsql security definer set search_path = public as $$
 begin perform public.moderate_look(pid, case when approve then 'approve' else 'hide' end); end $$;
+
+-- New accounts default to the logo's pink.
+alter table public.profiles alter column fav_color set default '#C2185B';
