@@ -600,14 +600,14 @@ const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meT
 const ts=t=>Date.parse(t)||Date.now();
 const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,price:r.price??null,bio:r.bio||'',rating:+r.rating,reviews:r.reviews,firstFree:!!r.first_free,planPrice:r.plan_price,planSubs:r.plan_submissions});
 const mapPost=r=>({kinds:r.kinds?.length?r.kinds:[r.kind],photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,status:r.status||'approved',authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,stylistId:r.stylist_id,stylistScore:r.stylist_score,created:ts(r.created_at),
-  ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro}))});
+  ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro,edited:!!c.edited_at}))});
 const mapReq=r=>({kinds:r.kinds?.length?r.kinds:[r.kind],photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,shareWhenDone:!!r.share_when_done,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
 const mapApp=r=>({id:r.id,stylistId:r.stylist_id,experience:r.experience,link:r.link,note:r.note,portfolio:r.portfolio||[],status:r.status,created:ts(r.created_at)});
 const mapUser=r=>({id:r.id,name:r.name,photo:r.photo_url,favColor:r.fav_color,keywords:r.keywords||[],board:r.board||[],stickers:r.stickers||[],submissions:r.submissions||0});
 async function load(){
   const {data:{session}}=await sb.auth.getSession();ME=session?.user?.id||null;
   const [st,po]=await Promise.all([sb.from('stylists').select('*').order('verified',{ascending:false}).order('rating',{ascending:false}).limit(200),
-    sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').order('created_at',{ascending:false}).limit(60)]);
+    sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at,edited_at)').order('created_at',{ascending:false}).limit(60)]);
   if(st.error||po.error)throw (st.error||po.error);
   const posts=po.data.map(mapPost);await attachScores(posts);
   const next={memberships:[],freeFrom:[],friends:[],users:{},stylists:st.data.map(mapStylist),posts,requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
@@ -623,7 +623,7 @@ async function load(){
     const [phr,bir]=await Promise.all([sb.from('photo_reviews').select('*').eq('user_id',ME).maybeSingle(),sb.from('bio_reviews').select('*').eq('stylist_id',ME).maybeSingle()]);
     next.myPhotoReview=phr.data||null;next.myBioReview=bir.data||null;
     const [ms,mc]=await Promise.all([sb.from('memberships').select('*').order('started_at',{ascending:false}),
-      sb.from('comments').select('id,post_id,text,created_at,posts(id,author_id,kind,caption,photo_url)').eq('author_id',ME).order('created_at',{ascending:false}).limit(100)]);
+      sb.from('comments').select('id,post_id,text,created_at,edited_at,posts(id,author_id,kind,caption,photo_url)').eq('author_id',ME).order('created_at',{ascending:false}).limit(100)]);
     next.myComments=(mc.data||[]).filter(c=>c.posts).map(c=>({id:c.id,text:c.text,created:ts(c.created_at),post:{id:c.posts.id,authorId:c.posts.author_id,kind:c.posts.kind,caption:c.posts.caption,photo:c.posts.photo_url}}));
     next.myComments.forEach(c=>ids.add(c.post.authorId));
     next.memberships=(ms.data||[]).map(m=>({id:m.id,clientId:m.client_id,stylistId:m.stylist_id,price:m.price,subs:m.submissions,status:m.status,started:ts(m.started_at),ends:m.ends_at?ts(m.ends_at):null}));
@@ -764,9 +764,9 @@ const tierOf=s=>s?.verified?'Verified':'Awaiting verification';
 const ago=t=>{const h=Math.round((Date.now()-t)/3600000);return h<1?'Just now':h<24?`${h}h ago`:`${Math.round(h/24)}d ago`};
 const chips=(names,cls='')=>`<div class="chips">${(names||[]).map(n=>`<span class="chip c ${cls}"><i style="background:${HEX[n]||n}"></i>${esc(n)}</span>`).join('')}</div>`;
 function cmtHTML(c,p){
-  const w=personOf(c.by);const canDel=c.by===ME||db.isAdmin;const canReport=ME&&c.by!==ME&&p.authorId===ME;
-  return `<div class="cmt" id="cmt-${c.id}">${c.pro?'<span class="pro-tag">Stylist</span>':''}${pName(c.by,c.by===ME?'You':w.name)} ${esc(c.text)}
-    ${canDel||canReport?`<span style="white-space:nowrap;margin-left:6px">${canReport?`<button class="textlink" data-flagc="${c.id}">Report</button>`:''}${canDel?` <button class="textlink" data-delc="${c.id}">Delete</button>`:''}</span>`:''}</div>`;
+  const w=personOf(c.by);const mine=c.by===ME,canDel=mine||db.isAdmin;const canReport=ME&&!mine&&p.authorId===ME;
+  return `<div class="cmt" id="cmt-${c.id}">${c.pro?'<span class="pro-tag">Stylist</span>':''}${pName(c.by,mine?'You':w.name)} ${esc(c.text)}${c.edited?' <span class="hint">(edited)</span>':''}
+    ${canDel||canReport||mine?`<span style="white-space:nowrap;margin-left:6px">${mine?`<button class="textlink" data-editc="${c.id}" data-post="${p.id}">Edit</button>`:''}${canReport?`<button class="textlink" data-flagc="${c.id}">Report</button>`:''}${canDel?` <button class="textlink" data-delc="${c.id}">Delete</button>`:''}</span>`:''}</div>`;
 }
 const tags=l=>`<div class="chips">${(l||[]).map(c=>`<span class="chip tag">${esc(c)}</span>`).join('')}</div>`;
 const stripes=names=>(names||[]).map(n=>`<span style="background:${HEX[n]||n}"></span>`).join('');
@@ -905,7 +905,7 @@ async function openPerson(id){
   try{
     const [pr,st,po]=await Promise.all([sb.from('profiles').select('id,name,photo_url,fav_color,keywords,board,stickers,submissions,created_at').eq('id',id).maybeSingle(),
       sb.from('stylists').select('*').eq('id',id).maybeSingle(),
-      sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').eq('author_id',id).order('created_at',{ascending:false}).limit(60)]);
+      sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at,edited_at)').eq('author_id',id).order('created_at',{ascending:false}).limit(60)]);
     if(!pr.data){state.person={id,missing:true};return render()}
     const u=mapUser(pr.data);u.joined=ts(pr.data.created_at);db.users[id]={...(db.users[id]||{}),...u};
     const posts=(po.data||[]).map(mapPost);await attachScores(posts);
@@ -1089,7 +1089,7 @@ const VIEWS={
       <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your community <em>comments</em></h2><p>Comments you left on community looks. Only you and the person who posted can see them.</p></div></div>
       <div class="queue">${(db.myComments||[]).map(c=>`<div class="qrow"><div class="thumb">${media(c.post,c.post.kind)}</div>
         <div><div class="meta"><span class="kind">${kl(c.post)}</span><span class="dot">${pName(c.post.authorId)}</span><span class="dot">${ago(c.created)}</span></div><p class="ask" style="font-size:15px">“${esc(c.post.caption)}”</p><p style="margin:4px 0 0">${esc(c.text)}</p></div>
-        <button class="btn sm line" data-person="${c.post.authorId}">View</button></div>`).join('')||'<p class="muted">No community comments yet.</p>'}</div>`;
+        <div class="actions" style="margin:0;flex-direction:column"><button class="btn sm line" data-editc="${c.id}" data-post="${c.post.id}">Edit</button><button class="btn sm line" data-person="${c.post.authorId}">View</button></div></div>`).join('')||'<p class="muted">No community comments yet.</p>'}</div>`;
   },
   sprofile(){
     const s=stylist(db.me.stylistId);
@@ -1144,9 +1144,9 @@ function approvalsTab(){
    +sec('Stylist bios',A.bios.length,`<div class="list">${A.bios.map(x=>`<div class="app-card" style="grid-template-columns:minmax(0,1fr) auto"><div>${pName(x.stylist_id)}<p style="margin:6px 0 0;max-width:65ch">${esc(x.text)}</p></div>${btns('bio',x.stylist_id)}</div>`).join('')}</div>`);
 }
 async function loadAdminComments(){
-  const {data,error}=await sb.from('comments').select('id,text,created_at,author_id,post_id,posts(id,author_id,caption,kind,photo_url),comment_flags(id,reason,detail,reporter_id,created_at)').order('created_at',{ascending:false}).limit(300);
+  const {data,error}=await sb.from('comments').select('id,text,created_at,edited_at,previous_text,edit_reviewed,author_id,post_id,posts(id,author_id,caption,kind,photo_url),comment_flags(id,reason,detail,reporter_id,created_at)').order('created_at',{ascending:false}).limit(300);
   if(error)throw error;
-  const rows=(data||[]).map(c=>({id:c.id,text:c.text,created:ts(c.created_at),by:c.author_id,post:c.posts,flags:c.comment_flags||[]}));
+  const rows=(data||[]).map(c=>({id:c.id,text:c.text,created:ts(c.created_at),by:c.author_id,post:c.posts,flags:c.comment_flags||[],edited:c.edited_at?ts(c.edited_at):null,prev:c.previous_text,unreviewedEdit:c.edit_reviewed===false}));
   const ids=[...new Set(rows.flatMap(r=>[r.by,r.post?.author_id,...r.flags.map(f=>f.reporter_id)]).filter(x=>x&&!db.users[x]))];
   if(ids.length){const {data:pr}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords').in('id',ids);(pr||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})})}
   state.acomments=rows;
@@ -1167,8 +1167,8 @@ function looksTab(){
   const folders=[['pending','To check'],['checked','Checked'],['hidden','Hidden']];
   const list=by(f).sort((a,b)=>(b.flags.length>0)-(a.flags.length>0)||b.created-a.created);
   const btn=(a,label,cls='line')=>`<button class="btn sm ${cls}" data-look="${a}" data-id="__ID__">${label}</button>`;
-  const acts={pending:[['approve','Approve','soft'],['hide','Hide'],['delete','Delete']],checked:[['hide','Hide'],['delete','Delete']],hidden:[['restore','Restore','soft'],['delete','Delete']]}[f];
-  const note={pending:'Live now and not checked yet. Approve what’s fine, hide anything you want to look at later.',checked:'Looks you’ve already approved. They stay live.',hidden:'Blocked from everyone. Restore them or delete them for good.'}[f];
+  const acts={pending:[['approve','Approve','soft'],['hide','Hide']],checked:[['hide','Hide']],hidden:[['restore','Restore','soft'],['delete','Delete']]}[f];
+  const note={pending:'Live now and not checked yet. Approve what’s fine, hide anything you want to look at later.',checked:'Looks you’ve already approved. They stay live.',hidden:'Blocked from everyone. Restore them, or delete them for good. Only hidden looks can be deleted.'}[f];
   return `<div class="filters" role="group" aria-label="Folder" style="margin-top:6px">${folders.map(([k,l])=>`<button data-lfolder="${k}" aria-pressed="${f===k}">${l} · ${by(k).length}</button>`).join('')}</div>
     <p class="muted" style="margin:-10px 0 18px">${note}</p>
     ${list.length?`<div class="people">${list.map(x=>`<div class="person" style="grid-template-columns:110px minmax(0,1fr);cursor:default;align-items:start">
@@ -1183,13 +1183,16 @@ function looksTab(){
 }
 function commentsTab(){
   if(!state.acomments){loadAdminComments().then(()=>{if(state.view==='admin'&&state.adminTab==='comments')render()}).catch(e=>{console.error(e);toast('Could not load comments')});return '<div class="empty"><h3>Loading comments…</h3></div>'}
-  const rows=state.acomments,flagged=rows.filter(r=>r.flags.length),rest=rows.filter(r=>!r.flags.length);
+  const rows=state.acomments,edits=rows.filter(r=>r.unreviewedEdit),flagged=rows.filter(r=>r.flags.length&&!r.unreviewedEdit),rest=rows.filter(r=>!r.flags.length&&!r.unreviewedEdit);
   const row=r=>`<div class="app-card" style="grid-template-columns:72px minmax(0,1fr) auto"><div class="thumb">${r.post?media({photo:r.post.photo_url},r.post.kind):''}</div>
     <div><div class="meta">${pName(r.by)}<span class="dot">on ${r.post?pName(r.post.author_id):'a deleted look'}’s look</span><span class="dot">${ago(r.created)}</span></div>
-      <p style="margin:6px 0 0;font-size:15px">${esc(r.text)}</p>
+      <p style="margin:6px 0 0;font-size:15px">${esc(r.text)}${r.edited?` <span class="hint">(edited ${ago(r.edited)})</span>`:''}</p>
+      ${r.unreviewedEdit&&r.prev!=null?`<p class="hint" style="margin:4px 0 0">Before the edit: “${esc(r.prev)}”</p>`:''}
       ${r.flags.length?`<div class="badges" style="margin-top:8px">${r.flags.map(f=>`<span class="on">${esc(FLAG_LABEL[f.reason]||f.reason)}${f.reporter_id?` · by ${esc(personOf(f.reporter_id).name)}`:''}</span>`).join('')}</div>${r.flags.filter(f=>f.detail&&f.reason!=='auto').map(f=>`<p class="hint" style="margin:4px 0 0">“${esc(f.detail)}”</p>`).join('')}`:''}</div>
-    <div class="actions" style="margin:0;flex-direction:column;align-items:stretch">${r.flags.length?`<button class="btn sm line" data-dismiss="${r.id}">Dismiss flag</button>`:''}<button class="btn sm" data-delc="${r.id}">Delete comment</button></div></div>`;
-  return `<div class="section-head" style="padding-top:28px"><div><h2 style="font-size:28px">Flagged <em>· ${flagged.length}</em></h2><p>Reported by members or flagged automatically because they look like an attempt to share contact details.</p></div></div>
+    <div class="actions" style="margin:0;flex-direction:column;align-items:stretch">${r.unreviewedEdit?`<button class="btn sm soft" data-creviewed="${r.id}">Mark reviewed</button>`:''}${r.flags.length?`<button class="btn sm line" data-dismiss="${r.id}">Dismiss flag</button>`:''}<button class="btn sm" data-delc="${r.id}">Delete comment</button></div></div>`;
+  return `<div class="section-head" style="padding-top:28px"><div><h2 style="font-size:28px">Edited · not reviewed <em>· ${edits.length}</em></h2><p>Edits are live right away. Check them here, then mark them reviewed.</p></div></div>
+    ${edits.length?`<div class="list">${edits.map(row).join('')}</div>`:'<p class="muted">No edits waiting.</p>'}
+    <div class="section-head" style="padding-top:28px"><div><h2 style="font-size:28px">Flagged <em>· ${flagged.length}</em></h2><p>Reported by members or flagged automatically because they look like an attempt to share contact details.</p></div></div>
     ${flagged.length?`<div class="list">${flagged.map(row).join('')}</div>`:'<p class="muted">Nothing flagged.</p>'}
     <div class="section-head" style="padding-top:28px"><h2 style="font-size:28px">Recent comments <em>· ${rest.length}</em></h2></div>
     ${rest.length?`<div class="list">${rest.map(row).join('')}</div>`:'<p class="muted">No other comments.</p>'}`;
@@ -1715,6 +1718,15 @@ document.addEventListener('click',e=>{
     openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Delete this look?</h2><p class="muted" style="margin:0 0 18px">It’s removed for everyone, with its ratings and comments. This can’t be undone. To decide later, hide it instead.</p>
       <div class="actions"><button class="btn line" id="dl-keep">Keep it</button><button class="btn" id="dl-ok">Delete look</button></div>`);
     $('#dl-keep').onclick=closeSheet;$('#dl-ok').onclick=done;return}
+  if(d.editc){if(!requireApproved())return;const id=d.editc,post=db.posts.find(x=>x.id===d.post)||{},c=(post.comments||[]).find(x=>x.id===id)||(db.myComments||[]).find(x=>x.id===id);
+    openSheet(`<div class="eyebrow">Your comment</div><h2 style="margin:6px 0 14px">Edit comment</h2>
+      <div class="field"><label for="ec-text">Comment</label><textarea id="ec-text" maxlength="300">${esc(c?.text||'')}</textarea><span class="hint">It updates right away and shows as edited. Lookover admins can see edits.</span></div>
+      <div class="actions"><button class="btn line" id="ec-cancel">Cancel</button><button class="btn" id="ec-save">Save</button></div>`);
+    $('#ec-cancel').onclick=closeSheet;
+    $('#ec-save').onclick=()=>{const t=$('#ec-text').value.trim();if(!t){toast('Your comment can’t be empty. Delete it instead.');return}
+      if(hasContact(t)){toast('Comments can’t include contact details, links or handles.');return}
+      run(async()=>{const r=await sb.from('comments').update({text:t.slice(0,300)}).eq('id',id).select('id');must(r);if(!r.data?.length)throw new Error('You can only edit your own comments.');closeSheet();await load();render()},'Comment updated')};return}
+  if(d.creviewed){return run(async()=>{must(await sb.rpc('mark_comment_reviewed',{cid:d.creviewed}));state.acomments=null;render()},'Marked as reviewed')}
   if(d.dismiss){return run(async()=>{must(await sb.from('comment_flags').delete().eq('comment_id',d.dismiss));state.acomments=null;render()},'Flag dismissed')}
   if(d.zi!==undefined&&t.dataset.zi!==undefined&&state.view==='feed'){state.zi=+d.zi;return render()}
   if(d.mtab){state.mineTab=d.mtab;return render()}

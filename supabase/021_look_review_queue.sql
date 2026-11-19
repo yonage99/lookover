@@ -36,6 +36,8 @@ begin
     update public.posts set status = 'approved', review_state = 'checked', reviewed_at = now() where id = pid;
     delete from public.post_flags where post_id = pid;
   elsif action = 'delete' then
+    if (select review_state from public.posts where id = pid) <> 'hidden' then
+      raise exception 'Hide this look first. Only hidden looks can be deleted.'; end if;
     update public.requests set post_id = null where post_id = pid;
     delete from public.posts where id = pid;
   else
