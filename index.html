@@ -612,7 +612,7 @@ function openAuth(mode='signup',then){
   const up=mode==='signup';
   openSheet(`<div class="eyebrow">${up?'Join Lookover':'Welcome back'}</div><h2 style="margin:6px 0 8px">${up?'Create your account':'Log in'}</h2>
     <p class="muted" style="margin:0 0 20px">${up?'It takes ten seconds. Free for everyone.':'Use the email and password you signed up with.'}</p>
-    <form id="auth-form">${up?'<div class="field"><label for="au-name">First name</label><input id="au-name" autocomplete="given-name" maxlength="40" required></div>':''}
+    <form id="auth-form">${up?'<div class="field"><label for="au-name">Your name</label><input id="au-name" autocomplete="given-name" maxlength="40" required><span class="hint">This is how people will see you. It can’t be changed later.</span></div>':''}
       <div class="field"><label for="au-email">Email</label><input id="au-email" type="email" autocomplete="email" required></div>
       <div class="field"><label for="au-pass">Password</label><input id="au-pass" type="password" minlength="8" autocomplete="${up?'new-password':'current-password'}" required><span class="hint">${up?'At least 8 characters.':''}</span></div>
       <div class="actions" style="justify-content:space-between;align-items:center"><button type="button" class="textlink" id="au-switch">${up?'I already have an account':'Create an account instead'}</button><button class="btn" type="submit">${up?'Create account':'Log in'}</button></div></form>`);
@@ -1025,15 +1025,15 @@ function tiersBlock(s){
     <div class="tier ${t==='Top verified'?'on':''}"><h3>Top verified</h3><b>$15<small style="font-size:14px;color:var(--muted)"> / review</small></b><p>Verified, with 4.8★ or higher across 50+ reviews. Unlocks automatically.</p></div></div>`;
 }
 function stylistForm(s){
-  return `<div class="field"><label for="sf-name">Your name</label><input id="sf-name" value="${esc(s.name)}" autocomplete="name"></div>
+  return `<div class="field"><span class="label">Your name</span><div style="font-size:16px;font-weight:600">${esc(ME?me().name:'Log in first')}</div><span class="hint">Your stylist profile uses your account name.</span></div>
     <div class="field"><span class="label">What do you review?</span>${toggles('sf-services',Object.values(KINDS).map(k=>k.label),svc(s).map(k=>KINDS[k].label).filter(()=>s.name))}</div>
     <div class="field"><span class="label">Your specialties · pick up to 3</span>${toggles('sf-spec',SPECIALTIES,s.specialties)}</div>
     <div class="field"><label for="sf-line">Your style in one line</label><input id="sf-line" maxlength="90" value="${esc(s.line)}" placeholder="I make basics look expensive."></div>`;
 }
 function readStylistForm(){
-  const v={name:$('#sf-name').value.trim(),line:$('#sf-line').value.trim(),specialties:picked('sf-spec'),
+  const v={name:me().name,line:$('#sf-line').value.trim(),specialties:picked('sf-spec'),
     services:Object.keys(KINDS).filter(k=>picked('sf-services').includes(KINDS[k].label))};
-  if(!v.name){toast('Add your name');$('#sf-name').focus();return null}
+  if(!ME){openAuth('signup');return null}
   if(!v.services.length){toast('Choose at least one thing you review');return null}
   if(v.specialties.length>3){toast('Pick up to 3 specialties');return null}
   v.title=v.specialties[0]||KINDS[v.services[0]].label+' reviews';return v;
@@ -1229,7 +1229,7 @@ function adoptReview(rid){
 function editMe(){
   const u=me();let fav=u.favColor||FAV_COLORS[0];
   openSheet(`<div class="eyebrow">My profile</div><h2 style="margin:6px 0 18px">Edit profile</h2>
-    <div class="field"><label for="em-name">Name</label><input id="em-name" value="${esc(u.name)}" maxlength="40"></div>
+    <div class="field"><span class="label">Name</span><div style="font-size:16px;font-weight:600">${esc(u.name)}</div><span class="hint">Names can’t be changed once they’re set.</span></div>
     <div class="field"><span class="label">Words that describe your style</span>${toggles('em-words',STYLE_WORDS,u.keywords)}
       <div class="cmt-form" style="margin-top:8px"><input id="em-custom" placeholder="Add your own, like “all black”" maxlength="24"><button type="button" class="btn sm line" id="em-add">Add</button></div></div>
     <div class="field"><span class="label">Favorite color</span><div class="swatch-row" id="em-fav">${FAV_COLORS.map(c=>`<button type="button" data-fav="${c}" style="background:${c}" aria-label="Choose ${c}" aria-pressed="${c===fav}"></button>`).join('')}
@@ -1239,8 +1239,8 @@ function editMe(){
   document.querySelectorAll('#em-fav [data-fav]').forEach(b=>b.onclick=()=>pick(b.dataset.fav));$('#em-wheel').oninput=e=>pick(e.target.value);
   $('#em-add').onclick=()=>{const v=$('#em-custom').value.trim();if(!v)return;const box=$('#em-words');const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.sw=v;b.setAttribute('aria-pressed','true');b.textContent=v;box.appendChild(b);$('#em-custom').value=''};
   $('#em-cancel').onclick=()=>{applyTheme(u.favColor);closeSheet()};
-  $('#em-save').onclick=()=>run(async()=>{const name=($('#em-name').value.trim()||u.name).slice(0,40);
-    must(await sb.from('profiles').update({name,keywords:picked('em-words').slice(0,8),fav_color:/^#[0-9a-f]{6}$/i.test(fav)?fav:'#8c1238'}).eq('id',ME));closeSheet();await load();render()},'Profile saved');
+  $('#em-save').onclick=()=>run(async()=>{
+    must(await sb.from('profiles').update({keywords:picked('em-words').slice(0,8),fav_color:/^#[0-9a-f]{6}$/i.test(fav)?fav:'#8c1238'}).eq('id',ME));closeSheet();await load();render()},'Profile saved');
 }
 function addToBoard(){
   const u=me();let chosen=new Set();
