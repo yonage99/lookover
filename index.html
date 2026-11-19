@@ -264,6 +264,16 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .presets button{padding:0;border:2px solid transparent;border-radius:14px;overflow:hidden;cursor:pointer;background:none}
 .presets button[aria-pressed="true"]{border-color:var(--accent)}
 .presets svg{width:100%;height:auto;aspect-ratio:4/5}
+.presets .ip{position:relative;display:block;aspect-ratio:4/5;background:var(--soft)}
+.presets .ip img{width:100%;height:100%;object-fit:cover;display:block}
+.presets .ip span{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,.92);color:#111114;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inspo-admin{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.inspo-admin .ic{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.inspo-admin .ic.off{opacity:.55}
+.inspo-admin .ic img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:var(--soft)}
+.inspo-admin .ic .b{padding:10px;display:grid;gap:8px}
+.inspo-admin .ic input,.inspo-admin .ic select{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.inspo-admin .ic .row{display:flex;gap:6px;flex-wrap:wrap}
 .swatch-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .swatch-row button{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
 .swatch-row button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
@@ -717,7 +727,7 @@ function bgStyle(k){const v=BGS[k]||'#fff';
   return 'background:'+v}
 function itemHTML(it,edit){
   const st=`left:${it.x}%;top:${it.y}%;width:${it.w}%;transform:translate(-50%,-50%) rotate(${it.r}deg);z-index:${it.z}`;let inner='';
-  if(it.type==='photo')inner=`<div class="polaroid"><img src="${esc(it.src)}" alt="Collage photo" draggable="false"></div>`;
+  if(it.type==='photo')inner=`<div class="polaroid"><img src="${esc(it.src)}" alt="${esc(it.cap||'Collage photo')}" draggable="false">${it.cap?`<span class="cap" style="font-size:${(it.w*.085).toFixed(2)}cqw">${esc(it.cap)}</span>`:''}</div>`;
   else if(it.type==='preset'){const P=PRESETS[it.preset]||['outfit',['Dove grey']];inner=`<div class="polaroid">${art(P[0],P[1])}<span class="cap" style="font-size:${(it.w*.085).toFixed(2)}cqw">${esc(it.preset)}</span></div>`}
   else if(it.type==='sticker')inner=isWord(it.e)?`<span class="sticker word" style="font-size:${(it.w*.2).toFixed(2)}cqw">${esc(it.e)}</span>`:`<span class="sticker" style="font-size:${(it.w*.8).toFixed(2)}cqw">${esc(it.e)}</span>`;
   else inner=`<span class="ctext" style="font-size:${(it.w*.15).toFixed(2)}cqw;color:${esc(it.color||'#111114')}">${esc(it.text)}</span>`;
@@ -1151,10 +1161,11 @@ const VIEWS={
         <div class="actions"><button class="btn" id="create-stylist">Create my stylist profile</button></div></div>`;
   },
   admin(){
-    const tabs=`<div class="section-head" style="padding-bottom:8px"><div><div class="eyebrow">Admin</div><h2>${state.adminTab==='people'?'Everyone on <em>Lookover</em>':state.adminTab==='approvals'?'Approvals':state.adminTab==='comments'?'All <em>comments</em>':state.adminTab==='history'?'Admin <em>history</em>':state.adminTab==='looks'?'Community <em>looks</em>':state.adminTab==='requests'?'Sent <em>requests</em>':'Stylist <em>verification</em>'}</h2></div></div>
-      <div class="tabs" role="tablist"><button role="tab" data-atab="people" aria-selected="${state.adminTab==='people'}">People</button><button role="tab" data-atab="approvals" aria-selected="${state.adminTab==='approvals'}">Approvals</button><button role="tab" data-atab="comments" aria-selected="${state.adminTab==='comments'}">Comments</button><button role="tab" data-atab="verify" aria-selected="${state.adminTab==='verify'}">Verification</button><button role="tab" data-atab="history" aria-selected="${state.adminTab==='history'}">History</button></div>`;
+    const tabs=`<div class="section-head" style="padding-bottom:8px"><div><div class="eyebrow">Admin</div><h2>${state.adminTab==='people'?'Everyone on <em>Lookover</em>':state.adminTab==='approvals'?'Approvals':state.adminTab==='comments'?'All <em>comments</em>':state.adminTab==='history'?'Admin <em>history</em>':state.adminTab==='inspo'?'Inspiration <em>gallery</em>':state.adminTab==='looks'?'Community <em>looks</em>':state.adminTab==='requests'?'Sent <em>requests</em>':'Stylist <em>verification</em>'}</h2></div></div>
+      <div class="tabs" role="tablist"><button role="tab" data-atab="people" aria-selected="${state.adminTab==='people'}">People</button><button role="tab" data-atab="approvals" aria-selected="${state.adminTab==='approvals'}">Approvals</button><button role="tab" data-atab="comments" aria-selected="${state.adminTab==='comments'}">Comments</button><button role="tab" data-atab="verify" aria-selected="${state.adminTab==='verify'}">Verification</button><button role="tab" data-atab="inspo" aria-selected="${state.adminTab==='inspo'}">Inspiration</button><button role="tab" data-atab="history" aria-selected="${state.adminTab==='history'}">History</button></div>`;
     if(!state.alog){loadLog().then(()=>{if(state.view==='admin')render()}).catch(e=>{console.error(e);state.alog=[];state.logBy={};render()});return tabs+'<div class="empty"><h3>Loading…</h3></div>'}
     if(state.adminTab==='history')return tabs+historyTab();
+    if(state.adminTab==='inspo')return tabs+inspoTab();
     if(state.adminTab==='people')return tabs+peopleTab();
     if(state.adminTab==='approvals')return tabs+approvalsTab();
     if(state.adminTab==='comments')return tabs+commentsTab();
@@ -1201,8 +1212,8 @@ async function loadAdminLooks(){
   if(ids.length){const {data:pr}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords').in('id',ids);(pr||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})})}
   state.alooks=rows;
 }
-const ACT_LABEL={approved:'Approved',declined:'Declined',hidden:'Hidden',restored:'Restored',deleted:'Deleted',verified:'Verified',revoked:'Verification revoked',edited:'Edited',edit_checked:'Edit checked',flag_dismissed:'Report dismissed'};
-const KIND_LABEL={account:'Account',profile_photo:'Profile photo',bio:'Stylist bio',upload:'Upload',look:'Look',comment:'Comment',review:'Review',verification:'Verification'};
+const ACT_LABEL={added:'Added',shown:'Shown again',approved:'Approved',declined:'Declined',hidden:'Hidden',restored:'Restored',deleted:'Deleted',verified:'Verified',revoked:'Verification revoked',edited:'Edited',edit_checked:'Edit checked',flag_dismissed:'Report dismissed'};
+const KIND_LABEL={inspiration:'Inspiration photo',account:'Account',profile_photo:'Profile photo',bio:'Stylist bio',upload:'Upload',look:'Look',comment:'Comment',review:'Review',verification:'Verification'};
 async function loadLog(){
   const {data,error}=await sb.from('admin_log').select('*').order('created_at',{ascending:false}).limit(3000);if(error)throw error;
   state.alog=(data||[]).map(x=>({...x,at:ts(x.created_at)}));state.logBy={};
@@ -1215,6 +1226,20 @@ function byLine(id,kind){
   const dec=all.find(x=>x.action!=='edited'),ed=all.find(x=>x.action==='edited');
   const one=x=>`${ACT_LABEL[x.action]||x.action} by <b>${esc(x.actor_name||'someone')}</b> <span title="${esc(whenTxt(x.at))}">· ${ago(x.at)}</span>`;
   return `<p class="hint" style="margin:4px 0 6px">${[dec,ed].filter(Boolean).map(one).join(' · ')}</p>`;
+}
+function inspoTab(){
+  if(!state.ainspo){loadInspo().then(l=>{state.ainspo=l;if(state.view==='admin'&&state.adminTab==='inspo')render()}).catch(e=>{console.error(e);toast('Could not load the gallery')});return '<div class="empty"><h3>Loading gallery…</h3></div>'}
+  const L=state.ainspo,on=L.filter(x=>x.active).length,cat=state.inspoCat||'outfit';
+  return `<div class="board-tools" style="flex-wrap:wrap;gap:10px"><label class="btn" for="ia-files" style="cursor:pointer">+ Add photos<input type="file" id="ia-files" accept="image/*" multiple hidden></label>
+      <select id="ia-cat" aria-label="Category for new photos" style="font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">${INSPO_CATS.map(([k,l])=>`<option value="${k}" ${k===cat?'selected':''}>New photos go in: ${l}</option>`).join('')}</select>
+      <span class="muted">${on} showing · ${L.length-on} hidden</span></div>
+    <p class="muted" style="margin:-6px 0 16px">These photos appear when people tap “+ Inspiration” on their mood board. Give each one a short name, like “Quiet luxury”. Hidden photos stay on collages that already use them. ${L.length?'':'Until you add photos, people see the drawn placeholder cards.'}</p>
+    ${L.length?`<div class="inspo-admin">${L.map((x,i)=>`<div class="ic ${x.active?'':'off'}"><img src="${esc(x.photo_url)}" alt="">
+      <div class="b"><input data-ititle="${x.id}" value="${esc(x.title)}" maxlength="60" placeholder="Name, e.g. Quiet luxury" aria-label="Name">
+        <select data-icatset="${x.id}" aria-label="Category">${INSPO_CATS.map(([k,l])=>`<option value="${k}" ${k===x.category?'selected':''}>${l}</option>`).join('')}</select>
+        <div class="row"><button class="btn sm line" data-imove="${x.id}" data-dir="-1" ${i?'':'disabled'} aria-label="Move earlier">←</button><button class="btn sm line" data-imove="${x.id}" data-dir="1" ${i<L.length-1?'':'disabled'} aria-label="Move later">→</button>
+          <button class="btn sm ${x.active?'line':'soft'}" data-itoggle="${x.id}">${x.active?'Hide':'Show'}</button>${x.active?'':`<button class="btn sm line" data-idel="${x.id}">Delete</button>`}</div>
+        ${x.active?'':'<span class="hint">Hidden from the picker</span>'}${byLine(x.id,'inspiration')}</div></div>`).join('')}</div>`:'<div class="empty"><h3>No photos yet</h3>Add photos to build the gallery.</div>'}`;
 }
 function historyTab(){
   const L=state.alog;
@@ -1624,17 +1649,24 @@ function editMe(){
   $('#em-save').onclick=()=>run(async()=>{
     must(await sb.from('profiles').update({keywords:picked('em-words').slice(0,8),fav_color:/^#[0-9a-f]{6}$/i.test(fav)?fav:'#8c1238'}).eq('id',ME));closeSheet();await load();render()},'Profile saved');
 }
-function addToBoard(){
-  const u=me();let chosen=new Set();
+const INSPO_CATS=[['outfit','Outfits'],['makeup','Makeup'],['nails','Nails'],['hair','Hair'],['other','Other']];
+async function loadInspo(){const {data,error}=await sb.from('inspirations').select('*').order('sort').order('created_at',{ascending:false});if(error)throw error;db.inspo=data||[];return db.inspo}
+async function addToBoard(){
+  const u=me();let chosen=new Set();let list=[];try{list=(await loadInspo()).filter(x=>x.active)}catch(e){console.error(e)}
+  const cats=INSPO_CATS.filter(([k])=>list.some(x=>x.category===k));
   openSheet(`<div class="eyebrow">Mood board</div><h2 style="margin:6px 0 18px">Add to your collage</h2>
     <div class="pick-photo" style="margin-bottom:20px"><label for="mb-roll">${ICON.gallery}From camera roll<input type="file" id="mb-roll" accept="image/*" multiple></label><label for="mb-cam">${ICON.camera}Take a photo<input type="file" id="mb-cam" accept="image/*" capture="environment"></label></div>
-    <div class="field"><span class="label">Or pick some inspiration</span><div class="presets">${Object.keys(PRESETS).map(n=>`<button type="button" data-preset="${esc(n)}" aria-pressed="false" aria-label="${esc(n)}">${art(PRESETS[n][0],PRESETS[n][1],n)}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">Or pick some inspiration</span>
+      ${list.length?`${cats.length>1?`<div class="filters" role="group" aria-label="Category" style="margin-bottom:10px"><button data-icat="" aria-pressed="true">All</button>${cats.map(([k,l])=>`<button data-icat="${k}" aria-pressed="false">${l}</button>`).join('')}</div>`:''}
+        <div class="presets" id="ip-grid">${list.map(x=>`<button type="button" data-preset="${x.id}" data-cat="${x.category}" aria-pressed="false" aria-label="${esc(x.title||'Inspiration')}"><span class="ip"><img src="${esc(x.photo_url)}" alt="" loading="lazy">${x.title?`<span>${esc(x.title)}</span>`:''}</span></button>`).join('')}</div>`
+      :`<div class="presets">${Object.keys(PRESETS).map(n=>`<button type="button" data-preset="${esc(n)}" aria-pressed="false" aria-label="${esc(n)}">${art(PRESETS[n][0],PRESETS[n][1],n)}</button>`).join('')}</div>`}</div>
     <div class="actions"><button class="btn line" id="mb-cancel">Cancel</button><button class="btn" id="mb-add">Add selected</button></div>`);
   document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const n=b.dataset.preset;chosen.has(n)?chosen.delete(n):chosen.add(n);b.setAttribute('aria-pressed',chosen.has(n))});
+  document.querySelectorAll('[data-icat]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-icat]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('#ip-grid [data-cat]').forEach(x=>x.hidden=!!b.dataset.icat&&x.dataset.cat!==b.dataset.icat)});
   const onFiles=e=>{const files=[...e.target.files].slice(0,6);run(async()=>{for(const f of files){const p=await readPhoto(f,800);if(p)addItem({type:'photo',src:await upload(p,'board'),w:34})}
     await saveMe();closeSheet();render()},`Added ${files.length} photo${files.length>1?'s':''}`)};
   $('#mb-roll').onchange=onFiles;$('#mb-cam').onchange=onFiles;$('#mb-cancel').onclick=closeSheet;
-  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>addItem({type:'preset',preset:n,w:30}));queueSave();closeSheet();toast('Added to your collage');render()};
+  $('#mb-add').onclick=()=>{if(!chosen.size){toast('Pick at least one, or add a photo');return}chosen.forEach(n=>{const x=list.find(i=>i.id===n);x?addItem({type:'photo',src:x.photo_url,cap:x.title||'',w:30}):addItem({type:'preset',preset:n,w:30})});queueSave();closeSheet();toast('Added to your collage');render()};
 }
 function viewStylist(id){
   const s=stylist(id),p=priceOf(s);
@@ -1816,6 +1848,16 @@ function afterRender(){
     run(async()=>{must(await sb.from('stylists').update({plan_price:price,plan_submissions:subs}).eq('id',ME));await load();render()},`Membership offered at $${price}/month`)};
   const ofo=$('#of-plan-off');if(ofo)ofo.onclick=()=>run(async()=>{must(await sb.from('stylists').update({plan_price:null,plan_submissions:null}).eq('id',ME));await load();render()},'Membership no longer offered. Current members keep theirs.');
 
+  const iaf=$('#ia-files');if(iaf){
+    $('#ia-cat').onchange=e=>{state.inspoCat=e.target.value};
+    iaf.onchange=e=>{const files=[...e.target.files].slice(0,20),cat=$('#ia-cat').value;state.inspoCat=cat;
+      run(async()=>{const base=(state.ainspo||[]).length;for(const [k,f] of files.entries()){const ph=await readPhoto(f,1200);if(!ph)continue;
+        const title=f.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/\b(img|dsc|photo|image)\s*\d+\b/gi,'').trim().slice(0,60);
+        must(await sb.from('inspirations').insert({photo_url:await upload(ph,'inspo'),title,category:cat,sort:base+k}))}
+        state.ainspo=null;render()},`Added ${files.length} photo${files.length>1?'s':''} · give each a name`)}}
+  document.querySelectorAll('[data-ititle]').forEach(el=>el.onchange=()=>{const v=el.value.trim();if(hasContact(v)){toast('Names can’t include contact details or links');return}
+    run(async()=>{must(await sb.from('inspirations').update({title:v}).eq('id',el.dataset.ititle));const x=state.ainspo.find(i=>i.id===el.dataset.ititle);if(x)x.title=v},'Name saved')});
+  document.querySelectorAll('[data-icatset]').forEach(el=>el.onchange=()=>run(async()=>{must(await sb.from('inspirations').update({category:el.value}).eq('id',el.dataset.icatset));const x=state.ainspo.find(i=>i.id===el.dataset.icatset);if(x)x.category=el.value},'Category saved'));
   const hq=$('#hist-q');if(hq)hq.oninput=()=>{const v=hq.value.trim().toLowerCase();let n=0;document.querySelectorAll('#hist [data-find]').forEach(el=>{const ok=!v||el.dataset.find.includes(v);el.hidden=!ok;if(ok)n++});$('#hist-none').hidden=n>0};
   const pq=$('#people-q');if(pq)pq.oninput=()=>{const v=pq.value.trim().toLowerCase();let n=0;document.querySelectorAll('#people .person').forEach(el=>{const ok=!v||el.dataset.find.includes(v);el.hidden=!ok;if(ok)n++});$('#people-none').hidden=n>0};
 }
@@ -1902,7 +1944,7 @@ document.addEventListener('click',e=>{
     if(!ks.length){toast('Tap what you want reviewed first');return}if(ME&&!requireApproved())return;closeSheet();return openComposer({kinds:ks,stylistId:d.sendpick})}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
-  if(d.atab){state.adminTab=d.atab;state.alog=null;if(d.atab==='people')state.people=null;if(d.atab==='approvals'){state.approvals=null;state.uploads=null}if(d.atab==='comments')state.acomments=null;if(d.atab==='looks')state.alooks=null;if(d.atab==='requests')state.areqs=null;return render()}
+  if(d.atab){state.adminTab=d.atab;state.alog=null;if(d.atab==='inspo')state.ainspo=null;if(d.atab==='people')state.people=null;if(d.atab==='approvals'){state.approvals=null;state.uploads=null}if(d.atab==='comments')state.acomments=null;if(d.atab==='looks')state.alooks=null;if(d.atab==='requests')state.areqs=null;return render()}
   if(d.mod){const ok=d.ok==='1',fn={member:['moderate_member','uid'],post:['moderate_post','pid'],photo:['moderate_photo','uid'],bio:['moderate_bio','sid']}[d.mod];
     return run(async()=>{must(await sb.rpc(fn[0],{[fn[1]]:d.id,approve:ok}));state.approvals=null;await load();render()},d.mod==='post'?(ok?'Look kept and reports cleared':'Look removed'):(ok?'Approved':'Rejected'))}
   if(d.vis){t.parentElement.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b===t));state.compose.vis=d.vis;return}
@@ -1917,6 +1959,13 @@ document.addEventListener('click',e=>{
   if(d.filter){state.filter=d.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
   if(d.comcat){state.comCat=d.comcat;return render()}
   if(d.tab){state.meTab=d.tab;return render()}
+  if(d.itoggle){const x=state.ainspo.find(i=>i.id===d.itoggle);return run(async()=>{must(await sb.from('inspirations').update({active:!x.active}).eq('id',x.id));state.ainspo=null;render()},x.active?'Hidden from the picker':'Showing in the picker')}
+  if(d.imove){const L=state.ainspo,i=L.findIndex(x=>x.id===d.imove),j=i+(+d.dir);if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];
+    return run(async()=>{for(const [k,x] of L.entries())if(x.sort!==k){must(await sb.from('inspirations').update({sort:k}).eq('id',x.id));x.sort=k}render()})}
+  if(d.idel){const x=state.ainspo.find(i=>i.id===d.idel);
+    openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Delete this photo?</h2><p class="muted" style="margin:0 0 18px">“${esc(x.title||'Untitled')}” is removed from the gallery for good. Collages that already use it keep it.</p>
+      <div class="actions"><button class="btn line" id="id-keep">Keep it</button><button class="btn" id="id-ok">Delete photo</button></div>`);
+    $('#id-keep').onclick=closeSheet;$('#id-ok').onclick=()=>run(async()=>{must(await sb.from('inspirations').delete().eq('id',x.id));closeSheet();state.ainspo=null;render()},'Photo deleted');return}
   if(d.pack){state.pack=d.pack;return render()}
   if(d.sticker){if(addItem({type:'sticker',e:d.sticker,w:14,r:Math.round(Math.random()*20-10)})){queueSave();render()}return}
   if(d.cb){const c=collageOf(me()),it=c.items.find(i=>i.id===state.sel);
