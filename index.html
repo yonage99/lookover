@@ -529,8 +529,8 @@ async function load(){
     ids.add(ME);
     const [cp,rq,ap,pr]=await Promise.all([sb.from('color_profiles').select('data').eq('user_id',ME).maybeSingle(),
       sb.from('requests').select('*').or(`client_id.eq.${ME},stylist_id.eq.${ME}`).order('created_at',{ascending:false}).limit(200),
-      sb.from('applications').select('*').order('created_at',{ascending:false}).limit(100),sb.from('profiles').select('is_admin').eq('id',ME).maybeSingle()]);
-    next.profile=cp.data?.data||null;next.requests=(rq.data||[]).map(mapReq);next.applications=(ap.data||[]).map(mapApp);next.isAdmin=!!pr.data?.is_admin;
+      sb.from('applications').select('*').order('created_at',{ascending:false}).limit(100),sb.from('profiles').select('is_admin,is_ghost').eq('id',ME).maybeSingle()]);
+    next.profile=cp.data?.data||null;next.requests=(rq.data||[]).map(mapReq);next.applications=(ap.data||[]).map(mapApp);next.isAdmin=!!pr.data?.is_admin;next.isGhost=!!pr.data?.is_ghost;
     next.requests.forEach(r=>{ids.add(r.clientId);ids.add(r.stylistId)});next.applications.forEach(a=>ids.add(a.stylistId));
     next.me.stylistId=next.stylists.some(x=>x.id===ME)?ME:null;
     const [ms,fc]=await Promise.all([sb.from('memberships').select('*').order('started_at',{ascending:false}),sb.from('free_clients').select('*')]);
@@ -711,7 +711,7 @@ function renderShell(){
     :`<button data-go="${v}" ${state.view===v||(v==='me'&&state.view==='colors')?'aria-current="page"':''}>${ICON[ic]}<span>${l}</span></button>`).join('');
   $('#me-btn').innerHTML=ME?face(state.role==='stylist'?stylist(db.me.stylistId):me()):'<span style="font-size:12px;font-weight:600">Log in</span>';
   $('#me-btn').style.width=ME?'':'auto';$('#me-btn').style.padding=ME?'':'0 14px';$('#me-btn').style.borderRadius=ME?'':'999px';
-  const v=$('#viewing');v.hidden=state.role==='client';v.textContent=state.role==='stylist'?'Viewing as stylist':'Viewing as admin';
+  const v=$('#viewing');v.hidden=state.role==='client'&&!db.isGhost;v.textContent=(db.isGhost?'Ghost account · only you see your activity':'')+(state.role==='client'?'':(db.isGhost?' · ':'')+(state.role==='stylist'?'Viewing as stylist':'Viewing as admin'));
   $('#menu').innerHTML=`
     <div class="menu-col"><h4>Get feedback</h4>${Object.entries(KINDS).map(([k,v])=>`<button data-compose="${k}"><i>+</i>${v.ask}</button>`).join('')}</div>
     <div class="menu-col"><h4>Discover</h4>
@@ -801,10 +801,10 @@ async function openPerson(id){
   if(state.view==='person')render();
 }
 async function loadPeople(){
-  const [pr,st,po]=await Promise.all([sb.from('profiles').select('id,name,photo_url,fav_color,keywords,is_admin,created_at').order('created_at',{ascending:false}).limit(1000),
+  const [pr,st,po]=await Promise.all([sb.from('profiles').select('id,name,photo_url,fav_color,keywords,is_admin,is_ghost,created_at').order('created_at',{ascending:false}).limit(1000),
     sb.from('stylists').select('id,verified').limit(1000),sb.from('posts').select('author_id').limit(5000)]);
   const sty=Object.fromEntries((st.data||[]).map(x=>[x.id,x.verified]));const counts={};(po.data||[]).forEach(x=>counts[x.author_id]=(counts[x.author_id]||0)+1);
-  state.people=(pr.data||[]).map(x=>({...mapUser(x),admin:x.is_admin,joined:ts(x.created_at),stylist:x.id in sty,verified:!!sty[x.id],posts:counts[x.id]||0}));
+  state.people=(pr.data||[]).map(x=>({...mapUser(x),admin:x.is_admin,ghost:x.is_ghost,joined:ts(x.created_at),stylist:x.id in sty,verified:!!sty[x.id],posts:counts[x.id]||0}));
   state.people.forEach(x=>{db.users[x.id]={...x,...(db.users[x.id]||{})}});
 }
 function peopleTab(){
@@ -815,7 +815,7 @@ function peopleTab(){
     <div class="people" id="people">${list.map(x=>`<button class="person" data-person="${x.id}" data-find="${esc((x.name+' '+(x.keywords||[]).join(' ')).toLowerCase())}">
       <div class="avatar">${face(x)}</div><div style="min-width:0"><b>${esc(x.name)}</b>
       <div class="meta"><span>Joined ${day(x.joined)}</span><span class="dot">${x.posts} look${x.posts===1?'':'s'}</span></div>
-      <div class="badges">${x.admin?'<span class="on">Admin</span>':''}${x.verified?'<span class="on">Verified stylist</span>':x.stylist?'<span>Stylist</span>':''}${(x.keywords||[]).slice(0,2).map(k=>`<span>${esc(k)}</span>`).join('')}</div></div></button>`).join('')||'<p class="muted">No accounts yet.</p>'}</div>
+      <div class="badges">${x.ghost?'<span class="on">Ghost</span>':''}${x.admin?'<span class="on">Admin</span>':''}${x.verified?'<span class="on">Verified stylist</span>':x.stylist?'<span>Stylist</span>':''}${(x.keywords||[]).slice(0,2).map(k=>`<span>${esc(k)}</span>`).join('')}</div></div></button>`).join('')||'<p class="muted">No accounts yet.</p>'}</div>
     <p class="hint" id="people-none" hidden style="text-align:center;margin-top:20px">No one matches that search.</p>`;
 }
 function ratingsLog(list){
@@ -1086,6 +1086,7 @@ function renderComposer(){
     <div class="field"><span class="label">After your review comes back</span><div class="vis" role="group" aria-label="After your review comes back">
       <button type="button" data-vis="private" aria-pressed="${c.vis==='private'}"><b>Keep it private</b><span>Only you and your stylist see it. You can still share it later.</span></button>
       <button type="button" data-vis="public" aria-pressed="${c.vis==='public'}"><b>Share to the community</b><span>Posted with your stylist’s score so everyone can rate it</span></button></div></div>
+    ${db.isGhost?'<p class="note" style="margin:16px 0 0">Ghost account: real stylists won’t receive this. To test the full review, send it to another ghost stylist.</p>':''}
     <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send" ${pros.length?'':'disabled'}>Send for review</button></div>`);
   const onFile=async e=>{const f=e.target.files?.[0];if(!f)return;state.compose.photo=await readPhoto(f,1000);if(!state.compose.photo){toast('That photo could not be read. Try another one.');return}snapshotCompose();renderComposer()};
   $('#cp-roll')&&($('#cp-roll').onchange=onFile);$('#cp-cam')&&($('#cp-cam').onchange=onFile);
