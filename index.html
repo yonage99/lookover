@@ -696,7 +696,11 @@ function alertNewReviews(){const u=unseenReviews().filter(r=>!alerted.has(r.id))
 const GENDERS=[['woman','Woman'],['man','Man']];
 const myGender=()=>ME?me().gender:null;
 // Clients only see stylists of their own gender. Ghost/test accounts see everyone.
-const matches=s=>!ME||db.isGhost||!myGender()||personOf(s.id).gender===myGender();
+// Admins can browse the whole app, or only women's or only men's side.
+const GVIEW_KEY='lookover-admin-gender-view';
+const adminView=()=>db.isAdmin?(localStorage.getItem(GVIEW_KEY)||'all'):null;
+const inAdminView=g=>{const v=adminView();return v==='all'||g===v};
+const matches=s=>db.isAdmin?inAdminView(personOf(s.id).gender):(!ME||db.isGhost||!myGender()||personOf(s.id).gender===myGender());
 let askedGender=false;
 function askGender(then){
   openSheet(`<div class="eyebrow">Your account</div><h2 style="margin:6px 0 10px">Are you a man or a woman?</h2>
@@ -891,7 +895,7 @@ function renderShell(){
       <button data-go="mine"><i>✎</i>My reviews</button>
       <button data-go="join"><i>✓</i>Become a stylist</button></div>
     <div class="roles">${(()=>{const roles=['client',...(db.me.stylistId?['stylist']:[]),...(db.isAdmin?['admin']:[])];
-      return roles.length>1?`<span class="hint">Switch view</span>${roles.map(r=>`<button data-role="${r}" aria-pressed="${state.role===r}">${{client:'Client',stylist:'Stylist',admin:'Admin'}[r]}</button>`).join('')}`:''})()}
+      return (roles.length>1?`<span class="hint">Switch view</span>${roles.map(r=>`<button data-role="${r}" aria-pressed="${state.role===r}">${{client:'Client',stylist:'Stylist',admin:'Admin'}[r]}</button>`).join('')}`:'')+(db.isAdmin?`</div><div class="roles"><span class="hint">Admin · show</span>${[['all','Everyone'],['woman','Women only'],['man','Men only']].map(([k,l])=>`<button data-gview="${k}" aria-pressed="${adminView()===k}">${l}</button>`).join('')}`:'')})()}
       <span class="spacer"></span>${ME?'<button id="logout">Log out</button>':'<button id="login">Log in</button><button data-signup="1">Sign up</button>'}</div>`;
 }
 function setMenu(open){$('#menu').hidden=!open;$('#explore-btn').setAttribute('aria-expanded',open)}
@@ -1019,6 +1023,7 @@ const VIEWS={
     return head+(c.items.length?collageHTML(c,false):`<div class="empty"><h3>No collage yet</h3>${esc(u.name)} hasn’t made a collage.</div>`);
   },
   browse(){
+    const gNote=db.isAdmin&&adminView()!=='all'?`<p class="note" style="margin:0 0 14px">Admin view: showing ${adminView()==='man'?'men':'women'} only. Change it in Explore.</p>`:'';
     const inCat=db.stylists.filter(matches).filter(s=>state.cat==='all'||svc(s).includes(state.cat));
     let list=inCat.filter(s=>state.filter!=='1st review free'||s.firstFree);
     if(state.filter==='Top rated')list=list.slice().sort((a,b)=>b.rating-a.rating||b.reviews-a.reviews);
@@ -1038,11 +1043,11 @@ const VIEWS={
     <div class="cats" role="group" aria-label="Type of review"><button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
       ${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
     <div class="filters" role="group" aria-label="Filter">${['All','1st review free','Top rated','Lowest price'].map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
-    <div class="roster">${list.map(stylistCard).join('')||`<div class="empty" style="grid-column:1/-1"><h3>${db.stylists.length?'No one here yet':'Be the first stylist on Lookover'}</h3>${db.stylists.length?'Try another filter.':'Lookover just launched. Join as a stylist and start reviewing looks for free.'}<div style="margin-top:16px"><button class="btn" data-go="join">Become a stylist</button></div></div>`}</div>`;
+    ${gNote}<div class="roster">${list.map(stylistCard).join('')||`<div class="empty" style="grid-column:1/-1"><h3>${db.stylists.length?'No one here yet':'Be the first stylist on Lookover'}</h3>${db.stylists.length?'Try another filter.':'Lookover just launched. Join as a stylist and start reviewing looks for free.'}<div style="margin-top:16px"><button class="btn" data-go="join">Become a stylist</button></div></div>`}</div>`;
   },
   community(){
-    const posts=db.posts.filter(p=>(p.status==='approved'||p.authorId===ME)&&p.status!=='rejected'&&(state.comCat==='all'||kindsOf(p).includes(state.comCat))).sort((a,b)=>b.created-a.created);
-    return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Every look here was reviewed by a stylist first. Everyone sees the median score. Comments go only to the person who posted. See something that isn’t a look, or an ad? Tap Report.</p></div><button class="btn" id="plus2">Get a look reviewed</button></div>
+    const posts=db.posts.filter(p=>(p.status==='approved'||p.authorId===ME)&&p.status!=='rejected'&&(!db.isAdmin||inAdminView(personOf(p.authorId).gender))&&(state.comCat==='all'||kindsOf(p).includes(state.comCat))).sort((a,b)=>b.created-a.created);
+    return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Every look here was reviewed by a stylist first. Everyone sees the median score. Comments go only to the person who posted. See something that isn’t a look, or an ad? Tap Report.</p>${db.isAdmin&&adminView()!=='all'?`<p class="note" style="margin:8px 0 0">Admin view: showing looks from ${adminView()==='man'?'men':'women'} only.</p>`:''}</div><button class="btn" id="plus2">Get a look reviewed</button></div>
       <div class="mini" style="margin-bottom:22px"><span class="eyebrow">How to post your look</span><span>1. Tap <b>+</b> and send your look to a stylist. &nbsp;2. When the review is back, tap <b>Share to community</b> in My reviews, or choose it when you send. It goes up right away.</span></div>
       <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...ACTIVE_KINDS.map(k=>[k,KINDS[k].label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
       <div class="feed">${posts.map(postCard).join('')||'<div class="empty"><h3>No looks yet</h3>Send a look to a stylist. Once it’s reviewed, you can share it here.</div>'}</div>`;
@@ -1675,7 +1680,7 @@ const INSPO_AUD=[['all','For everyone'],['woman','For women'],['man','For men']]
 const INSPO_CATS=[['outfit','Outfits'],['makeup','Makeup'],['nails','Nails'],['hair','Hair'],['other','Other']];
 async function loadInspo(){const {data,error}=await sb.from('inspirations').select('*').order('sort').order('created_at',{ascending:false});if(error)throw error;db.inspo=data||[];return db.inspo}
 async function addToBoard(){
-  const u=me();let chosen=new Set();let list=[];try{list=(await loadInspo()).filter(x=>x.active&&(x.audience==='all'||!u.gender||x.audience===u.gender))}catch(e){console.error(e)}
+  const u=me();let chosen=new Set();let list=[];try{list=(await loadInspo()).filter(x=>x.active&&(db.isAdmin?(adminView()==='all'||x.audience==='all'||x.audience===adminView()):(x.audience==='all'||!u.gender||x.audience===u.gender)))}catch(e){console.error(e)}
   const cats=INSPO_CATS.filter(([k])=>list.some(x=>x.category===k));
   openSheet(`<div class="eyebrow">Mood board</div><h2 style="margin:6px 0 18px">Add to your collage</h2>
     <div class="pick-photo" style="margin-bottom:20px"><label for="mb-roll">${ICON.gallery}From camera roll<input type="file" id="mb-roll" accept="image/*" multiple></label><label for="mb-cam">${ICON.camera}Take a photo<input type="file" id="mb-cam" accept="image/*" capture="environment"></label></div>
@@ -1973,6 +1978,7 @@ document.addEventListener('click',e=>{
     return run(async()=>{must(await sb.rpc(fn[0],{[fn[1]]:d.id,approve:ok}));state.approvals=null;await load();render()},d.mod==='post'?(ok?'Look kept and reports cleared':'Look removed'):(ok?'Approved':'Rejected'))}
   if(d.vis){t.parentElement.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b===t));state.compose.vis=d.vis;return}
   if(d.go){setMenu(false);closeSheet();return go(d.go)}
+  if(d.gview){localStorage.setItem(GVIEW_KEY,d.gview);setMenu(false);toast({all:'Showing everyone',woman:'Showing women only',man:'Showing men only'}[d.gview]);return render()}
   if(d.role){state.role=d.role;setMenu(false);return go(DOCK[d.role][0][0])}
   if(t.id==='plus'||t.id==='plus2'||t.id==='plus3'){if(ME&&!requireApproved())return;return openComposer()}
   if(d.compose){setMenu(false);if(ME&&!requireApproved())return;return openComposer({kind:d.compose,stylistId:d.to})}
