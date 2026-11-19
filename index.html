@@ -47,7 +47,7 @@ h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;text-wrap:balance;l
 .mast-in{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:20px}
 .wordmark{font-family:var(--display);font-size:28px;font-weight:500;letter-spacing:-.01em;text-decoration:none;line-height:1;cursor:pointer}
 .logo-svg{display:block;height:56px;width:auto}
-@media (max-width:620px){.logo-svg{height:40px}}
+@media (max-width:620px){.logo-svg{height:40px}.ed-row .lab{min-width:58px}.ed-chip{padding:6px 11px}.ed-round{width:32px;height:32px}.ed-hint{font-size:11px}}
 .wordmark em{font-style:italic;font-weight:400;color:var(--accent-text)}
 .explore{position:relative}
 .explore-btn{display:flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px;font-weight:500}
@@ -405,12 +405,16 @@ button.avatar{border:0;padding:0;cursor:pointer}
 .ed-frame canvas{display:block;width:100%;height:100%}
 .ed-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px);background-size:33.333% 33.333%;opacity:0;transition:opacity .2s}
 .ed-frame.drag .ed-grid{opacity:1}
-.ed-tools{padding:10px 16px max(16px,env(safe-area-inset-bottom));display:grid;gap:12px;max-width:620px;width:100%;margin:0 auto}
+.ed-tools{padding:8px 16px max(14px,env(safe-area-inset-bottom));display:grid;gap:10px;max-height:52vh;overflow-y:auto;max-width:620px;width:100%;margin:0 auto}
 .ed-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ed-row .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);min-width:76px}
 .ed-row input[type=range]{flex:1;accent-color:#fff}
 .ed-chip{background:rgba(255,255,255,.1);border:1px solid transparent;color:#fff;border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer}
 .ed-chip[aria-pressed="true"]{background:#fff;color:#111}
+.ed-brush{position:absolute;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5);pointer-events:none;transform:translate(-50%,-50%);display:none}
+.ed-frame.brush{cursor:none}
+.ed-frame.brush .ed-brush{display:block}
+.ed-hint{font-size:12px;color:rgba(255,255,255,.7);margin:-4px 0 0}
 .ed-round{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:18px;cursor:pointer}
 footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 
@@ -481,8 +485,11 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 <div class="toast" id="toast" role="status"></div>
 <div class="editor" id="editor" role="dialog" aria-modal="true" aria-label="Edit photo">
   <div class="ed-top"><button class="plain" id="ed-cancel">Cancel</button><b id="ed-title">Edit photo</b><button class="btn sm" id="ed-done">Done</button></div>
-  <div class="ed-stage" id="ed-stage"><div class="ed-frame" id="ed-frame"><canvas id="ed-canvas"></canvas><div class="ed-grid"></div></div></div>
+  <div class="ed-stage" id="ed-stage"><div class="ed-frame" id="ed-frame"><canvas id="ed-canvas"></canvas><div class="ed-grid"></div><div class="ed-brush" id="ed-brush"></div></div></div>
   <div class="ed-tools">
+    <div class="ed-row"><span class="lab">Tool</span><span id="ed-tool" class="ed-row" style="gap:6px"></span></div>
+    <div class="ed-row" id="ed-brushrow"><span class="lab">Brush</span><input type="range" id="ed-bsize" min="8" max="140" value="44" aria-label="Brush size"><button class="ed-chip" id="ed-undo">Undo</button><button class="ed-chip" id="ed-clear">Clear</button></div>
+    <p class="ed-hint" id="ed-hint"></p>
     <div class="ed-row"><span class="lab">Card</span><span id="ed-shapes" class="ed-row" style="gap:6px"></span></div>
     <div class="ed-row"><span class="lab">Size</span><button class="ed-round" id="ed-zout" aria-label="Make smaller">−</button><input type="range" id="ed-zoom" min="0" max="1000" aria-label="Size"><button class="ed-round" id="ed-zin" aria-label="Make bigger">+</button></div>
     <div class="ed-row"><span class="lab">Light</span><input type="range" id="ed-bright" min="60" max="140" value="100" aria-label="Brightness"></div>
@@ -510,7 +517,7 @@ const HAIR_TYPES=['Straight','Wavy','Curly','Coily'];
 const CUTS=['Long layers','Curtain bangs','Face-framing layers','Lob','Bob','Pixie','Shag','Blunt cut','Taper fade','Textured crop','Buzz cut','Defined curls'];
 const AESTHETICS=['Quiet luxury','Minimal','Modest','Streetwear','Coquette','Old money','Y2K','Boho','Clean girl','Soft glam','Edgy','Preppy'];
 const STYLE_WORDS=['Modest','Minimal','Colorful','Vintage','Streetwear','Classic','Feminine','Edgy','Sporty','Boho','Preppy','Glam','Thrifted','Neutral tones','Bold prints','Gold jewelry','Silver jewelry'];
-const SPECIALTIES=['Color analysis','Modest fashion','Streetwear','Workwear','Menswear','Events & formal','Thrift & budget','Capsule wardrobes','Everyday makeup','Bridal makeup','Acne-prone skin','Sensitive skin','Nail art','Gel & builder','Haircuts','Hair color','Curly hair','Barbering'];
+const SPECIALTIES=['Color analysis','Modest fashion','Streetwear','Workwear','Menswear','Events & formal','Thrift & budget','Capsule wardrobes','Everyday makeup','Bridal makeup','Nail art','Gel & builder','Haircuts','Hair color','Curly hair','Barbering'];
 const FAV_COLORS=['#8c1238','#c2185b','#e0607e','#d9742b','#c9a227','#2e7d5b','#1f6f78','#2b59c3','#6a4cc2','#8a6f5a','#5f6670','#111114'];
 const STICKERS=['✨','🎀','🌸','💖','⭐','🦋','🍒','👑','🔥','🌈','💅','👗','💄','🕶️','👠','🧸'];
 const KINDS={
@@ -540,7 +547,7 @@ const PRESETS={
   'Boho':['outfit',['Rust','Mustard','Ecru','Chocolate']],'Coquette':['outfit',['Soft pink','Optic white','Rose','Cherry']],
   'Clean girl':['makeup',['Nude rose','Peach','Champagne','Ballet nude']],'Soft glam':['makeup',['Mauve','Soft pink','Taupe','Champagne']],
   'Chrome nails':['nails',['Silver chrome']],'French tips':['nails',['Milky white']],'Cherry nails':['nails',['Cherry']],
-  'Glass skin':['skin',['Sheer pink','Milky white']],'Curtain bangs':['hair',['Chestnut','Caramel','Chocolate brown']],'Copper hair':['hair',['Copper','Auburn','Caramel']]
+  'Curtain bangs':['hair',['Chestnut','Caramel','Chocolate brown']],'Copper hair':['hair',['Copper','Auburn','Caramel']]
 };
 
 /* ================= Color helpers ================= */
@@ -871,7 +878,7 @@ const notesBlock=r=>{const n=[['Must stay',r.keep],['Willing to swap',r.swap],['
 function profileMini(P,who='Your',hint=''){
   if(!P)return '';
   return `<div class="mini"><div class="mini-top"><span class="eyebrow">${who} color profile</span><span class="source ${P.confirmed?'ok':''}">${P.confirmed?'✓ ':''}${esc(P.source)}</span></div>
-    <div><b class="s">${esc(P.season)}</b> <span class="muted">· ${esc(P.undertone)} undertone${P.skinType?` · ${esc(P.skinType)} skin`:''}</span></div>${chips(P.wear)}${hint?`<span class="hint">${hint}</span>`:''}</div>`;
+    <div><b class="s">${esc(P.season)}</b> <span class="muted">· ${esc(P.undertone)} undertone</span></div>${chips(P.wear)}${hint?`<span class="hint">${hint}</span>`:''}</div>`;
 }
 
 /* ================= Views ================= */
@@ -938,7 +945,7 @@ const VIEWS={
       <div><div class="eyebrow">${st?'Stylist':'Member'} · Joined ${day}</div><h1>${esc(u.name)} ${st?.verified?'<span class="vcheck" style="width:22px;height:22px;font-size:12px">✓</span>':''}</h1>
         ${st?`<p class="muted" style="margin:6px 0 8px">${esc(st.line||st.title)}</p>${st.bio?`<p style="max-width:60ch;margin:0 0 10px">${esc(st.bio)}</p>`:''}<div class="meta num" style="margin-bottom:8px"><span>★ ${st.rating||'New'} (${st.reviews} ratings)</span><span class="dot">${svc(st).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${esc(quote(st).label)}</span></div>${offersBlock(st)}`:''}
         <div style="margin:8px 0 0">${tags(u.keywords)}</div></div>
-      <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map((k,i)=>`<button class="btn ${i?'line':''} sm" data-compose="${k}" data-to="${st.id}">${KINDS[k].ask}</button>`).join('')}</div>`:''}</div></section>
+      <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map((k,i)=>`<button class="btn soft sm" data-compose="${k}" data-to="${st.id}">${KINDS[k].ask}</button>`).join('')}</div>`:''}</div></section>
       <div class="tabs" role="tablist"><button role="tab" data-ptab="collage" aria-selected="${P.tab==='collage'}">Collage</button><button role="tab" data-ptab="looks" aria-selected="${P.tab==='looks'}">Looks · ${P.posts.length}</button></div>`;
     if(P.tab==='looks')return head+(P.posts.length?`<div class="feed">${P.posts.map(postCard).join('')}</div>`:`<div class="empty"><h3>No public looks yet</h3>${esc(u.name)} hasn’t shared anything with the community.</div>`);
     const c=collageOf(u);
@@ -978,7 +985,16 @@ const VIEWS={
     const list=db.requests.filter(r=>r.clientId===ME).sort((a,b)=>b.created-a.created);
     const fresh=new Set(unseenReviews().map(r=>r.id));setTimeout(()=>{markSeen([...fresh]);renderShell()},0);
     const mem=(db.memberships||[]).filter(m=>m.clientId===ME&&memberLive(m));const dd=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>
+    const dl=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    const tabs=`<div class="tabs" role="tablist"><button role="tab" data-mtab="cards" aria-selected="${state.mineTab!=='log'}">Reviews</button><button role="tab" data-mtab="log" aria-selected="${state.mineTab==='log'}">Sent log · ${list.length}</button></div>`;
+    if(state.mineTab==='log')return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>${tabs}
+      <div class="queue">${list.map(r=>{const s=stylist(r.stylistId)||personOf(r.stylistId);return `<button class="qrow" data-viewrev="${r.id}" style="text-align:left;cursor:pointer;width:100%">
+        <div class="thumb">${media(r,r.kind,r.art)}</div>
+        <div style="min-width:0"><div class="meta"><span>${dl(r.created)}</span><span class="dot kind">${KINDS[r.kind]?.label||''}</span><span class="dot">to ${esc(s.name)}</span><span class="dot">${photosOf(r).length} photo${photosOf(r).length===1?'':'s'}</span></div>
+          <p class="ask" style="font-size:16px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">“${esc(r.question)}”</p>
+          <div class="meta" style="margin-top:4px"><span>${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}</span><span class="dot">${r.postId?'Public':'Private'}</span>${r.stars?`<span class="dot">You rated ${starsTxt(r.stars)}</span>`:''}</div></div>
+        <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'Waiting'}</span></button>`}).join('')||'<div class="empty"><h3>Nothing sent yet</h3>Tap + to send your first look.</div>'}</div>`;
+    return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>${tabs}
       ${ratingsLog(list)}
       ${mem.length?`<div class="queue" style="margin-bottom:22px">${mem.map(m=>{const st=stylist(m.stylistId);return `<div class="qrow">${pAvatar(m.stylistId,'avatar','width:56px;height:56px')}
         <div><div class="kind">Membership</div>${pName(m.stylistId,st?.name)}<div class="meta"><span>$${m.price}/month</span><span class="dot">${Math.max(0,m.subs-(m.used||0))} of ${m.subs} looks left</span><span class="dot">${m.status==='active'?'Renews':'Ends'} ${dd(m.status==='active'?m.periodEnd||m.started:m.ends)}</span></div></div>
@@ -1163,14 +1179,14 @@ function colorsTab(P){
   const sec=(t,rows)=>`<div class="pp-sec"><h3>${t}</h3><div class="pp-rows">${rows}</div></div>`,row=(l,c)=>c?`<div><h4 class="h4">${l}</h4>${c}</div>`:'';
   return `<div class="passport"><div class="pp-side"><div class="stripes">${stripes(P.wear.slice(0,5))}</div>
       <div class="pp-side-body"><div><div class="eyebrow">Color season</div><div class="pp-season" style="margin-top:6px">${esc(P.season)}</div></div>
-      <div class="facts"><div><h4 class="h4" style="margin:0">Undertone</h4><b>${esc(P.undertone)}</b></div><div><h4 class="h4" style="margin:0">Skin</h4><b>${esc(P.skinType||'–')}</b></div></div>
+      <div class="facts"><div><h4 class="h4" style="margin:0">Undertone</h4><b>${esc(P.undertone)}</b></div></div>
       <span class="source ${P.confirmed?'ok':''}">${P.confirmed?'✓ ':''}${esc(P.source)}</span><p class="hint" style="margin:0">Sent with every review request.</p>
       <div class="ctas"><button class="btn sm line" data-quiz="1">Retake quiz</button><button class="btn sm" id="ep-open">Edit</button></div></div></div>
     <div class="pp-main">${sec('Clothes',row('Wear more',P.wear?.length&&chips(P.wear))+row('Keep away from your face',P.avoid?.length&&chips(P.avoid,'avoid')))}
       ${sec('Makeup',row('Lips',P.lips?.length&&chips(P.lips))+row('Cheeks',P.cheeks?.length&&chips(P.cheeks))+row('Eyes',P.eyes?.length&&chips(P.eyes)))}
       ${sec('Nails',row('Polish shades',P.nails?.length&&chips(P.nails)))}
       ${sec('Hair',row('Face shape · texture',`<div>${esc(P.faceShape||'Not set')} · ${esc(P.hairType||'Not set')}</div>`)+row('Hair colors',P.hairColors?.length&&chips(P.hairColors)))}
-      ${sec('Skin',row('Type',`<div>${esc(P.skinType||'Not set')}</div>`)+row('Focus on',P.concerns?.length?tags(P.concerns):'<div class="muted">Nothing selected</div>'))}</div></div>`;
+</div></div>`;
 }
 function offersEditor(s,members){
   return `<div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your <em>offers</em></h2><p>Optional ways to win new clients and keep regulars. You can also set your price to $0 to review for free.</p></div></div>
@@ -1344,8 +1360,7 @@ const QUIZ=[
   ['eyes','Your eye color',[['light','Blue, green or grey'],['medium','Hazel or light brown'],['dark','Dark brown or black']]],
   ['contrast','How strong is the contrast between your hair, skin and eyes?',[['low','Soft, everything blends'],['medium','In between'],['high','Striking']]],
   ['face','Pull your hair back. Your face shape is closest to',FACE_SHAPES.map(f=>[f,f])],
-  ['hairtype','Your natural hair texture',HAIR_TYPES.map(h=>[h,h])],
-  ['skin','A few hours after washing your face, your skin feels',[['Dry','Tight or flaky'],['Oily','Shiny all over'],['Combination','Shiny T-zone, dry cheeks'],['Normal','Comfortable'],['Sensitive','Easily irritated']]]
+  ['hairtype','Your natural hair texture',HAIR_TYPES.map(h=>[h,h])]
 ];
 let quizAns={};
 async function saveColors(P,msg){if(!requireAuth())return;await run(async()=>{must(await sb.from('color_profiles').upsert({user_id:ME,data:P,updated_at:new Date().toISOString()}));db.profile=P},msg)}
@@ -1361,13 +1376,12 @@ function openQuiz(){
   quizAns={};
   openSheet(`<div class="eyebrow">Two-minute color quiz</div><h2 style="margin:6px 0 6px">Find your colors</h2><p class="muted" style="margin:0 0 6px">Answer in daylight, with no makeup if you can. A stylist can confirm it later.</p>
     ${QUIZ.map(([k,q,o],i)=>`<div class="quiz-q"><h3><span class="n">${i+1}.</span>${q}</h3><div class="chips">${o.map(([v,l])=>`<button type="button" class="chip" data-qk="${k}" data-qv="${v}" aria-pressed="false">${l}</button>`).join('')}</div></div>`).join('')}
-    <div class="quiz-q"><h3><span class="n">${QUIZ.length+1}.</span>Anything you want help with? <span class="muted" style="font-weight:400">Optional</span></h3>${toggles('qz-concerns',CONCERNS)}</div>
     <div id="quiz-result"></div><div class="actions" id="quiz-actions" style="margin-top:20px"><button class="btn line" id="qz-cancel">Cancel</button><button class="btn" id="qz-go">See my colors</button></div>`);
   $('#qz-cancel').onclick=closeSheet;
   $('#qz-go').onclick=()=>{
     const miss=QUIZ.filter(([k])=>!quizAns[k]).length;if(miss){toast(`Answer ${miss} more question${miss>1?'s':''}`);return}
-    const P=computeProfile({...quizAns,concerns:picked('qz-concerns')});
-    $('#quiz-result').innerHTML=`<div class="mini" style="margin-top:22px"><span class="eyebrow">Your result</span><div class="pp-season">${esc(P.season)}</div><div class="muted">${esc(P.undertone)} undertone · ${esc(P.skinType)} skin · ${esc(P.faceShape)} face</div>
+    const P=computeProfile({...quizAns,concerns:[]});
+    $('#quiz-result').innerHTML=`<div class="mini" style="margin-top:22px"><span class="eyebrow">Your result</span><div class="pp-season">${esc(P.season)}</div><div class="muted">${esc(P.undertone)} undertone · ${esc(P.faceShape)} face</div>
       <div><h4 class="h4" style="margin-top:6px">Wear more</h4>${chips(P.wear)}</div><div><h4 class="h4" style="margin-top:6px">Lips & nails</h4>${chips([...P.lips,...P.nails.slice(0,2)])}</div></div>`;
     $('#quiz-actions').innerHTML='<button class="btn line" id="qz-again">Change answers</button><button class="btn" id="qz-save">Save to my profile</button>';
     $('#qz-again').onclick=openQuiz;
@@ -1385,11 +1399,11 @@ function editColors(){
     <div class="field"><span class="label">Nail polish</span>${swatchPicker('ep-nails',P.nails,POLISH)}</div>
     <div class="cols">${sel('ep-face','Face shape',FACE_SHAPES,P.faceShape)}${sel('ep-htype','Hair texture',HAIR_TYPES,P.hairType)}</div>
     <div class="field"><span class="label">Hair colors</span>${swatchPicker('ep-hair',P.hairColors,HAIRC)}</div>
-    <div class="cols">${sel('ep-skin','Skin type',SKIN_TYPES,P.skinType)}<div></div></div><div class="field"><span class="label">Skin concerns</span>${toggles('ep-concerns',CONCERNS,P.concerns)}</div>
+
     <div class="actions"><button class="btn line" id="ep-cancel">Cancel</button><button class="btn" id="ep-save">Save</button></div>`);
   $('#ep-cancel').onclick=closeSheet;
   $('#ep-save').onclick=()=>{const v=id=>$(id).value||null;
-    const NP={season:v('#ep-season')||P.season,undertone:v('#ep-under')||P.undertone,skinType:v('#ep-skin'),concerns:picked('ep-concerns'),wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),nails:picked('ep-nails'),hairColors:picked('ep-hair'),faceShape:v('#ep-face'),hairType:v('#ep-htype'),source:'Edited by you',updated:Date.now()};
+    const NP={season:v('#ep-season')||P.season,undertone:v('#ep-under')||P.undertone,skinType:P.skinType||null,concerns:P.concerns||[],wear:picked('ep-wear'),avoid:picked('ep-avoid'),lips:picked('ep-lips'),cheeks:picked('ep-cheeks'),eyes:picked('ep-eyes'),nails:picked('ep-nails'),hairColors:picked('ep-hair'),faceShape:v('#ep-face'),hairType:v('#ep-htype'),source:'Edited by you',updated:Date.now()};
     saveColors(NP,'Palette saved').then(()=>{closeSheet();render()})};
 }
 function adoptReview(rid){
@@ -1433,7 +1447,7 @@ function viewStylist(id){
     <p style="font-size:17px;margin:0 0 12px">${esc(s.line||s.title)}</p>${s.bio?`<p style="margin:0 0 14px;max-width:60ch">${esc(s.bio)}</p>`:''}
     <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${esc(quote(s).label)}</span></div>
     ${tags(s.specialties)}${offersBlock(s)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
-    <div class="actions" style="justify-content:stretch">${svc(s).map(k=>`<button class="btn ${k===svc(s)[0]?'':'line'}" data-compose="${k}" data-to="${s.id}" style="flex:1">${KINDS[k].ask}</button>`).join('')}</div>`);
+    <div class="actions" style="justify-content:stretch">${svc(s).map(k=>`<button class="btn soft" data-compose="${k}" data-to="${s.id}" style="flex:1">${KINDS[k].ask}</button>`).join('')}</div>`);
 }
 function applyVerification(){
   const s=stylist(db.me.stylistId);let photos=[];
@@ -1462,7 +1476,17 @@ function loadImage(file){
 }
 function drawRot(ctx,img,cx,cy,sc,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-img.width*sc/2,-img.height*sc/2,img.width*sc,img.height*sc);ctx.restore()}
 function coverOf(img,W,H,rot){const sw=rot%180?img.height:img.width,sh=rot%180?img.width:img.height;return {cover:Math.max(W/sw,H/sh),contain:Math.min(W/sw,H/sh)}}
-function drawEdit(ctx,W,H,img,st){
+function ensureBlur(item){
+  const img=item.img;
+  if(!item.blurred){const mw=Math.min(900,img.width),mh=Math.round(img.height*mw/img.width);
+    const step=(src,w,h)=>{const c=document.createElement('canvas');c.width=Math.max(4,w);c.height=Math.max(4,h);const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,c.width,c.height);return c};
+    item.blurred=step(step(step(img,Math.round(mw/24),Math.round(mh/24)),Math.round(mw/8),Math.round(mh/8)),mw,mh)}
+  if(!item.mask){const m=document.createElement('canvas');m.width=item.blurred.width;m.height=item.blurred.height;item.mask=m;item.maskUsed=false}
+}
+function blurLayer(item){const t=document.createElement('canvas');t.width=item.mask.width;t.height=item.mask.height;const x=t.getContext('2d');
+  x.drawImage(item.blurred,0,0);x.globalCompositeOperation='destination-in';x.drawImage(item.mask,0,0);return t}
+function drawEdit(ctx,W,H,item,st){
+  const img=item.img;
   const rot=((st.rot%360)+360)%360,{cover}=coverOf(img,W,H,rot);
   ctx.save();ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
   if(st.bumper==='blur'){const t=document.createElement('canvas');t.width=Math.max(8,Math.round(W/28));t.height=Math.max(8,Math.round(H/28));
@@ -1470,19 +1494,38 @@ function drawEdit(ctx,W,H,img,st){
     ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(0,0,W,H)}
   else{ctx.fillStyle=st.bumper==='black'?'#0b0b0c':'#ffffff';ctx.fillRect(0,0,W,H)}
   drawRot(ctx,img,W/2+st.ox*W,H/2+st.oy*H,cover*st.zoom,rot);
+  if(item.maskUsed&&item.mask){const L=blurLayer(item);drawRot(ctx,L,W/2+st.ox*W,H/2+st.oy*H,cover*st.zoom*img.width/L.width,rot)}
   if(st.bright<1){ctx.fillStyle=`rgba(0,0,0,${(1-st.bright).toFixed(3)})`;ctx.fillRect(0,0,W,H)}
   else if(st.bright>1){ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(255,255,255,${((st.bright-1)*.9).toFixed(3)})`;ctx.fillRect(0,0,W,H)}
   ctx.restore();
 }
-function exportEdit(img,shape,st){const S=SHAPES[shape];const c=document.createElement('canvas');c.width=S.w;c.height=S.h;drawEdit(c.getContext('2d'),S.w,S.h,img,st);return c.toDataURL('image/jpeg',.86)}
+function exportEdit(item,shape,st){const S=SHAPES[shape];const c=document.createElement('canvas');c.width=S.w;c.height=S.h;drawEdit(c.getContext('2d'),S.w,S.h,item,st);return c.toDataURL('image/jpeg',.86)}
 const ZMIN=.25,ZMAX=5,z2s=z=>Math.round(Math.log(z/ZMIN)/Math.log(ZMAX/ZMIN)*1000),s2z=v=>ZMIN*Math.pow(ZMAX/ZMIN,v/1000);
 function openEditor(item,title){
   return new Promise(resolve=>{
     const ed=$('#editor'),frame=$('#ed-frame'),cv=$('#ed-canvas'),ctx=cv.getContext('2d');let st={...item.st};let shape=state.compose.shape;
+    ensureBlur(item);const mctx=item.mask.getContext('2d');const saved=mctx.getImageData(0,0,item.mask.width,item.mask.height),savedUsed=item.maskUsed;
+    let tool='move';const undo=[];const brush=$('#ed-brush');
+    const HINTS={move:'Drag to move the photo. Pinch or use Size to make it bigger or smaller.',blur:'Paint over anything you want hidden, like your face. Only the blurred version is uploaded.',erase:'Paint over a blurred area to bring it back.'};
+    const syncTool=()=>{$('#ed-tool').innerHTML=[['move','Move'],['blur','Blur'],['erase','Erase']].map(([k,l])=>`<button class="ed-chip" data-tool="${k}" aria-pressed="${k===tool}">${l}</button>`).join('');
+      $('#ed-brushrow').style.display=tool==='move'?'none':'';frame.classList.toggle('brush',tool!=='move');$('#ed-hint').textContent=HINTS[tool];
+      $('#ed-undo').disabled=!undo.length;$('#ed-clear').disabled=!item.maskUsed;requestAnimationFrame(size)};
+    $('#ed-tool').onclick=e=>{const b=e.target.closest('[data-tool]');if(!b)return;tool=b.dataset.tool;syncTool()};
+    const toImage=(clientX,clientY)=>{const r=frame.getBoundingClientRect(),W=cv.width,H=cv.height,x=(clientX-r.left)*W/r.width,y=(clientY-r.top)*H/r.height;
+      const rot=((st.rot%360)+360)%360,sc=coverOf(item.img,W,H,rot).cover*st.zoom,a=-rot*Math.PI/180,dx=(x-(W/2+st.ox*W))/sc,dy=(y-(H/2+st.oy*H))/sc;
+      const k=item.mask.width/item.img.width;return {x:(dx*Math.cos(a)-dy*Math.sin(a)+item.img.width/2)*k,y:(dx*Math.sin(a)+dy*Math.cos(a)+item.img.height/2)*k,
+        r:(+$('#ed-bsize').value/2)*(W/r.width)/sc*k}};
+    let last=null;
+    const paint=(cx,cy)=>{const p=toImage(cx,cy);mctx.save();mctx.globalCompositeOperation=tool==='erase'?'destination-out':'source-over';mctx.fillStyle=mctx.strokeStyle='#fff';
+      mctx.lineCap='round';mctx.lineWidth=p.r*2;mctx.beginPath();if(last){mctx.moveTo(last.x,last.y);mctx.lineTo(p.x,p.y);mctx.stroke()}mctx.beginPath();mctx.arc(p.x,p.y,p.r,0,Math.PI*2);mctx.fill();mctx.restore();
+      last=p;if(tool==='blur')item.maskUsed=true;draw()};
+    const moveBrush=e=>{const r=frame.getBoundingClientRect(),d=+$('#ed-bsize').value;brush.style.width=brush.style.height=d+'px';brush.style.left=(e.clientX-r.left)+'px';brush.style.top=(e.clientY-r.top)+'px'};
+    $('#ed-undo').onclick=()=>{const u=undo.pop();if(!u)return;mctx.putImageData(u.data,0,0);item.maskUsed=u.used;syncTool();draw()};
+    $('#ed-clear').onclick=()=>{undo.push({data:mctx.getImageData(0,0,item.mask.width,item.mask.height),used:item.maskUsed});mctx.clearRect(0,0,item.mask.width,item.mask.height);item.maskUsed=false;syncTool();draw()};
     $('#ed-title').textContent=title;ed.classList.add('open');document.body.style.overflow='hidden';
     const size=()=>{const S=SHAPES[shape],stage=$('#ed-stage').getBoundingClientRect(),aw=stage.width-32,ah=stage.height-16;const k=Math.min(aw/S.w,ah/S.h);
       frame.style.width=Math.floor(S.w*k)+'px';frame.style.height=Math.floor(S.h*k)+'px';const d=Math.min(2,window.devicePixelRatio||1);cv.width=Math.floor(S.w*k*d);cv.height=Math.floor(S.h*k*d);draw()};
-    let raf=0;const draw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>drawEdit(ctx,cv.width,cv.height,item.img,st))};
+    let raf=0;const draw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>drawEdit(ctx,cv.width,cv.height,item,st))};
     const sync=()=>{$('#ed-zoom').value=z2s(st.zoom);$('#ed-bright').value=Math.round(st.bright*100);
       $('#ed-shapes').innerHTML=Object.entries(SHAPES).map(([k,v])=>`<button class="ed-chip" data-shape="${k}" aria-pressed="${k===shape}">${v.label}</button>`).join('');
       $('#ed-bump').innerHTML=Object.entries(BUMPERS).map(([k,v])=>`<button class="ed-chip" data-bump="${k}" aria-pressed="${k===st.bumper}">${v}</button>`).join('');draw()};
@@ -1497,17 +1540,20 @@ function openEditor(item,title){
     $('#ed-bump').onclick=e=>{const b=e.target.closest('[data-bump]');if(!b)return;st.bumper=b.dataset.bump;sync()};
     const pts=new Map();let pinch=null;
     frame.onpointerdown=e=>{frame.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});frame.classList.add('drag');
-      if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom}}};
-    frame.onpointermove=e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId),cur={x:e.clientX,y:e.clientY};pts.set(e.pointerId,cur);
+      if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom};last=null;return}
+      if(tool!=='move'){undo.push({data:mctx.getImageData(0,0,item.mask.width,item.mask.height),used:item.maskUsed});if(undo.length>25)undo.shift();last=null;moveBrush(e);paint(e.clientX,e.clientY);syncTool()}};
+    frame.onpointerleave=()=>{if(!pts.size)brush.style.left='-999px'};
+    frame.onpointermove=e=>{if(tool!=='move')moveBrush(e);if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId),cur={x:e.clientX,y:e.clientY};pts.set(e.pointerId,cur);
       if(pts.size===2&&pinch){const [a,b]=[...pts.values()];setZoom(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d);return}
+      if(tool!=='move'){paint(cur.x,cur.y);return}
       const r=frame.getBoundingClientRect();st.ox=Math.max(-1.5,Math.min(1.5,st.ox+(cur.x-prev.x)/r.width));st.oy=Math.max(-1.5,Math.min(1.5,st.oy+(cur.y-prev.y)/r.height));draw()};
-    const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)frame.classList.remove('drag')};
+    const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size){frame.classList.remove('drag');last=null}};
     frame.onpointerup=up;frame.onpointercancel=up;
     frame.onwheel=e=>{e.preventDefault();setZoom(st.zoom*Math.exp(-e.deltaY/400))};
     const close=v=>{ed.classList.remove('open');document.body.style.overflow='';window.removeEventListener('resize',size);resolve(v)};
-    $('#ed-cancel').onclick=()=>close(null);
+    $('#ed-cancel').onclick=()=>{mctx.putImageData(saved,0,0);item.maskUsed=savedUsed;close(null)};
     $('#ed-done').onclick=()=>close({st,shape});
-    window.addEventListener('resize',size);sync();requestAnimationFrame(size);
+    window.addEventListener('resize',size);sync();syncTool();requestAnimationFrame(size);
   });
 }
 async function addPhotos(files){
@@ -1516,13 +1562,13 @@ async function addPhotos(files){
   for(let i=0;i<list.length;i++){
     const img=await loadImage(list[i]);if(!img){toast('That photo could not be read. Try another one.');continue}
     const item={img,st:newEdit()};const r=await openEditor(item,`Photo ${c.photos.length+1} of ${Math.min(3,c.photos.length+list.length-i)}`);
-    if(!r)continue;item.st=r.st;applyShape(r.shape);item.out=exportEdit(item.img,c.shape,item.st);c.photos.push(item);
+    if(!r)continue;item.st=r.st;applyShape(r.shape);item.out=exportEdit(item,c.shape,item.st);c.photos.push(item);
   }
   renderComposer();
 }
-function applyShape(shape){const c=state.compose;if(shape===c.shape)return;c.shape=shape;c.photos.forEach(p=>p.out=exportEdit(p.img,shape,p.st))}
+function applyShape(shape){const c=state.compose;if(shape===c.shape)return;c.shape=shape;c.photos.forEach(p=>p.out=exportEdit(p,shape,p.st))}
 async function editPhoto(i){const c=state.compose,item=c.photos[i];snapshotCompose();
-  const r=await openEditor(item,`Photo ${i+1} of ${c.photos.length}`);if(r){item.st=r.st;applyShape(r.shape);item.out=exportEdit(item.img,c.shape,item.st)}renderComposer()}
+  const r=await openEditor(item,`Photo ${i+1} of ${c.photos.length}`);if(r){item.st=r.st;applyShape(r.shape);item.out=exportEdit(item,c.shape,item.st)}renderComposer()}
 
 /* ================= After render: wire per-view behavior ================= */
 function afterRender(){
@@ -1591,10 +1637,10 @@ document.addEventListener('click',e=>{
       <div class="actions"><button class="btn line" id="cm-keep">Keep it</button><button class="btn" id="cm-ok">Cancel membership</button></div>`);
     $('#cm-keep').onclick=closeSheet;$('#cm-ok').onclick=()=>run(async()=>{must(await sb.rpc('cancel_membership',{mid:d.cancelm}));closeSheet();await load();render()},'Membership canceled');return}
   if(d.viewrev){const r=db.requests.find(x=>x.id===d.viewrev);if(!r)return;
-    openSheet(`<div class="eyebrow">${r.stylistId===ME?'Your review for '+esc(r.client):'Review from '+esc(stylist(r.stylistId)?.name||personOf(r.stylistId).name)} · ${KINDS[r.kind].label}</div>
+    openSheet(`<div class="eyebrow">${r.stylistId===ME?'Your review for '+esc(r.client):'Sent to '+esc(stylist(r.stylistId)?.name||personOf(r.stylistId).name)+' · '+new Date(r.created).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${KINDS[r.kind].label}</div>
       <h2 style="margin:6px 0 14px">“${esc(r.question)}”</h2>
       <div style="display:grid;gap:8px;margin-bottom:14px">${photosOf(r).length?photosOf(r).map((u,i)=>`<img src="${esc(u)}" alt="Photo ${i+1}" style="width:100%;max-height:420px;object-fit:contain;border-radius:14px;background:var(--soft)">`).join(''):media(r,r.kind,r.art)}</div>
-      ${notesBlock(r)}${r.feedback?feedbackBlock(r.feedback,r.kind):'<p class="muted">Not reviewed yet.</p>'}
+      ${notesBlock(r)}<div class="meta" style="margin:10px 0">${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}<span class="dot">${r.postId?'Shared to the community':'Private'}</span></div>${r.feedback?feedbackBlock(r.feedback,r.kind):'<p class="muted">Waiting for the stylist’s review.</p>'}
       ${r.stars?`<p class="hint" style="margin-top:14px">Rated ${starsTxt(r.stars)} · ${countNote(r)}</p>`:''}`);return}
   if(d.delc){const id=d.delc;
     openSheet(`<div class="eyebrow">${db.isAdmin?'Admin':'Your comment'}</div><h2 style="margin:6px 0 10px">Delete this comment?</h2><p class="muted" style="margin:0 0 18px">It will be removed for everyone. This can’t be undone.</p>
@@ -1612,7 +1658,7 @@ document.addEventListener('click',e=>{
       if(r.error?.code==='23505')throw Object.assign(new Error('You already reported this comment.'),{code:'P0001'});must(r);closeSheet()},'Thanks. Our team will take a look.');return}
   if(d.flagp){if(!requireApproved())return;const id=d.flagp;
     openSheet(`<div class="eyebrow">Report a look</div><h2 style="margin:6px 0 10px">What’s wrong with it?</h2><p class="muted" style="margin:0 0 14px">Our team will review it. If several people report a look, it’s hidden until we check it. The person won’t know who reported it.</p>
-      <div class="vis" style="grid-template-columns:1fr" role="group" aria-label="Reason">${['not_a_look','contact','inappropriate','spam','other'].map((k,i)=>`<button type="button" data-preason="${k}" aria-pressed="${i===0}"><b>${PFLAG_LABEL[k]}</b><span>${{not_a_look:'Not a photo of an outfit, makeup, skin, nails or hair',contact:'A sign, text or caption asking people to contact them or hire them outside Lookover',inappropriate:'Nudity, violence or anything offensive',spam:'Repeated or misleading posts',other:'Something else'}[k]}</span></button>`).join('')}</div>
+      <div class="vis" style="grid-template-columns:1fr" role="group" aria-label="Reason">${['not_a_look','contact','inappropriate','spam','other'].map((k,i)=>`<button type="button" data-preason="${k}" aria-pressed="${i===0}"><b>${PFLAG_LABEL[k]}</b><span>${{not_a_look:'Not a photo of an outfit, makeup, nails or hair',contact:'A sign, text or caption asking people to contact them or hire them outside Lookover',inappropriate:'Nudity, violence or anything offensive',spam:'Repeated or misleading posts',other:'Something else'}[k]}</span></button>`).join('')}</div>
       <div class="field" style="margin-top:14px"><label for="pr-detail">Anything to add? (optional)</label><input id="pr-detail" maxlength="300"></div>
       <div class="actions"><button class="btn line" id="pr-cancel">Cancel</button><button class="btn" id="pr-send">Send report</button></div>`);
     let reason='not_a_look';document.querySelectorAll('[data-preason]').forEach(b=>b.onclick=()=>{reason=b.dataset.preason;document.querySelectorAll('[data-preason]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
@@ -1621,6 +1667,7 @@ document.addEventListener('click',e=>{
       if(r.error?.code==='23505')throw Object.assign(new Error('You already reported this look.'),{code:'P0001'});must(r);closeSheet();await load();render()},'Thanks. Our team will take a look.');return}
   if(d.dismiss){return run(async()=>{must(await sb.from('comment_flags').delete().eq('comment_id',d.dismiss));state.acomments=null;render()},'Flag dismissed')}
   if(d.zi!==undefined&&t.dataset.zi!==undefined&&state.view==='feed'){state.zi=+d.zi;return render()}
+  if(d.mtab){state.mineTab=d.mtab;return render()}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
   if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;if(d.atab==='approvals')state.approvals=null;if(d.atab==='comments')state.acomments=null;return render()}
