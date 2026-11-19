@@ -297,6 +297,7 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .tier{border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:6px;align-content:start;background:var(--surface)}
 .tier.on{border-color:var(--accent);background:var(--accent-soft)}
 .tier b{font-family:var(--display);font-size:30px;font-weight:500}
+.tier .plink b,.tier .switch b{font-family:var(--body);font-size:14px;font-weight:600}
 .tier h3{font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:0}
 .tier p{margin:0;font-size:13px;color:var(--muted)}
 .queue{display:grid;gap:10px}
@@ -507,13 +508,13 @@ const CFG={url:"https://stehllepbcppfkqmayfg.supabase.co",key:"sb_publishable_u_
 const sb=window.supabase.createClient(CFG.url,CFG.key);
 let ME=null;
 const GUEST={id:null,name:'Guest',keywords:[],favColor:'#8c1238',photo:null,board:[],stickers:[],submissions:0};
-let db={users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
+let db={memberships:[],freeFrom:[],friends:[],users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
 const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null,person:null,adminTab:'people',people:null};
 const ts=t=>Date.parse(t)||Date.now();
-const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,rating:+r.rating,reviews:r.reviews});
+const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,rating:+r.rating,reviews:r.reviews,firstFree:!!r.first_free,planPrice:r.plan_price,planSubs:r.plan_submissions});
 const mapPost=r=>({id:r.id,authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,created:ts(r.created_at),
   ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro}))});
-const mapReq=r=>({id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
+const mapReq=r=>({id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
 const mapApp=r=>({id:r.id,stylistId:r.stylist_id,experience:r.experience,link:r.link,note:r.note,portfolio:r.portfolio||[],status:r.status,created:ts(r.created_at)});
 const mapUser=r=>({id:r.id,name:r.name,photo:r.photo_url,favColor:r.fav_color,keywords:r.keywords||[],board:r.board||[],stickers:r.stickers||[],submissions:r.submissions||0});
 async function load(){
@@ -522,7 +523,7 @@ async function load(){
     sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').order('created_at',{ascending:false}).limit(60)]);
   if(st.error||po.error)throw (st.error||po.error);
   const posts=po.data.map(mapPost);await attachScores(posts);
-  const next={users:{},stylists:st.data.map(mapStylist),posts,requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
+  const next={memberships:[],freeFrom:[],friends:[],users:{},stylists:st.data.map(mapStylist),posts,requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
   const ids=new Set([...next.stylists.map(x=>x.id),...next.posts.map(x=>x.authorId),...next.posts.flatMap(x=>x.comments.map(c=>c.by))]);
   if(ME){
     ids.add(ME);
@@ -532,6 +533,12 @@ async function load(){
     next.profile=cp.data?.data||null;next.requests=(rq.data||[]).map(mapReq);next.applications=(ap.data||[]).map(mapApp);next.isAdmin=!!pr.data?.is_admin;
     next.requests.forEach(r=>{ids.add(r.clientId);ids.add(r.stylistId)});next.applications.forEach(a=>ids.add(a.stylistId));
     next.me.stylistId=next.stylists.some(x=>x.id===ME)?ME:null;
+    const [ms,fc]=await Promise.all([sb.from('memberships').select('*').order('started_at',{ascending:false}),sb.from('free_clients').select('*')]);
+    next.memberships=(ms.data||[]).map(m=>({id:m.id,clientId:m.client_id,stylistId:m.stylist_id,price:m.price,subs:m.submissions,status:m.status,started:ts(m.started_at),ends:m.ends_at?ts(m.ends_at):null}));
+    next.freeFrom=(fc.data||[]).filter(x=>x.client_id===ME).map(x=>x.stylist_id);
+    next.friends=(fc.data||[]).filter(x=>x.stylist_id===ME).map(x=>x.client_id);
+    next.memberships.forEach(m=>{ids.add(m.clientId);ids.add(m.stylistId)});next.friends.forEach(x=>ids.add(x));
+    await Promise.all(next.memberships.filter(m=>m.clientId===ME&&memberLive(m)).map(async m=>{const {data}=await sb.rpc('membership_usage',{mid:m.id});const u=data?.[0];if(u){m.used=u.used;m.periodEnd=ts(u.period_end)}}));
   }
   const list=[...ids].filter(Boolean);
   if(list.length){const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords,board,stickers,submissions').in('id',list);(data||[]).forEach(u=>next.users[u.id]=mapUser(u))}
@@ -625,6 +632,24 @@ const initials=n=>String(n||'?').split(/\s+/).filter(Boolean).map(w=>w[0]).join(
 const stylist=id=>db.stylists.find(s=>s.id===id);
 const me=()=>(ME&&db.users[ME])||GUEST;
 const svc=s=>s.services?.length?s.services:['outfit'];
+const memberLive=m=>m.status==='active'||(m.ends&&m.ends>Date.now());
+const offersPlan=s=>s.verified&&s.planPrice&&s.planSubs;
+const myMembership=sid=>(db.memberships||[]).find(m=>m.clientId===ME&&m.stylistId===sid&&memberLive(m));
+function quote(s){
+  if(!s.verified)return {amount:0,label:'Free · community stylist'};
+  if(ME&&(db.freeFrom||[]).includes(s.id))return {amount:0,label:`Free · you’re on ${s.name.split(' ')[0]}’s free list`};
+  if(s.firstFree&&!(ME&&db.requests.some(r=>r.clientId===ME&&r.stylistId===s.id)))return {amount:0,label:'Free · your first review with them'};
+  const m=myMembership(s.id);if(m&&(m.used??0)<m.subs)return {amount:0,label:`Included in your membership · ${m.subs-(m.used||0)} of ${m.subs} left`};
+  return {amount:priceOf(s),label:`$${priceOf(s)} per review`};
+}
+const REASON={community:'Free',friend:'Free · friend',first_free:'Free · first review',membership:'Membership',standard:''};
+const offerTags=s=>[s.firstFree&&s.verified?'1st review free':'',offersPlan(s)?`Membership $${s.planPrice}/mo · ${s.planSubs} looks`:''].filter(Boolean);
+function offersBlock(s){
+  if(!s.verified||(!s.firstFree&&!offersPlan(s)))return '';const m=ME&&myMembership(s.id);
+  return `<div class="mini" style="margin:14px 0 0">${s.firstFree?`<div><b class="s">First review free</b> <span class="muted">· for anyone new to ${esc(s.name.split(' ')[0])}</span></div>`:''}
+    ${offersPlan(s)?`<div class="mini-top"><div><b class="s">$${s.planPrice} a month</b> <span class="muted">· ${s.planSubs} look${s.planSubs>1?'s':''} reviewed each month</span></div>
+      ${m?`<span class="pill done">${m.status==='active'?'You’re a member':'Membership ending'}</span>`:s.id===ME?'':`<button class="btn sm" data-join="${s.id}">Join membership</button>`}</div>`:''}</div>`;
+}
 const isTop=s=>s.verified&&s.rating>=4.8&&s.reviews>=50;
 const priceOf=s=>!s.verified?0:isTop(s)?15:10;
 const tierOf=s=>!s.verified?'Community':isTop(s)?'Top verified':'Verified';
@@ -750,7 +775,7 @@ function profileMini(P,who='Your',hint=''){
 function stylistCard(s){
   const p=priceOf(s);
   return `<button class="stylist" data-stylist="${s.id}" aria-label="View ${esc(s.name)}">
-    <div class="portrait">${face(s,true)}<span class="badge ${s.verified?'v':''}">${s.verified?`<span class="vcheck">✓</span>$${p}`:'Free'}</span></div>
+    <div class="portrait">${face(s,true)}<span class="badge ${s.verified?'v':''}">${s.verified?`<span class="vcheck">✓</span>$${p}`:'Free'}</span>${offerTags(s).length?`<span class="badge" style="top:auto;bottom:12px;right:auto;left:12px">${esc(offerTags(s)[0])}</span>`:''}</div>
     <div class="stylist-info"><div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div><h3>${esc(s.name)}</h3>
       <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${tierOf(s)}</span></div></div></button>`;
 }
@@ -800,7 +825,7 @@ const VIEWS={
     const day=new Date(u.joined).toLocaleDateString(undefined,{month:'long',year:'numeric'});
     const head=`<section class="prof-head"><div class="prof-avatar" style="cursor:default;border-color:${esc(u.favColor)}">${face(u)}</div>
       <div><div class="eyebrow">${st?`${tierOf(st)} stylist`:'Member'} · Joined ${day}</div><h1>${esc(u.name)} ${st?.verified?'<span class="vcheck" style="width:22px;height:22px;font-size:12px">✓</span>':''}</h1>
-        ${st?`<p class="muted" style="margin:6px 0 8px">${esc(st.line||st.title)}</p><div class="meta num" style="margin-bottom:8px"><span>★ ${st.rating||'New'} (${st.reviews} ratings)</span><span class="dot">${svc(st).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${priceOf(st)?'$'+priceOf(st)+' per review':'Free reviews'}</span></div>`:''}
+        ${st?`<p class="muted" style="margin:6px 0 8px">${esc(st.line||st.title)}</p><div class="meta num" style="margin-bottom:8px"><span>★ ${st.rating||'New'} (${st.reviews} ratings)</span><span class="dot">${svc(st).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${esc(quote(st).label)}</span></div>${offersBlock(st)}`:''}
         <div style="margin:8px 0 0">${tags(u.keywords)}</div></div>
       <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map((k,i)=>`<button class="btn ${i?'line':''} sm" data-compose="${k}" data-to="${st.id}">${KINDS[k].ask}</button>`).join('')}</div>`:''}</div></section>
       <div class="tabs" role="tablist"><button role="tab" data-ptab="collage" aria-selected="${P.tab==='collage'}">Collage</button><button role="tab" data-ptab="looks" aria-selected="${P.tab==='looks'}">Looks · ${P.posts.length}</button></div>`;
@@ -837,11 +862,15 @@ const VIEWS={
   mine(){
     if(!ME)return signInPrompt('Your reviews live here','Create a free account to send looks to stylists and keep every review in one place.');
     const list=db.requests.filter(r=>r.clientId===ME).sort((a,b)=>b.created-a.created);
+    const mem=(db.memberships||[]).filter(m=>m.clientId===ME&&memberLive(m));const dd=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
     return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>
+      ${mem.length?`<div class="queue" style="margin-bottom:22px">${mem.map(m=>{const st=stylist(m.stylistId);return `<div class="qrow">${pAvatar(m.stylistId,'avatar','width:56px;height:56px')}
+        <div><div class="kind">Membership</div>${pName(m.stylistId,st?.name)}<div class="meta"><span>$${m.price}/month</span><span class="dot">${Math.max(0,m.subs-(m.used||0))} of ${m.subs} looks left</span><span class="dot">${m.status==='active'?'Renews':'Ends'} ${dd(m.status==='active'?m.periodEnd||m.started:m.ends)}</span></div></div>
+        ${m.status==='active'?`<button class="btn sm line" data-cancelm="${m.id}">Cancel</button>`:'<span class="pill pending">Ending</span>'}</div>`}).join('')}</div>`:''}
       <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
         return `<article class="req"><div class="req-media">${media(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
         <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div>${pName(r.stylistId,s?.name,'h3')}
-          <div class="meta"><span>${tierOf(s)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.postId?'Public':'Private'}</span></div></div>
+          <div class="meta"><span>${tierOf(s)}</span><span class="dot">${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.postId?'Public':'Private'}</span></div></div>
           <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'In review'}</span></div>
           <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
           ${f?feedbackBlock(f,r.kind):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
@@ -898,13 +927,15 @@ const VIEWS={
   studio(){
     const s=stylist(db.me.stylistId);const list=db.requests.filter(r=>r.stylistId===s.id);
     const pending=list.filter(r=>r.status==='pending').length,done=list.filter(r=>r.status==='done');
-    const earned=done.reduce((a,r)=>a+(r.amount||0),0)*.8;const app=db.applications.find(a=>a.stylistId===s.id&&a.status==='pending');const revoked=!s.verified&&!app&&db.applications.find(a=>a.stylistId===s.id)?.status==='revoked';
+    const members=(db.memberships||[]).filter(m=>m.stylistId===s.id&&memberLive(m));
+    const earned=(done.reduce((a,r)=>a+(r.amount||0),0)+members.filter(m=>m.status==='active').reduce((a,m)=>a+m.price,0))*.8;const app=db.applications.find(a=>a.stylistId===s.id&&a.status==='pending');const revoked=!s.verified&&!app&&db.applications.find(a=>a.stylistId===s.id)?.status==='revoked';
     return `<div class="section-head"><div><div class="eyebrow">Studio</div><h2>Welcome back, <em>${esc(s.name.split(' ')[0])}</em></h2></div><button class="btn" data-go="feed">Open review feed${pending?` · ${pending}`:''}</button></div>
       <div class="stats num"><div class="stat"><b>${pending}</b><span>waiting for you</span></div><div class="stat"><b>${done.length}</b><span>reviews sent here</span></div>
-        <div class="stat"><b>★ ${s.rating||'–'}</b><span>${s.reviews} ratings</span></div><div class="stat"><b>$${earned.toFixed(0)}</b><span>you earned (80%)</span></div></div>
+        <div class="stat"><b>★ ${s.rating||'–'}</b><span>${s.reviews} ratings</span></div><div class="stat"><b>$${earned.toFixed(0)}</b><span>your 80% · not billed yet</span></div></div>
       <div class="section-head" style="padding-top:8px"><div><h2 style="font-size:30px">Your <em>tier</em></h2><p>${revoked?'Your verification was removed by the Lookover team, so your reviews are free for now. You can apply again when you are ready.':s.verified?'You are verified. Your price is set by your tier, so clients always know what to expect.':app?'Your verification is being reviewed. We usually reply within 3 days.':'You review for free as a community stylist. Get verified to start earning.'}</p></div>
         ${!s.verified&&!app?'<button class="btn soft" id="apply-v">Apply for verification</button>':''}</div>
       ${tiersBlock(s)}
+      ${offersEditor(s,members)}
       <div class="section-head" style="padding-top:36px"><h2 style="font-size:30px">Recently <em>sent</em></h2></div>
       <div class="queue">${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${esc(r.client)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p></div><span class="pill done">${r.feedback?.score?r.feedback.score+'/10':'Sent'}</span></div>`).join('')||'<p class="muted">Nothing sent yet.</p>'}</div>`;
   },
@@ -954,6 +985,24 @@ function colorsTab(P){
       ${sec('Nails',row('Polish shades',P.nails?.length&&chips(P.nails)))}
       ${sec('Hair',row('Face shape · texture',`<div>${esc(P.faceShape||'Not set')} · ${esc(P.hairType||'Not set')}</div>`)+row('Hair colors',P.hairColors?.length&&chips(P.hairColors)))}
       ${sec('Skin',row('Type',`<div>${esc(P.skinType||'Not set')}</div>`)+row('Focus on',P.concerns?.length?tags(P.concerns):'<div class="muted">Nothing selected</div>'))}</div></div>`;
+}
+function offersEditor(s,members){
+  const friends=(db.friends||[]).map(id=>personOf(id));
+  return `<div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Offers & <em>free reviews</em></h2><p>Optional ways to bring in new clients and keep regulars.</p></div></div>
+    <div class="tiers">
+      <div class="tier"><h3>First review free</h3><p>Anyone new to you gets their first review free. Each person gets it once.</p>
+        <label class="switch" style="margin-top:8px"><span><b>${s.firstFree?'On':'Off'}</b></span><input type="checkbox" id="of-first" ${s.firstFree?'checked':''} ${s.verified?'':'disabled'}></label>
+        ${s.verified?'':'<p class="hint">Your reviews are already free as a community stylist.</p>'}</div>
+      <div class="tier"><h3>Monthly membership</h3><p>Clients pay one monthly price for a set number of looks.</p>
+        ${s.verified?`<div class="cols" style="margin-top:8px"><div class="field" style="margin:0"><label for="of-price">Price / month</label><input id="of-price" type="number" min="5" max="500" step="1" placeholder="40" value="${s.planPrice??''}"></div>
+          <div class="field" style="margin:0"><label for="of-subs">Looks / month</label><input id="of-subs" type="number" min="1" max="100" step="1" placeholder="4" value="${s.planSubs??''}"></div></div>
+          <div class="ctas" style="margin-top:10px"><button class="btn sm" id="of-plan">${offersPlan(s)?'Update':'Offer membership'}</button>${offersPlan(s)?'<button class="btn sm line" id="of-plan-off">Stop offering</button>':''}</div>
+          <p class="hint">${members.length} member${members.length===1?'':'s'}. Changing the price only affects new members.</p>`:'<p class="hint">Available once you are verified.</p>'}</div>
+      <div class="tier"><h3>Free list</h3><p>Friends you review for free, every time.</p>
+        <div class="cmt-form" style="margin-top:8px"><input id="of-find" placeholder="Search by name" aria-label="Search people to add"><button class="btn sm line" id="of-search">Find</button></div>
+        <div id="of-results" class="queue" style="gap:6px"></div>
+        <div class="queue" style="gap:6px;margin-top:8px">${friends.map(f=>`<div class="who" style="justify-content:space-between">${pName(f.id)}<button class="btn sm line" data-unfriend="${f.id}">Remove</button></div>`).join('')||'<p class="hint">No one on your free list yet.</p>'}</div></div>
+    </div>`;
 }
 function tiersBlock(s){
   const t=s?tierOf(s):null;
@@ -1016,8 +1065,8 @@ function renderComposer(){
       <div class="chips" style="margin-top:6px">${AESTHETICS.slice(0,8).map(a=>`<button type="button" class="chip" data-aes="${a}">${a}</button>`).join('')}</div></div>
     ${pros.length?'':`<div class="mini"><span class="eyebrow">No ${KINDS[c.kind].label.toLowerCase()} pros yet</span><span class="hint">Lookover is brand new. Your look will go to the community for ratings, and you can send it to a pro once one joins.</span></div>`}
     <div class="field" ${pros.length?'':'hidden'}><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great ${KINDS[c.kind].label.toLowerCase()} pro</option>
-      ${pros.map(s=>`<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${s.verified?'Verified $'+priceOf(s):'Free'} · ★ ${s.rating}</option>`).join('')}</select>
-      <span class="hint">${chosen&&priceOf(chosen)?`$${priceOf(chosen)} per review. Payment is not live yet, so it is free for now.`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
+      ${pros.map(s=>{const qq=quote(s);return `<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${qq.amount?'$'+qq.amount:'Free'}${s.verified?' · verified':''} · ★ ${s.rating}</option>`}).join('')}</select>
+      <span class="hint">${chosen?`${esc(quote(chosen).label)}.${quote(chosen).amount?' Payments are not live yet, so it is free for now.':''}`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
     ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
     <div class="field"><span class="label">Who can see it?</span><div class="vis" role="group" aria-label="Who can see it">
       <button type="button" data-vis="private" aria-pressed="${pros.length&&c.vis==='private'}" ${pros.length?'':'disabled'}><b>Private</b><span>Only your stylist sees it</span></button>
@@ -1196,8 +1245,8 @@ function viewStylist(id){
   const s=stylist(id),p=priceOf(s);
   openSheet(`<div class="who" style="gap:16px;margin-bottom:18px"><div class="avatar" style="width:84px;height:84px">${face(s)}</div><div><div class="eyebrow">${tierOf(s)} ${s.verified?'<span class="vcheck">✓</span>':''}</div><h2 style="margin:4px 0 0">${esc(s.name)}</h2><button class="textlink" data-person="${s.id}">View full profile</button></div></div>
     <p style="font-size:17px;margin:0 0 12px">${esc(s.line||s.title)}</p>
-    <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${p?'$'+p+' per review':'Free'}</span></div>
-    ${tags(s.specialties)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
+    <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${esc(quote(s).label)}</span></div>
+    ${tags(s.specialties)}${offersBlock(s)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
     <div class="actions" style="justify-content:stretch">${svc(s).map(k=>`<button class="btn ${k===svc(s)[0]?'':'line'}" data-compose="${k}" data-to="${s.id}" style="flex:1">${KINDS[k].ask}</button>`).join('')}</div>`);
 }
 function applyVerification(){
@@ -1250,12 +1299,33 @@ function afterRender(){
   }
   document.querySelectorAll('[data-cform]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.elements.c.value;if(!t.trim())return;addComment(f.dataset.cform,t);render();const el=document.getElementById('post-'+f.dataset.cform);el&&el.scrollIntoView({block:'center'})});
   const as=$('#apply-v');if(as)as.onclick=applyVerification;
+  const of1=$('#of-first');if(of1)of1.onchange=()=>run(async()=>{must(await sb.from('stylists').update({first_free:of1.checked}).eq('id',ME));await load();render()},of1.checked?'First review free is on':'First review free is off');
+  const ofp=$('#of-plan');if(ofp)ofp.onclick=()=>{const price=Math.round(+$('#of-price').value),subs=Math.round(+$('#of-subs').value);
+    if(!(price>=5&&price<=500)){toast('Set a monthly price between $5 and $500');return}if(!(subs>=1&&subs<=100)){toast('Set between 1 and 100 looks a month');return}
+    run(async()=>{must(await sb.from('stylists').update({plan_price:price,plan_submissions:subs}).eq('id',ME));await load();render()},`Membership offered at $${price}/month`)};
+  const ofo=$('#of-plan-off');if(ofo)ofo.onclick=()=>run(async()=>{must(await sb.from('stylists').update({plan_price:null,plan_submissions:null}).eq('id',ME));await load();render()},'Membership no longer offered. Current members keep theirs.');
+  const ofs=$('#of-search');if(ofs){const go2=async()=>{const v=$('#of-find').value.trim();if(v.length<2){toast('Type at least 2 letters');return}
+      const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color').ilike('name',`%${v.replace(/[%_]/g,'')}%`).neq('id',ME).limit(8);
+      (data||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})});
+      $('#of-results').innerHTML=(data||[]).filter(x=>!db.friends.includes(x.id)).map(x=>`<div class="who" style="justify-content:space-between">${pName(x.id)}<button class="btn sm soft" data-befriend="${x.id}">Add</button></div>`).join('')||'<p class="hint">No one found.</p>'};
+    ofs.onclick=go2;$('#of-find').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go2()}}}
   const pq=$('#people-q');if(pq)pq.oninput=()=>{const v=pq.value.trim().toLowerCase();let n=0;document.querySelectorAll('#people .person').forEach(el=>{const ok=!v||el.dataset.find.includes(v);el.hidden=!ok;if(ok)n++});$('#people-none').hidden=n>0};
 }
 
 /* ================= Global click handling ================= */
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a[role=button]');if(!t)return;const d=t.dataset;
+  if(d.befriend)return run(async()=>{must(await sb.from('free_clients').insert({stylist_id:ME,client_id:d.befriend}));await load();render()},`${personOf(d.befriend).name} now gets free reviews from you`);
+  if(d.unfriend)return run(async()=>{must(await sb.from('free_clients').delete().eq('stylist_id',ME).eq('client_id',d.unfriend));await load();render()},'Removed from your free list');
+  if(d.join){if(!requireAuth())return;const x=stylist(d.join);
+    openSheet(`<div class="eyebrow">Membership</div><h2 style="margin:6px 0 10px">Join ${esc(x.name)}’s membership</h2>
+      <p style="margin:0 0 6px"><b>$${x.planPrice} a month</b> for ${x.planSubs} reviewed look${x.planSubs>1?'s':''} each month.</p>
+      <p class="muted" style="margin:0 0 18px">Payments are not live yet, so joining is free for now. You can cancel any time and keep it until the end of the month.</p>
+      <div class="actions"><button class="btn line" id="jm-cancel">Not now</button><button class="btn" id="jm-ok">Join membership</button></div>`);
+    $('#jm-cancel').onclick=closeSheet;$('#jm-ok').onclick=()=>run(async()=>{must(await sb.rpc('join_membership',{sty:x.id}));closeSheet();await load();render()},`You joined ${x.name}’s membership`);return}
+  if(d.cancelm){openSheet(`<div class="eyebrow">Membership</div><h2 style="margin:6px 0 10px">Cancel this membership?</h2><p class="muted" style="margin:0 0 18px">You keep it until the end of this month.</p>
+      <div class="actions"><button class="btn line" id="cm-keep">Keep it</button><button class="btn" id="cm-ok">Cancel membership</button></div>`);
+    $('#cm-keep').onclick=closeSheet;$('#cm-ok').onclick=()=>run(async()=>{must(await sb.rpc('cancel_membership',{mid:d.cancelm}));closeSheet();await load();render()},'Membership canceled');return}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
   if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;return render()}
