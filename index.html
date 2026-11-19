@@ -728,20 +728,20 @@ const memberLive=m=>m.status==='active'||(m.ends&&m.ends>Date.now());
 const offersPlan=s=>s.verified&&s.planPrice&&s.planSubs;
 const myMembership=sid=>(db.memberships||[]).find(m=>m.clientId===ME&&m.stylistId===sid&&memberLive(m));
 function quote(s){
-  if(s.firstFree&&!(ME&&db.requests.some(r=>r.clientId===ME&&r.stylistId===s.id)))return {amount:0,label:'Free · your first review with them'};
+  if((s.firstFree||s.price===0)&&!(ME&&db.requests.some(r=>r.clientId===ME&&r.stylistId===s.id)))return {amount:0,label:'Free · your first review with them'};
   const m=myMembership(s.id);if(m&&(m.used??0)<m.subs)return {amount:0,label:`Included in your membership · ${m.subs-(m.used||0)} of ${m.subs} left`};
-  return s.price?{amount:s.price,label:`$${s.price} per review`}:{amount:0,label:'Price not set yet'};
+  return s.price===0?{amount:0,label:'Free review'}:s.price?{amount:s.price,label:`$${s.price} per review`}:{amount:0,label:'Price not set yet'};
 }
 const COUNTS=r=>['standard','membership','first_free'].includes(r.reason);
 const starsTxt=n=>'★'.repeat(n)+'☆'.repeat(5-n);
-const countNote=r=>COUNTS(r)?'Counts toward their score':r.reason==='friend'?'Friend review · not counted in their score':'Free community review · not counted in their score';
+const countNote=r=>COUNTS(r)?'Counts toward their score':'Extra free review · only your first free review with a stylist counts toward their score';
 const CONTACT_RES=[/[a-z0-9._%+-]+\s*(@|\(at\)|\[at\])\s*[a-z0-9.-]+\s*(\.|\(dot\)|\[dot\]|dot)\s*[a-z]{2,}/i,/\+?[0-9]([ ().-]*[0-9]){6,}/,/(https?:\/\/|www\.)/i,
   /\b[a-z0-9-]+\.(com|net|org|io|co|me|app|shop|store|link|ly|gg|info|biz)\b/i,/(^|\s)@[a-z0-9._]{2,}/i,
   /\b(instagram|insta|ig|tiktok|snapchat|snap|whatsapp|whats app|telegram|signal|facebook|fb|venmo|cash ?app|cashapp|paypal|zelle|linktree|onlyfans|discord)\b/i,
   /\b(dm me|text me|call me|email me|e-mail me|message me|contact me|reach me|hit me up|find me on)\b/i];
 const hasContact=t=>!!t&&CONTACT_RES.some(r=>r.test(t));
-const REASON={community:'Free',friend:'Free · friend',first_free:'Free · first review',membership:'Membership',standard:''};
-const offerTags=s=>[s.firstFree?'1st review free':'',offersPlan(s)?`Membership $${s.planPrice}/mo · ${s.planSubs} looks`:''].filter(Boolean);
+const REASON={free:'Free',community:'Free',friend:'Free · friend',first_free:'Free · first review',membership:'Membership',standard:''};
+const offerTags=s=>[s.price===0?'Free reviews':s.firstFree?'1st review free':'',offersPlan(s)?`Membership $${s.planPrice}/mo · ${s.planSubs} looks`:''].filter(Boolean);
 function offersBlock(s){
   if(!s.firstFree&&!offersPlan(s))return '';const m=ME&&myMembership(s.id);
   return `<div class="mini" style="margin:14px 0 0">${s.firstFree?`<div><b class="s">First review free</b> <span class="muted">· for anyone new to ${esc(s.name.split(' ')[0])}</span></div>`:''}
@@ -877,9 +877,9 @@ function profileMini(P,who='Your',hint=''){
 function stylistCard(s){
   const p=priceOf(s);
   return `<button class="stylist" data-stylist="${s.id}" aria-label="View ${esc(s.name)}">
-    <div class="portrait">${face(s,true)}<span class="badge v"><span class="vcheck">✓</span>${p?'$'+p:'Price soon'}</span>${offerTags(s).length?`<span class="badge" style="top:auto;bottom:12px;right:auto;left:12px">${esc(offerTags(s)[0])}</span>`:''}</div>
+    <div class="portrait">${face(s,true)}<span class="badge v"><span class="vcheck">✓</span>${s.price===0?'Free':p?'$'+p:'Price soon'}</span>${offerTags(s).length?`<span class="badge" style="top:auto;bottom:12px;right:auto;left:12px">${esc(offerTags(s)[0])}</span>`:''}</div>
     <div class="stylist-info"><div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div><h3>${esc(s.name)}</h3>
-      <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${p?'$'+p+' per review':'Price not set'}</span></div></div></button>`;
+      <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${s.price===0?'Free reviews':p?'$'+p+' per review':'Price not set'}</span></div></div></button>`;
 }
 async function openPerson(id){
   if(!id)return;closeSheet();setMenu(false);
@@ -947,7 +947,7 @@ const VIEWS={
     const inCat=db.stylists.filter(s=>state.cat==='all'||svc(s).includes(state.cat));
     let list=inCat.filter(s=>state.filter!=='1st review free'||s.firstFree);
     if(state.filter==='Top rated')list=list.slice().sort((a,b)=>b.rating-a.rating||b.reviews-a.reviews);
-    if(state.filter==='Lowest price')list=list.slice().sort((a,b)=>(a.price||1e9)-(b.price||1e9));
+    if(state.filter==='Lowest price')list=list.slice().sort((a,b)=>(a.price??1e9)-(b.price??1e9));
     const free=db.stylists.filter(s=>s.firstFree).length;
     return `<section class="hero"><div>
         <div class="eyebrow">Outfits · Makeup · Nails · Hair</div>
@@ -959,7 +959,7 @@ const VIEWS={
         <div class="sample-body"><div class="verdict"><div class="score num">8<small>/10</small></div><div style="text-align:right"><span class="eyebrow">Color season</span><div style="font-family:var(--display);font-style:italic;font-size:22px">Deep Winter</div></div></div>
         <p class="quote">“Keep the trousers. Trade the beige for navy and you’ll look rested instead of washed out.”</p>${chips(['Navy','Plum','Optic white','Pine'])}
         <div class="eyebrow">Example review · what you get back</div></div></article></section>
-    <div class="section-head" id="roster"><div><h2>Choose your <em>${({skin:'skincare pro',makeup:'makeup artist',nails:'nail artist',hair:'hairstylist'})[state.cat]||'stylist'}</em></h2><p>Every stylist is checked by our team and sets their own price. Some offer your first review free.</p></div><span class="muted">${list.length} available</span></div>
+    <div class="section-head" id="roster"><div><h2>Choose your <em>${({skin:'skincare pro',makeup:'makeup artist',nails:'nail artist',hair:'hairstylist'})[state.cat]||'stylist'}</em></h2><p>Every stylist is checked by our team and sets their own price. Some review for free or offer your first review free.</p></div><span class="muted">${list.length} available</span></div>
     <div class="cats" role="group" aria-label="Type of review"><button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
       ${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
     <div class="filters" role="group" aria-label="Filter">${['All','1st review free','Top rated','Lowest price'].map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
@@ -1054,12 +1054,12 @@ const VIEWS={
       <div class="section-head" style="padding-top:8px"><div><h2 style="font-size:30px">Verification & <em>price</em></h2><p>${revoked?'Your verification was removed by the Lookover team. Clients can’t find you until you’re verified again.':s.verified?'You’re verified, so clients can find you and send you looks.':app?'Your application is being reviewed. Clients will see you once you’re verified.':'Clients can’t see you yet. Apply for verification to start taking reviews.'}</p></div>
         ${!s.verified&&!app?'<button class="btn soft" id="apply-v">Apply for verification</button>':''}</div>
       <div class="tiers"><div class="tier ${s.verified?'on':''}"><h3>Status</h3><b>${s.verified?'Verified':app?'In review':'Not verified'}</b><p>${s.verified?'Listed for clients.':'Hidden from clients until verified.'}</p></div>
-        <div class="tier"><h3>Your price per review</h3><div class="cmt-form" style="margin-top:6px"><span style="align-self:center;font-weight:600">$</span><input id="pr-price" type="number" min="1" max="5000" step="1" value="${s.price??''}" placeholder="25" aria-label="Price per review in dollars"><button class="btn sm" id="pr-save">Save</button></div>
-          <p>You set it. Clients decide if it’s worth it. You keep 80%.</p></div>
-        <div class="tier"><h3>How ratings work</h3><p>Ratings on paid reviews and free first reviews count toward your score. Good ratings help you stand out at any price.</p></div></div>
+        <div class="tier"><h3>Your price per review</h3><div class="cmt-form" style="margin-top:6px"><span style="align-self:center;font-weight:600">$</span><input id="pr-price" type="number" min="0" max="5000" step="1" value="${s.price??''}" placeholder="25" aria-label="Price per review in dollars"><button class="btn sm" id="pr-save">Save</button></div>
+          <p>You set it, from free ($0) to $5,000. Clients decide if it’s worth it. You keep 80%.</p></div>
+        <div class="tier"><h3>How ratings work</h3><p>Paid reviews count toward your score. For free reviews, only the first one from each person counts. Extra free reviews from the same person don’t.</p></div></div>
       ${offersEditor(s,members)}
-      <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your reviews & <em>ratings</em></h2><p>Ratings on paid reviews and free first reviews count toward your score.</p></div></div>
-      <div class="queue">${done.length?'':'<p class="muted">No reviews sent yet.</p>'}${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${esc(r.client)}</span><span class="dot">${ago(r.created)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p><button class="textlink" data-viewrev="${r.id}">Read your review</button></div><div style="text-align:right">${r.stars?`<b style="color:var(--accent-text);letter-spacing:1px">${starsTxt(r.stars)}</b>`:'<span class="hint">Not rated yet</span>'}<div class="hint">${r.stars?(COUNTS(r)?'Counts toward your score':r.reason==='friend'?'Friend · not counted':'Free · not counted'):(REASON[r.reason]||('$'+r.amount))}</div></div></div>`).join('')||''}</div>
+      <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your reviews & <em>ratings</em></h2><p>Paid reviews and each person’s first free review count toward your score. Extra free reviews from the same person don’t.</p></div></div>
+      <div class="queue">${done.length?'':'<p class="muted">No reviews sent yet.</p>'}${done.map(r=>`<div class="qrow"><div class="thumb">${media(r,r.kind,r.art)}</div><div><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${esc(r.client)}</span><span class="dot">${ago(r.created)}</span></div><p class="ask" style="font-size:16px">“${esc(r.question)}”</p><button class="textlink" data-viewrev="${r.id}">Read your review</button></div><div style="text-align:right">${r.stars?`<b style="color:var(--accent-text);letter-spacing:1px">${starsTxt(r.stars)}</b>`:'<span class="hint">Not rated yet</span>'}<div class="hint">${r.stars?(COUNTS(r)?'Counts toward your score':'Extra free review · not counted'):(REASON[r.reason]||('$'+r.amount))}</div></div></div>`).join('')||''}</div>
       <div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your community <em>comments</em></h2><p>Comments you left on community looks. Only you and the person who posted can see them.</p></div></div>
       <div class="queue">${(db.myComments||[]).map(c=>`<div class="qrow"><div class="thumb">${media(c.post,c.post.kind)}</div>
         <div><div class="meta"><span class="kind">${KINDS[c.post.kind]?.label||''}</span><span class="dot">${pName(c.post.authorId)}</span><span class="dot">${ago(c.created)}</span></div><p class="ask" style="font-size:15px">“${esc(c.post.caption)}”</p><p style="margin:4px 0 0">${esc(c.text)}</p></div>
@@ -1148,7 +1148,7 @@ function adminVerify(){
     const ver=db.stylists.filter(x=>x.verified);
     return `<div class="section-head"><div><h2 style="font-size:30px">Verified <em>stylists</em></h2><p>Revoking moves a stylist back to free community reviews. They can apply again later.</p></div><span class="muted">${ver.length} verified</span></div>
       <div class="queue">${ver.map(x=>`<div class="qrow">${pAvatar(x.id,'avatar','width:56px;height:56px')}
-        <div>${pName(x.id)}<div class="meta"><span>${svc(x).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${x.price?'$'+x.price+' per review':'No price set'}</span><span class="dot">★ ${x.rating||0} (${x.reviews||0})</span></div></div>
+        <div>${pName(x.id)}<div class="meta"><span>${svc(x).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${x.price===0?'Free reviews':x.price?'$'+x.price+' per review':'No price set'}</span><span class="dot">★ ${x.rating||0} (${x.reviews||0})</span></div></div>
         <button class="btn sm line" data-revoke="${x.id}">Revoke verification</button></div>`).join('')||'<p class="muted">No verified stylists yet.</p>'}</div>
       <div class="section-head"><div><h2 style="font-size:30px">Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
       <div class="list">${apps.map(a=>{const s=stylist(a.stylistId);return `<div class="app-card"><div class="avatar" style="width:72px;height:72px">${face(s)}</div>
@@ -1172,7 +1172,7 @@ function colorsTab(P){
       ${sec('Skin',row('Type',`<div>${esc(P.skinType||'Not set')}</div>`)+row('Focus on',P.concerns?.length?tags(P.concerns):'<div class="muted">Nothing selected</div>'))}</div></div>`;
 }
 function offersEditor(s,members){
-  return `<div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your <em>offers</em></h2><p>Optional ways to win new clients and keep regulars. A free first review is the only free review on Lookover.</p></div></div>
+  return `<div class="section-head" style="padding-top:36px"><div><h2 style="font-size:30px">Your <em>offers</em></h2><p>Optional ways to win new clients and keep regulars. You can also set your price to $0 to review for free.</p></div></div>
     <div class="tiers">
       <div class="tier"><h3>First review free</h3><p>Anyone new to you gets their first review free. Each person gets it once.</p>
         <label class="switch" style="margin-top:8px"><span><b>${s.firstFree?'On':'Off'}</b></span><input type="checkbox" id="of-first" ${s.firstFree?'checked':''}></label>
@@ -1189,7 +1189,7 @@ function stylistForm(s){
     <div class="field"><span class="label">What do you review?</span>${toggles('sf-services',ACTIVE_KINDS.map(k=>KINDS[k].label),svc(s).map(k=>KINDS[k].label).filter(()=>s.name))}</div>
     <div class="field"><span class="label">Your specialties · pick up to 3</span>${toggles('sf-spec',SPECIALTIES,s.specialties)}</div>
     <div class="field"><label for="sf-line">Your style in one line</label><input id="sf-line" maxlength="90" value="${esc(s.line)}" placeholder="I make basics look expensive."></div>
-    ${s.name?'':`<div class="cols"><div class="field"><label for="sf-price">Your price per review ($)</label><input id="sf-price" type="number" min="1" max="5000" step="1" placeholder="25"><span class="hint">Any amount from $1 to $5,000. You can change it later.</span></div>
+    ${s.name?'':`<div class="cols"><div class="field"><label for="sf-price">Your price per review ($)</label><input id="sf-price" type="number" min="0" max="5000" step="1" placeholder="25"><span class="hint">Any amount from $0 (free) to $5,000. You can change it later.</span></div>
       <div class="field"><span class="label">First review free?</span><label class="switch" style="padding:10px 14px"><span><b>Offer it</b></span><input type="checkbox" id="sf-first"></label><span class="hint">Each new client gets one free review from you.</span></div></div>`}`;
 }
 function readStylistForm(){
@@ -1199,7 +1199,7 @@ function readStylistForm(){
   if(!v.services.length){toast('Choose at least one thing you review');return null}
   if(v.specialties.length>3){toast('Pick up to 3 specialties');return null}
   if(hasContact(v.line)){toast('Your tagline can’t include contact details, links, handles or other apps.');return null}
-  if($('#sf-price')){const pr=Math.round(+$('#sf-price').value);if(!(pr>=1&&pr<=5000)){toast('Set your price per review, between $1 and $5,000');$('#sf-price').focus();return null}v.price=pr;v.first_free=!!$('#sf-first')?.checked}
+  if($('#sf-price')){const pr=Math.round(+$('#sf-price').value);if($('#sf-price').value===''||!(pr>=0&&pr<=5000)){toast('Set your price per review, from $0 (free) to $5,000');$('#sf-price').focus();return null}v.price=pr;v.first_free=!!$('#sf-first')?.checked}
   v.title=v.specialties[0]||KINDS[v.services[0]].label+' reviews';return v;
 }
 
@@ -1275,7 +1275,7 @@ function submitCompose(){
   if([q,$('#cp-keep').value,$('#cp-swap').value,$('#cp-aes').value].some(hasContact)){toast('Please keep contact details, links and handles out of your request.');return}
   const pool=db.stylists.filter(x=>svc(x).includes(c.kind)&&x.id!==ME);
   let s=c.stylistId==='auto'?null:stylist(c.stylistId);
-  if(!s&&pool.length){const tt=t=>parseInt(t.turnaround)||48;const firstTime=x=>x.firstFree&&!db.requests.some(r=>r.clientId===ME&&r.stylistId===x.id);s=pool.filter(x=>x.price||firstTime(x)).sort((a,b)=>firstTime(b)-firstTime(a)||b.rating-a.rating||tt(a)-tt(b))[0]}
+  if(!s&&pool.length){const tt=t=>parseInt(t.turnaround)||48;const firstTime=x=>(x.firstFree||x.price===0)&&!db.requests.some(r=>r.clientId===ME&&r.stylistId===x.id);s=pool.filter(x=>x.price!=null||firstTime(x)).sort((a,b)=>firstTime(b)-firstTime(a)||b.rating-a.rating||tt(a)-tt(b))[0]}
   if(!s){toast('No one reviews this category yet');return}
   const fields={keep:$('#cp-keep').value.trim().slice(0,120),swap:$('#cp-swap').value.trim().slice(0,120),aesthetic:$('#cp-aes').value.trim().slice(0,60)};
   run(async()=>{
@@ -1566,8 +1566,8 @@ function afterRender(){
   const sbio=$('#send-bio');if(sbio){const ta=$('#bio-text');ta.oninput=()=>{$('#bio-count').textContent=hasContact(ta.value)?'Remove contact details, links, handles or other apps.':`${ta.value.length}/400 characters`};
     sbio.onclick=()=>{const t=ta.value.trim();if(!t){toast('Write a short bio first');return}if(hasContact(t)){toast('Bios can’t include contact details, links, handles or other apps.');return}
       run(async()=>{must(await sb.from('bio_reviews').upsert({stylist_id:ME,text:t},{onConflict:'stylist_id'}));await load();render()},'Bio sent. It will show once our team approves it.')}}
-  const prs=$('#pr-save');if(prs)prs.onclick=()=>{const v=Math.round(+$('#pr-price').value);if(!(v>=1&&v<=5000)){toast('Set a price between $1 and $5,000');return}
-    run(async()=>{must(await sb.from('stylists').update({price:v}).eq('id',ME));await load();render()},`Your price is now $${v} per review`)};
+  const prs=$('#pr-save');if(prs)prs.onclick=()=>{const v=Math.round(+$('#pr-price').value);if($('#pr-price').value===''||!(v>=0&&v<=5000)){toast('Set a price from $0 (free) to $5,000');return}
+    run(async()=>{must(await sb.from('stylists').update({price:v}).eq('id',ME));await load();render()},v?`Your price is now $${v} per review`:'Your reviews are now free')};
   const of1=$('#of-first');if(of1)of1.onchange=()=>run(async()=>{must(await sb.from('stylists').update({first_free:of1.checked}).eq('id',ME));await load();render()},of1.checked?'First review free is on':'First review free is off');
   const ofp=$('#of-plan');if(ofp)ofp.onclick=()=>{const price=Math.round(+$('#of-price').value),subs=Math.round(+$('#of-subs').value);
     if(!(price>=5&&price<=500)){toast('Set a monthly price between $5 and $500');return}if(!(subs>=1&&subs<=100)){toast('Set between 1 and 100 looks a month');return}
