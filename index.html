@@ -181,7 +181,7 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .feed{columns:3 300px;column-gap:20px}
 .post{break-inside:avoid;margin:0 0 20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:grid}
 .post-media{position:relative;background:var(--soft)}
-.post-media img,.post-media svg{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.post-media img,.post-media svg{width:100%;height:auto;max-height:78vh;object-fit:cover}
 .post-media .avgtag{position:absolute;left:12px;bottom:12px;background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;display:flex;gap:6px;align-items:baseline}
 .post-media .avgtag b{font-family:var(--display);font-size:20px}
 .post-body{padding:14px 16px 16px;display:grid;gap:10px}
@@ -363,6 +363,44 @@ button.avatar{border:0;padding:0;cursor:pointer}
 .badges span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--soft);color:var(--muted)}
 .badges span.on{background:var(--accent-soft);color:var(--accent-text)}
 .search{max-width:360px}
+/* Photo carousel */
+.car{position:relative}
+.car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.car-track::-webkit-scrollbar{display:none}
+.car-track>*{flex:0 0 100%;scroll-snap-align:center;width:100%}
+.car-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:5px;pointer-events:none}
+.car-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 0 2px rgba(0,0,0,.4)}
+.car-dots i.on{background:#fff;width:16px;border-radius:3px}
+.car-count{position:absolute;right:10px;top:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px}
+.req-media .car,.req-media .car-track{position:absolute;inset:0}
+.req-media .car-track img{height:100%;object-fit:cover;position:static}
+/* Photo strip in the request form */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.strip .ph{position:relative;border-radius:12px;overflow:hidden;background:var(--soft);aspect-ratio:4/5}
+.strip .ph img{width:100%;height:100%;object-fit:contain;background:#f1f1f4}
+.strip .ph .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;font-size:14px}
+.strip .ph .ed{position:absolute;left:6px;bottom:6px;border:0;border-radius:999px;background:rgba(255,255,255,.92);padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.strip label.add{display:grid;place-content:center;justify-items:center;gap:4px;border:1.5px dashed var(--line);border-radius:12px;aspect-ratio:4/5;cursor:pointer;font-size:12px;font-weight:600;text-align:center;background:var(--soft);padding:6px}
+.strip label.add svg{width:22px;height:22px;color:var(--accent-text)}
+.strip label.add input{position:absolute;width:1px;height:1px;opacity:0}
+/* Photo editor */
+.editor{position:fixed;inset:0;z-index:70;background:#0e0e11;color:#fff;display:none;grid-template-rows:auto minmax(0,1fr) auto}
+.editor.open{display:grid}
+.ed-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top)) 16px 12px}
+.ed-top button.plain{background:none;border:0;color:#fff;font-size:15px;cursor:pointer;padding:8px}
+.ed-stage{display:grid;place-items:center;padding:8px 16px;min-height:0}
+.ed-frame{position:relative;touch-action:none;cursor:grab;box-shadow:0 0 0 1px rgba(255,255,255,.35);border-radius:6px;overflow:hidden}
+.ed-frame:active{cursor:grabbing}
+.ed-frame canvas{display:block;width:100%;height:100%}
+.ed-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px);background-size:33.333% 33.333%;opacity:0;transition:opacity .2s}
+.ed-frame.drag .ed-grid{opacity:1}
+.ed-tools{padding:10px 16px max(16px,env(safe-area-inset-bottom));display:grid;gap:12px;max-width:620px;width:100%;margin:0 auto}
+.ed-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ed-row .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);min-width:76px}
+.ed-row input[type=range]{flex:1;accent-color:#fff}
+.ed-chip{background:rgba(255,255,255,.1);border:1px solid transparent;color:#fff;border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer}
+.ed-chip[aria-pressed="true"]{background:#fff;color:#111}
+.ed-round{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:18px;cursor:pointer}
 footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -422,6 +460,16 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
   <div class="sheet-in" id="sheet-body"></div>
 </aside>
 <div class="toast" id="toast" role="status"></div>
+<div class="editor" id="editor" role="dialog" aria-modal="true" aria-label="Edit photo">
+  <div class="ed-top"><button class="plain" id="ed-cancel">Cancel</button><b id="ed-title">Edit photo</b><button class="btn sm" id="ed-done">Done</button></div>
+  <div class="ed-stage" id="ed-stage"><div class="ed-frame" id="ed-frame"><canvas id="ed-canvas"></canvas><div class="ed-grid"></div></div></div>
+  <div class="ed-tools">
+    <div class="ed-row"><span class="lab">Card</span><span id="ed-shapes" class="ed-row" style="gap:6px"></span></div>
+    <div class="ed-row"><span class="lab">Size</span><button class="ed-round" id="ed-zout" aria-label="Make smaller">−</button><input type="range" id="ed-zoom" min="0" max="1000" aria-label="Size"><button class="ed-round" id="ed-zin" aria-label="Make bigger">+</button></div>
+    <div class="ed-row"><span class="lab">Light</span><input type="range" id="ed-bright" min="60" max="140" value="100" aria-label="Brightness"></div>
+    <div class="ed-row"><span class="lab">Edges</span><span id="ed-bump" class="ed-row" style="gap:6px"></span><span style="flex:1"></span><button class="ed-chip" id="ed-fit">Show all</button><button class="ed-chip" id="ed-fill">Fill</button><button class="ed-round" id="ed-rot" aria-label="Rotate">⟳</button></div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
@@ -459,6 +507,7 @@ const FAMILY={
   Autumn:{wear:['Camel','Rust','Olive','Chocolate','Mustard','Pine'],avoid:['Optic white','Cornflower','Rose','Ink'],lips:['Brick','Nude rose','Coral'],cheeks:['Peach','Bronze'],eyes:['Bronze','Espresso','Champagne'],nails:['Mocha','Oxblood','Gold chrome','Sage'],hairColors:['Copper','Auburn','Chestnut','Caramel']},
   Spring:{wear:['Ecru','Camel','Teal','Cornflower','True red','Mustard'],avoid:['Ink','Dove grey','Plum','Chocolate'],lips:['Coral','Peach','Classic red'],cheeks:['Peach','Coral'],eyes:['Champagne','Bronze','Taupe'],nails:['Coral pop','Ballet nude','Gold chrome','Fire red'],hairColors:['Honey blonde','Caramel','Copper']}
 };
+const ACTIVE_KINDS=['outfit','makeup','nails','hair']; // skincare paused for now
 const famOf=season=>Object.keys(FAMILY).find(f=>String(season).endsWith(f))||'Winter';
 function makeProfile(season,undertone,skinType,concerns=[],source='From the color quiz',extra={}){
   const f=FAMILY[famOf(season)];
@@ -505,6 +554,11 @@ function art(kind,names,label){
   const lab=label?`<rect x="16" y="330" width="${Math.min(268,label.length*9+28)}" height="30" rx="15" fill="#ffffff" opacity=".94"/><text x="30" y="350" font-family="Instrument Sans, Arial, sans-serif" font-size="14" font-weight="600" fill="#111114">${esc(label)}</text>`:'';
   return `<svg viewBox="0 0 300 375" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(label||KINDS[kind]?.label+' example')}" preserveAspectRatio="xMidYMid slice"><rect width="300" height="375" fill="${mix(c[0],'#f1f2f5',.86)}"/>${g}${lab}</svg>`;
 }
+const photosOf=x=>x?.photos?.length?x.photos:(x?.photo?[x.photo]:[]);
+function gallery(x,kind,cols,alt){const ph=photosOf(x);if(ph.length<2)return media(x,kind,cols,alt);
+  return `<div class="car" data-car><div class="car-track">${ph.map((u,i)=>`<img src="${esc(u)}" alt="${esc(alt||'Photo')} ${i+1} of ${ph.length}" loading="lazy">`).join('')}</div><span class="car-count">1/${ph.length}</span><div class="car-dots">${ph.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`}
+document.addEventListener('scroll',e=>{const t=e.target;if(!t.classList||!t.classList.contains('car-track'))return;const i=Math.round(t.scrollLeft/t.clientWidth),car=t.parentElement;
+  car.querySelectorAll('.car-dots i').forEach((d,j)=>d.classList.toggle('on',j===i));const c=car.querySelector('.car-count');if(c)c.textContent=`${i+1}/${car.querySelectorAll('.car-dots i').length}`},true);
 const media=(x,kind,cols,alt)=>x&&x.photo?`<img src="${x.photo}" alt="${esc(alt||'Photo')}">`:art(kind,cols);
 
 /* ================= Data (Supabase) ================= */
@@ -516,9 +570,9 @@ let db={memberships:[],freeFrom:[],friends:[],users:{},stylists:[],requests:[],p
 const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null,person:null,adminTab:'people',people:null};
 const ts=t=>Date.parse(t)||Date.now();
 const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,price:r.price??null,bio:r.bio||'',rating:+r.rating,reviews:r.reviews,firstFree:!!r.first_free,planPrice:r.plan_price,planSubs:r.plan_submissions});
-const mapPost=r=>({id:r.id,status:r.status||'approved',authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,stylistId:r.stylist_id,stylistScore:r.stylist_score,created:ts(r.created_at),
+const mapPost=r=>({photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,status:r.status||'approved',authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,stylistId:r.stylist_id,stylistScore:r.stylist_score,created:ts(r.created_at),
   ratings:Object.fromEntries((r.ratings||[]).map(x=>[x.user_id,x.score])),comments:(r.comments||[]).sort((x,y)=>ts(x.created_at)-ts(y.created_at)).map(c=>({id:c.id,by:c.author_id,text:c.text,pro:c.is_pro}))});
-const mapReq=r=>({id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,shareWhenDone:!!r.share_when_done,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
+const mapReq=r=>({photos:r.photo_urls?.length?r.photo_urls:(r.photo_url?[r.photo_url]:[]),id:r.id,kind:r.kind,stylistId:r.stylist_id,clientId:r.client_id,question:r.question,keep:r.keep,swap:r.swap,aesthetic:r.aesthetic,photo:r.photo_url,profile:r.color_profile,status:r.status,amount:r.amount,feedback:r.feedback,stars:r.client_stars,postId:r.post_id,shareWhenDone:!!r.share_when_done,reason:r.price_reason,created:ts(r.created_at),get client(){return personOf(this.clientId).name}});
 const mapApp=r=>({id:r.id,stylistId:r.stylist_id,experience:r.experience,link:r.link,note:r.note,portfolio:r.portfolio||[],status:r.status,created:ts(r.created_at)});
 const mapUser=r=>({id:r.id,name:r.name,photo:r.photo_url,favColor:r.fav_color,keywords:r.keywords||[],board:r.board||[],stickers:r.stickers||[],submissions:r.submissions||0});
 async function load(){
@@ -650,7 +704,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const initials=n=>String(n||'?').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 const stylist=id=>db.stylists.find(s=>s.id===id);
 const me=()=>(ME&&db.users[ME])||GUEST;
-const svc=s=>s.services?.length?s.services:['outfit'];
+const svc=s=>{const l=(s?.services||[]).filter(k=>ACTIVE_KINDS.includes(k));return l.length?l:['outfit']};
 const memberLive=m=>m.status==='active'||(m.ends&&m.ends>Date.now());
 const offersPlan=s=>s.verified&&s.planPrice&&s.planSubs;
 const myMembership=sid=>(db.memberships||[]).find(m=>m.clientId===ME&&m.stylistId===sid&&memberLive(m));
@@ -739,7 +793,7 @@ function renderShell(){
   $('#me-btn').style.width=ME?'':'auto';$('#me-btn').style.padding=ME?'':'0 14px';$('#me-btn').style.borderRadius=ME?'':'999px';
   const v=$('#viewing');v.hidden=state.role==='client'&&!db.isGhost;v.textContent=(db.isGhost?'Ghost account · only you see your activity':'')+(state.role==='client'?'':(db.isGhost?' · ':'')+(state.role==='stylist'?'Viewing as stylist':'Viewing as admin'));
   $('#menu').innerHTML=`
-    <div class="menu-col"><h4>Get feedback</h4>${Object.entries(KINDS).map(([k,v])=>`<button data-compose="${k}"><i>+</i>${v.ask}</button>`).join('')}</div>
+    <div class="menu-col"><h4>Get feedback</h4>${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button data-compose="${k}"><i>+</i>${v.ask}</button>`).join('')}</div>
     <div class="menu-col"><h4>Discover</h4>
       <button data-quiz="1"><i>◐</i>Take the color quiz</button>
       <button data-go="colors"><i>●</i>My color palette</button>
@@ -877,7 +931,7 @@ const VIEWS={
     if(state.filter==='Lowest price')list=list.slice().sort((a,b)=>(a.price||1e9)-(b.price||1e9));
     const free=db.stylists.filter(s=>s.firstFree).length;
     return `<section class="hero"><div>
-        <div class="eyebrow">Outfits · Makeup · Skincare · Nails · Hair</div>
+        <div class="eyebrow">Outfits · Makeup · Nails · Hair</div>
         <h1>Send the look.<br><em>Get the verdict.</em></h1>
         <p class="lede">Tap the + button, add a photo, say what has to stay and what you are going for. A stylist looks it over. Then, if you like, share it so the community can rate it too.</p>
         <div class="ctas"><button class="btn" data-compose="outfit">Rate my outfit</button><button class="btn line" data-quiz="1">Find my colors</button></div>
@@ -888,7 +942,7 @@ const VIEWS={
         <div class="eyebrow">Example review · what you get back</div></div></article></section>
     <div class="section-head" id="roster"><div><h2>Choose your <em>${({skin:'skincare pro',makeup:'makeup artist',nails:'nail artist',hair:'hairstylist'})[state.cat]||'stylist'}</em></h2><p>Every stylist is checked by our team and sets their own price. Some offer your first review free.</p></div><span class="muted">${list.length} available</span></div>
     <div class="cats" role="group" aria-label="Type of review"><button data-cat="all" aria-pressed="${state.cat==='all'}"><b>Everything</b><span>${db.stylists.length} pros</span></button>
-      ${Object.entries(KINDS).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
+      ${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button data-cat="${k}" aria-pressed="${state.cat===k}"><b>${v.label}</b><span>${v.blurb}</span></button>`).join('')}</div>
     <div class="filters" role="group" aria-label="Filter">${['All','1st review free','Top rated','Lowest price'].map(f=>`<button data-filter="${f}" aria-pressed="${state.filter===f}">${f}</button>`).join('')}</div>
     <div class="roster">${list.map(stylistCard).join('')||`<div class="empty" style="grid-column:1/-1"><h3>${db.stylists.length?'No one here yet':'Be the first stylist on Lookover'}</h3>${db.stylists.length?'Try another filter.':'Lookover just launched. Join as a stylist and start reviewing looks for free.'}<div style="margin-top:16px"><button class="btn" data-go="join">Become a stylist</button></div></div>`}</div>`;
   },
@@ -896,7 +950,7 @@ const VIEWS={
     const posts=db.posts.filter(p=>(p.status==='approved'||p.authorId===ME)&&p.status!=='rejected'&&(state.comCat==='all'||p.kind===state.comCat)).sort((a,b)=>b.created-a.created);
     return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Every look here was reviewed by a stylist first. Everyone sees the median score. Comments go only to the person who posted. See something that isn’t a look, or an ad? Tap Report.</p></div><button class="btn" id="plus2">Get a look reviewed</button></div>
       <div class="mini" style="margin-bottom:22px"><span class="eyebrow">How to post your look</span><span>1. Tap <b>+</b> and send your look to a stylist. &nbsp;2. When the review is back, tap <b>Share to community</b> in My reviews, or choose it when you send. It goes up right away.</span></div>
-      <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...Object.entries(KINDS).map(([k,v])=>[k,v.label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
+      <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...ACTIVE_KINDS.map(k=>[k,KINDS[k].label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
       <div class="feed">${posts.map(postCard).join('')||'<div class="empty"><h3>No looks yet</h3>Send a look to a stylist. Once it’s reviewed, you can share it here.</div>'}</div>`;
   },
   mine(){
@@ -910,7 +964,7 @@ const VIEWS={
         <div><div class="kind">Membership</div>${pName(m.stylistId,st?.name)}<div class="meta"><span>$${m.price}/month</span><span class="dot">${Math.max(0,m.subs-(m.used||0))} of ${m.subs} looks left</span><span class="dot">${m.status==='active'?'Renews':'Ends'} ${dd(m.status==='active'?m.periodEnd||m.started:m.ends)}</span></div></div>
         ${m.status==='active'?`<button class="btn sm line" data-cancelm="${m.id}">Cancel</button>`:'<span class="pill pending">Ending</span>'}</div>`}).join('')}</div>`:''}
       <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
-        return `<article class="req"><div class="req-media">${media(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
+        return `<article class="req"><div class="req-media">${gallery(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
         <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div>${pName(r.stylistId,s?.name,'h3')}
           <div class="meta"><span>${r.amount?'$'+r.amount:(REASON[r.reason]||'Free')}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.postId?'Public':'Private'}</span></div></div>
           <span class="pill ${r.status}">${r.status==='done'?(fresh.has(r.id)?'New review':'Reviewed'):'In review'}</span></div>
@@ -959,7 +1013,8 @@ const VIEWS={
       <div class="pager"><button id="q-prev" ${state.qi===0?'disabled':''} aria-label="Previous">←</button><span class="num">${state.qi+1} of ${q.length}</span><button id="q-next" ${state.qi>=q.length-1?'disabled':''} aria-label="Next">→</button></div></div>
       <div class="progress"><span style="width:${(state.qi+1)/q.length*100}%"></span></div>
       <div class="desk" data-rid="${r.id}">
-        <div class="desk-left"><div class="zoomer" id="zoomer" tabindex="0" aria-label="Photo, tap to zoom">${media(r,r.kind,r.art||r.profile?.wear,'Client photo')}<span class="zoom-hint">Tap to zoom</span></div>
+        <div class="desk-left"><div class="zoomer" id="zoomer" tabindex="0" aria-label="Photo, tap to zoom">${(()=>{const ph=photosOf(r);state.zi=Math.min(state.zi||0,Math.max(0,ph.length-1));return media(ph.length?{photo:ph[state.zi]}:r,r.kind,r.art||r.profile?.wear,'Client photo')})()}<span class="zoom-hint">Tap to zoom</span></div>
+          ${photosOf(r).length>1?`<div class="ctas">${photosOf(r).map((u,i)=>`<button class="thumb" data-zi="${i}" style="padding:0;border:2px solid ${i===state.zi?'var(--accent)':'transparent'};cursor:pointer" aria-label="Photo ${i+1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}
           <div class="client-box"><div class="who">${pAvatar(r.clientId)}<div>${pName(r.clientId,r.client)}<div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
             <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
             ${r.profile?profileMini(r.profile,'Client’s'):'<p class="hint" style="margin:0">No color profile yet.</p>'}</div></div>
@@ -1112,7 +1167,7 @@ function offersEditor(s,members){
 }
 function stylistForm(s){
   return `<div class="field"><span class="label">Your name</span><div style="font-size:16px;font-weight:600">${esc(ME?me().name:'Log in first')}</div><span class="hint">Your stylist profile uses your account name.</span></div>
-    <div class="field"><span class="label">What do you review?</span>${toggles('sf-services',Object.values(KINDS).map(k=>k.label),svc(s).map(k=>KINDS[k].label).filter(()=>s.name))}</div>
+    <div class="field"><span class="label">What do you review?</span>${toggles('sf-services',ACTIVE_KINDS.map(k=>KINDS[k].label),svc(s).map(k=>KINDS[k].label).filter(()=>s.name))}</div>
     <div class="field"><span class="label">Your specialties · pick up to 3</span>${toggles('sf-spec',SPECIALTIES,s.specialties)}</div>
     <div class="field"><label for="sf-line">Your style in one line</label><input id="sf-line" maxlength="90" value="${esc(s.line)}" placeholder="I make basics look expensive."></div>
     ${s.name?'':`<div class="cols"><div class="field"><label for="sf-price">Your price per review ($)</label><input id="sf-price" type="number" min="1" max="5000" step="1" placeholder="25"><span class="hint">Any amount from $1 to $5,000. You can change it later.</span></div>
@@ -1120,7 +1175,7 @@ function stylistForm(s){
 }
 function readStylistForm(){
   const v={name:me().name,line:$('#sf-line').value.trim(),specialties:picked('sf-spec'),
-    services:Object.keys(KINDS).filter(k=>picked('sf-services').includes(KINDS[k].label))};
+    services:ACTIVE_KINDS.filter(k=>picked('sf-services').includes(KINDS[k].label))};
   if(!ME){openAuth('signup');return null}
   if(!v.services.length){toast('Choose at least one thing you review');return null}
   if(v.specialties.length>3){toast('Pick up to 3 specialties');return null}
@@ -1133,7 +1188,7 @@ function readStylistForm(){
 function postCard(p){
   const a=personOf(p.authorId),n=p.nratings||0,mine=p.authorId===ME;
   const mineR=ME?p.ratings?.[ME]:null;const cm=p.comments||[];
-  return `<article class="post" id="post-${p.id}"><div class="post-media">${p.status==='pending'?'<span class="badge" style="left:12px;right:auto">Hidden while we review reports · only you see it</span>':''}${media(p,p.kind,p.art,'')}${n?`<span class="avgtag num" title="Median score"><b>${p.median.toFixed(1)}</b>median · ${n} rating${n>1?'s':''}</span>`:''}</div>
+  return `<article class="post" id="post-${p.id}"><div class="post-media">${p.status==='pending'?'<span class="badge" style="left:12px;right:auto">Hidden while we review reports · only you see it</span>':''}${gallery(p,p.kind,p.art,'')}${n?`<span class="avgtag num" title="Median score"><b>${p.median.toFixed(1)}</b>median · ${n} rating${n>1?'s':''}</span>`:''}</div>
     <div class="post-body"><div class="who">${pAvatar(p.authorId)}<div style="flex:1">${pName(p.authorId,p.authorId===ME?'You':a.name)}<div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
       <p style="margin:0">${esc(p.caption)}</p>
       ${p.stylistId?`<div class="who" style="gap:8px;font-size:13px"><span class="pro-tag">Stylist</span>${p.stylistScore?`<b>${p.stylistScore}/10</b>`:''}<span class="muted">reviewed by</span>${pName(p.stylistId,stylist(p.stylistId)?.name||personOf(p.stylistId).name)}</div>`:''}
@@ -1153,7 +1208,7 @@ function addComment(pid,text){
 
 /* ================= Composer (+ button) ================= */
 function openComposer(opts={}){
-  state.compose={kind:opts.kind||'outfit',stylistId:opts.stylistId||'auto',photo:null,vis:'private',aesthetic:''};
+  state.compose={kind:ACTIVE_KINDS.includes(opts.kind)?opts.kind:'outfit',stylistId:opts.stylistId||'auto',photos:[],shape:'portrait',vis:'private',aesthetic:''};
   renderComposer();
 }
 function renderComposer(){
@@ -1162,9 +1217,11 @@ function renderComposer(){
   const chosen=c.stylistId==='auto'?null:stylist(c.stylistId);
   const keep=id=>$(id)?.value??'';const vals={q:keep('#cp-q')||c._q||'',keep:keep('#cp-keep')||c._keep||'',swap:keep('#cp-swap')||c._swap||'',aes:keep('#cp-aes')||c.aesthetic||''};
   openSheet(`<div class="eyebrow">New request</div><h2 style="margin:6px 0 18px">${KINDS[c.kind].ask}</h2>
-    ${c.photo?`<div class="preview" style="margin-bottom:16px"><img src="${c.photo}" alt="Your photo"><button class="btn line sm" id="cp-clear">Change photo</button></div>`
-      :`<div class="pick-photo" style="margin-bottom:6px"><label for="cp-roll">${ICON.gallery}Camera roll<input type="file" id="cp-roll" accept="image/*"></label><label for="cp-cam">${ICON.camera}Take a photo<input type="file" id="cp-cam" accept="image/*" capture="environment"></label></div><p class="hint" style="margin:0 0 16px">Tip: ${KINDS[c.kind].photo.toLowerCase()}.</p>`}
-    <div class="field"><span class="label">What should they look at?</span><div class="chips">${Object.entries(KINDS).map(([k,v])=>`<button type="button" class="chip" data-ckind="${k}" aria-pressed="${c.kind===k}">${v.label}</button>`).join('')}</div></div>
+    <div class="strip">${c.photos.map((ph,i)=>`<div class="ph"><img src="${ph.out}" alt="Photo ${i+1}"><button class="x" data-phdel="${i}" aria-label="Remove photo ${i+1}">×</button><button class="ed" data-phedit="${i}">Edit</button></div>`).join('')}
+      ${c.photos.length<3?`<label class="add" for="cp-roll">${ICON.gallery}${c.photos.length?'Add another':'Camera roll'}<input type="file" id="cp-roll" accept="image/*" multiple></label>`:''}
+      ${c.photos.length<2?`<label class="add" for="cp-cam">${ICON.camera}Take a photo<input type="file" id="cp-cam" accept="image/*" capture="environment"></label>`:''}</div>
+    <p class="hint" style="margin:0 0 16px">Up to 3 photos · ${SHAPES[c.shape].label} card · Tap Edit to crop, resize or change the card shape. Tip: ${KINDS[c.kind].photo.toLowerCase()}.</p>
+    <div class="field"><span class="label">What should they look at?</span><div class="chips">${ACTIVE_KINDS.map(k=>[k,KINDS[k]]).map(([k,v])=>`<button type="button" class="chip" data-ckind="${k}" aria-pressed="${c.kind===k}">${v.label}</button>`).join('')}</div></div>
     <div class="field"><label for="cp-q">Your question</label><textarea id="cp-q" placeholder="Does this work for a wedding? What would you change?">${esc(vals.q)}</textarea></div>
     <div class="cols"><div class="field"><label for="cp-keep">Must stay</label><input id="cp-keep" value="${esc(vals.keep)}" placeholder="The vintage jacket"></div>
       <div class="field"><label for="cp-swap">Willing to swap</label><input id="cp-swap" value="${esc(vals.swap)}" placeholder="Shoes, bag"></div></div>
@@ -1180,9 +1237,10 @@ function renderComposer(){
       <button type="button" data-vis="public" aria-pressed="${c.vis==='public'}"><b>Share to the community</b><span>Posted with your stylist’s score so everyone can rate it</span></button></div></div>
     ${db.isGhost?'<p class="note" style="margin:16px 0 0">Ghost account: real stylists won’t receive this. To test the full review, send it to another ghost stylist.</p>':''}
     <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send" ${pros.length?'':'disabled'}>Send for review</button></div>`);
-  const onFile=async e=>{const f=e.target.files?.[0];if(!f)return;state.compose.photo=await readPhoto(f,1000);if(!state.compose.photo){toast('That photo could not be read. Try another one.');return}snapshotCompose();renderComposer()};
+  const onFile=e=>{const f=e.target.files;if(f?.length)addPhotos(f)};
+  document.querySelectorAll('[data-phdel]').forEach(b=>b.onclick=()=>{snapshotCompose();state.compose.photos.splice(+b.dataset.phdel,1);renderComposer()});
+  document.querySelectorAll('[data-phedit]').forEach(b=>b.onclick=()=>editPhoto(+b.dataset.phedit));
   $('#cp-roll')&&($('#cp-roll').onchange=onFile);$('#cp-cam')&&($('#cp-cam').onchange=onFile);
-  $('#cp-clear')&&($('#cp-clear').onclick=()=>{snapshotCompose();state.compose.photo=null;renderComposer()});
   $('#cp-pro')&&($('#cp-pro').onchange=e=>{snapshotCompose();state.compose.stylistId=e.target.value;renderComposer()});
   $('#cp-cancel').onclick=closeSheet;$('#cp-send').onclick=submitCompose;
   if(vals.q){$('#cp-q').value=vals.q}
@@ -1193,7 +1251,7 @@ function submitCompose(){
   if(!ME){snapshotCompose();openAuth('signup',()=>renderComposer());return}
   if(!requireApproved())return;
   const c=state.compose,q=$('#cp-q').value.trim();
-  if(!c.photo){toast('Add a photo first');return}
+  if(!c.photos.length){toast('Add at least one photo');return}
   if(!q){toast('Write a short question for your stylist');$('#cp-q').focus();return}
   if([q,$('#cp-keep').value,$('#cp-swap').value,$('#cp-aes').value].some(hasContact)){toast('Please keep contact details, links and handles out of your request.');return}
   const pool=db.stylists.filter(x=>svc(x).includes(c.kind)&&x.id!==ME);
@@ -1202,9 +1260,9 @@ function submitCompose(){
   if(!s){toast('No one reviews this category yet');return}
   const fields={keep:$('#cp-keep').value.trim().slice(0,120),swap:$('#cp-swap').value.trim().slice(0,120),aesthetic:$('#cp-aes').value.trim().slice(0,60)};
   run(async()=>{
-    const url=await upload(c.photo,c.kind);const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
+    const urls=[];for(const ph of c.photos)urls.push(await upload(ph.out,c.kind));const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
     let req=null;
-    req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kind,question:q.slice(0,600),...fields,photo_url:url,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
+    req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kind,question:q.slice(0,600),...fields,photo_url:urls[0],photo_urls:urls,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
     must(await sb.from('profiles').update({submissions:(u.submissions||0)+1}).eq('id',ME));
     closeSheet();await load();const gained=Math.min(STICKERS.length,3+2*me().submissions)-before;
     toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go('mine');
@@ -1371,13 +1429,88 @@ function applyVerification(){
       must(await sb.from('applications').insert({stylist_id:ME,experience:$('#av-exp').value,link:$('#av-link').value.trim().slice(0,200),note:(s.line||'').slice(0,300),portfolio:urls}));closeSheet();await load();render()},'Application sent. We will review it soon.')};
 }
 
+/* ================= Photo editor ================= */
+const SHAPES={portrait:{label:'Portrait',w:1080,h:1350},square:{label:'Square',w:1080,h:1080},tall:{label:'Tall',w:1080,h:1920}};
+const BUMPERS={blur:'Blurred',white:'White',black:'Black'};
+const newEdit=()=>({zoom:1,ox:0,oy:0,rot:0,bright:1,bumper:'blur'});
+function loadImage(file){
+  return new Promise(res=>{if(!file)return res(null);const fr=new FileReader();
+    fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,2200/Math.max(im.width,im.height));if(k===1)return res(im);
+      const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      const im2=new Image();im2.onload=()=>res(im2);im2.onerror=()=>res(null);im2.src=c.toDataURL('image/jpeg',.92)};im.onerror=()=>res(null);im.src=fr.result};
+    fr.onerror=()=>res(null);fr.readAsDataURL(file)});
+}
+function drawRot(ctx,img,cx,cy,sc,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);ctx.drawImage(img,-img.width*sc/2,-img.height*sc/2,img.width*sc,img.height*sc);ctx.restore()}
+function coverOf(img,W,H,rot){const sw=rot%180?img.height:img.width,sh=rot%180?img.width:img.height;return {cover:Math.max(W/sw,H/sh),contain:Math.min(W/sw,H/sh)}}
+function drawEdit(ctx,W,H,img,st){
+  const rot=((st.rot%360)+360)%360,{cover}=coverOf(img,W,H,rot);
+  ctx.save();ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
+  if(st.bumper==='blur'){const t=document.createElement('canvas');t.width=Math.max(8,Math.round(W/28));t.height=Math.max(8,Math.round(H/28));
+    const tc=t.getContext('2d');drawRot(tc,img,t.width/2,t.height/2,cover*1.1*t.width/W,rot);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(t,0,0,W,H);
+    ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(0,0,W,H)}
+  else{ctx.fillStyle=st.bumper==='black'?'#0b0b0c':'#ffffff';ctx.fillRect(0,0,W,H)}
+  drawRot(ctx,img,W/2+st.ox*W,H/2+st.oy*H,cover*st.zoom,rot);
+  if(st.bright<1){ctx.fillStyle=`rgba(0,0,0,${(1-st.bright).toFixed(3)})`;ctx.fillRect(0,0,W,H)}
+  else if(st.bright>1){ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(255,255,255,${((st.bright-1)*.9).toFixed(3)})`;ctx.fillRect(0,0,W,H)}
+  ctx.restore();
+}
+function exportEdit(img,shape,st){const S=SHAPES[shape];const c=document.createElement('canvas');c.width=S.w;c.height=S.h;drawEdit(c.getContext('2d'),S.w,S.h,img,st);return c.toDataURL('image/jpeg',.86)}
+const ZMIN=.25,ZMAX=5,z2s=z=>Math.round(Math.log(z/ZMIN)/Math.log(ZMAX/ZMIN)*1000),s2z=v=>ZMIN*Math.pow(ZMAX/ZMIN,v/1000);
+function openEditor(item,title){
+  return new Promise(resolve=>{
+    const ed=$('#editor'),frame=$('#ed-frame'),cv=$('#ed-canvas'),ctx=cv.getContext('2d');let st={...item.st};let shape=state.compose.shape;
+    $('#ed-title').textContent=title;ed.classList.add('open');document.body.style.overflow='hidden';
+    const size=()=>{const S=SHAPES[shape],stage=$('#ed-stage').getBoundingClientRect(),aw=stage.width-32,ah=stage.height-16;const k=Math.min(aw/S.w,ah/S.h);
+      frame.style.width=Math.floor(S.w*k)+'px';frame.style.height=Math.floor(S.h*k)+'px';const d=Math.min(2,window.devicePixelRatio||1);cv.width=Math.floor(S.w*k*d);cv.height=Math.floor(S.h*k*d);draw()};
+    let raf=0;const draw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>drawEdit(ctx,cv.width,cv.height,item.img,st))};
+    const sync=()=>{$('#ed-zoom').value=z2s(st.zoom);$('#ed-bright').value=Math.round(st.bright*100);
+      $('#ed-shapes').innerHTML=Object.entries(SHAPES).map(([k,v])=>`<button class="ed-chip" data-shape="${k}" aria-pressed="${k===shape}">${v.label}</button>`).join('');
+      $('#ed-bump').innerHTML=Object.entries(BUMPERS).map(([k,v])=>`<button class="ed-chip" data-bump="${k}" aria-pressed="${k===st.bumper}">${v}</button>`).join('');draw()};
+    const setZoom=(z,keepCenter=true)=>{st.zoom=Math.max(ZMIN,Math.min(ZMAX,z));$('#ed-zoom').value=z2s(st.zoom);draw()};
+    $('#ed-zoom').oninput=e=>setZoom(s2z(+e.target.value));
+    $('#ed-zin').onclick=()=>setZoom(st.zoom*1.15);$('#ed-zout').onclick=()=>setZoom(st.zoom/1.15);
+    $('#ed-bright').oninput=e=>{st.bright=+e.target.value/100;draw()};
+    $('#ed-rot').onclick=()=>{st.rot=(st.rot+90)%360;st.ox=0;st.oy=0;draw()};
+    $('#ed-fill').onclick=()=>{st.zoom=1;st.ox=0;st.oy=0;sync()};
+    $('#ed-fit').onclick=()=>{const S=SHAPES[shape],c=coverOf(item.img,S.w,S.h,st.rot);st.zoom=c.contain/c.cover;st.ox=0;st.oy=0;sync()};
+    $('#ed-shapes').onclick=e=>{const b=e.target.closest('[data-shape]');if(!b)return;shape=b.dataset.shape;sync();size()};
+    $('#ed-bump').onclick=e=>{const b=e.target.closest('[data-bump]');if(!b)return;st.bumper=b.dataset.bump;sync()};
+    const pts=new Map();let pinch=null;
+    frame.onpointerdown=e=>{frame.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});frame.classList.add('drag');
+      if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:st.zoom}}};
+    frame.onpointermove=e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId),cur={x:e.clientX,y:e.clientY};pts.set(e.pointerId,cur);
+      if(pts.size===2&&pinch){const [a,b]=[...pts.values()];setZoom(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d);return}
+      const r=frame.getBoundingClientRect();st.ox=Math.max(-1.5,Math.min(1.5,st.ox+(cur.x-prev.x)/r.width));st.oy=Math.max(-1.5,Math.min(1.5,st.oy+(cur.y-prev.y)/r.height));draw()};
+    const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)frame.classList.remove('drag')};
+    frame.onpointerup=up;frame.onpointercancel=up;
+    frame.onwheel=e=>{e.preventDefault();setZoom(st.zoom*Math.exp(-e.deltaY/400))};
+    const close=v=>{ed.classList.remove('open');document.body.style.overflow='';window.removeEventListener('resize',size);resolve(v)};
+    $('#ed-cancel').onclick=()=>close(null);
+    $('#ed-done').onclick=()=>close({st,shape});
+    window.addEventListener('resize',size);sync();requestAnimationFrame(size);
+  });
+}
+async function addPhotos(files){
+  const c=state.compose;snapshotCompose();
+  const list=[...files].slice(0,3-c.photos.length);if(files.length>list.length)toast('You can add up to 3 photos.');
+  for(let i=0;i<list.length;i++){
+    const img=await loadImage(list[i]);if(!img){toast('That photo could not be read. Try another one.');continue}
+    const item={img,st:newEdit()};const r=await openEditor(item,`Photo ${c.photos.length+1} of ${Math.min(3,c.photos.length+list.length-i)}`);
+    if(!r)continue;item.st=r.st;applyShape(r.shape);item.out=exportEdit(item.img,c.shape,item.st);c.photos.push(item);
+  }
+  renderComposer();
+}
+function applyShape(shape){const c=state.compose;if(shape===c.shape)return;c.shape=shape;c.photos.forEach(p=>p.out=exportEdit(p.img,shape,p.st))}
+async function editPhoto(i){const c=state.compose,item=c.photos[i];snapshotCompose();
+  const r=await openEditor(item,`Photo ${i+1} of ${c.photos.length}`);if(r){item.st=r.st;applyShape(r.shape);item.out=exportEdit(item.img,c.shape,item.st)}renderComposer()}
+
 /* ================= After render: wire per-view behavior ================= */
 function afterRender(){
   if(state.view==='feed'){
     const desk=document.querySelector('.desk');if(desk){const r=db.requests.find(x=>x.id===desk.dataset.rid);prefillDesk(r);
       const z=$('#zoomer');z.onclick=()=>z.classList.toggle('z');z.onkeydown=e=>{if(e.key==='Enter')z.classList.toggle('z')};
-      $('#q-send').onclick=()=>sendReview(r.id);$('#q-skip').onclick=()=>{state.qi++;render()};
-      $('#q-prev').onclick=()=>{state.qi--;render()};$('#q-next').onclick=()=>{state.qi++;render()}}
+      $('#q-send').onclick=()=>{state.zi=0;sendReview(r.id)};$('#q-skip').onclick=()=>{state.qi++;state.zi=0;render()};
+      $('#q-prev').onclick=()=>{state.qi--;state.zi=0;render()};$('#q-next').onclick=()=>{state.qi++;state.zi=0;render()}}
   }
   if(state.view==='sprofile'){
     $('#avatar-btn').onclick=()=>$('#avatar-input').click();
@@ -1440,7 +1573,7 @@ document.addEventListener('click',e=>{
   if(d.viewrev){const r=db.requests.find(x=>x.id===d.viewrev);if(!r)return;
     openSheet(`<div class="eyebrow">${r.stylistId===ME?'Your review for '+esc(r.client):'Review from '+esc(stylist(r.stylistId)?.name||personOf(r.stylistId).name)} · ${KINDS[r.kind].label}</div>
       <h2 style="margin:6px 0 14px">“${esc(r.question)}”</h2>
-      <div class="req-media" style="min-height:0;border-radius:16px;overflow:hidden;margin-bottom:14px">${r.photo?`<img src="${r.photo}" alt="The look" style="position:static;width:100%;max-height:380px;object-fit:contain">`:media(r,r.kind,r.art)}</div>
+      <div style="display:grid;gap:8px;margin-bottom:14px">${photosOf(r).length?photosOf(r).map((u,i)=>`<img src="${esc(u)}" alt="Photo ${i+1}" style="width:100%;max-height:420px;object-fit:contain;border-radius:14px;background:var(--soft)">`).join(''):media(r,r.kind,r.art)}</div>
       ${notesBlock(r)}${r.feedback?feedbackBlock(r.feedback,r.kind):'<p class="muted">Not reviewed yet.</p>'}
       ${r.stars?`<p class="hint" style="margin-top:14px">Rated ${starsTxt(r.stars)} · ${countNote(r)}</p>`:''}`);return}
   if(d.delc){const id=d.delc;
@@ -1467,6 +1600,7 @@ document.addEventListener('click',e=>{
     $('#pr-send').onclick=()=>run(async()=>{const r=await sb.from('post_flags').insert({post_id:id,reporter_id:ME,reason,detail:$('#pr-detail').value.trim().slice(0,300)});
       if(r.error?.code==='23505')throw Object.assign(new Error('You already reported this look.'),{code:'P0001'});must(r);closeSheet();await load();render()},'Thanks. Our team will take a look.');return}
   if(d.dismiss){return run(async()=>{must(await sb.from('comment_flags').delete().eq('comment_id',d.dismiss));state.acomments=null;render()},'Flag dismissed')}
+  if(d.zi!==undefined&&t.dataset.zi!==undefined&&state.view==='feed'){state.zi=+d.zi;return render()}
   if(d.person)return openPerson(d.person);
   if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
   if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;if(d.atab==='approvals')state.approvals=null;if(d.atab==='comments')state.acomments=null;return render()}
