@@ -342,6 +342,25 @@ input[type=range]{padding:0;accent-color:var(--accent);border:0}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .empty{padding:56px 0;text-align:center;color:var(--muted)}
 .empty h3{font-size:28px;color:var(--ink);margin-bottom:8px}
+.plink{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.plink:hover b,.plink:hover h3,b.plink:hover,.plink.name:hover{text-decoration:underline;text-underline-offset:3px}
+button.avatar{border:0;padding:0;cursor:pointer}
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vis button{display:grid;gap:2px;text-align:left;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer}
+.vis button b{font-size:15px}
+.vis button span{font-size:12px;color:var(--muted)}
+.vis button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.vis button[aria-pressed="true"] b{color:var(--accent-text)}
+.vis button:disabled{opacity:.45;cursor:not-allowed}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.person{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
+.person:hover{border-color:var(--accent)}
+.person .avatar{width:56px;height:56px}
+.person b{font-size:16px;display:block}
+.badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.badges span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--soft);color:var(--muted)}
+.badges span.on{background:var(--accent-soft);color:var(--accent-text)}
+.search{max-width:360px}
 footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -489,7 +508,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key);
 let ME=null;
 const GUEST={id:null,name:'Guest',keywords:[],favColor:'#8c1238',photo:null,board:[],stickers:[],submissions:0};
 let db={users:{},stylists:[],requests:[],posts:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:false};
-const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null};
+const state={role:'client',view:'browse',filter:'All',cat:'all',comCat:'all',meTab:'board',qi:0,placing:null,compose:null,busy:false,editBoard:false,sel:null,person:null,adminTab:'people',people:null};
 const ts=t=>Date.parse(t)||Date.now();
 const mapStylist=r=>({id:r.id,name:r.name,title:r.title,line:r.line,services:r.services,specialties:r.specialties,turnaround:r.turnaround,verified:r.verified,rating:+r.rating,reviews:r.reviews});
 const mapPost=r=>({id:r.id,authorId:r.author_id,kind:r.kind,caption:r.caption,aesthetic:r.aesthetic,photo:r.photo_url,requestId:r.request_id,created:ts(r.created_at),
@@ -614,6 +633,8 @@ function face(p,label){
   return `<div class="mono" style="background:radial-gradient(120% 90% at 30% 20%,${mix(t,'#ffffff',.3)},${t})"><b>${esc(initials(p?.name))}</b>${label?'<small>Photo coming soon</small>':''}</div>`;
 }
 const personOf=id=>db.users[id]||stylist(id)||{id,name:'Member'};
+const pAvatar=(id,cls='avatar',style='')=>`<button class="${cls}" ${style?`style="${style}"`:''} data-person="${id}" aria-label="Open ${esc(personOf(id).name)}’s profile">${face(personOf(id))}</button>`;
+const pName=(id,label,tag='b')=>`<button class="plink" data-person="${id}"><${tag}>${esc(label??personOf(id).name)}</${tag}></button>`;
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600)}
 function openSheet(html){$('#sheet-body').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');$('#sheet').scrollTop=0;setTimeout(()=>$('#sheet-x').focus(),60)}
 function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open')}
@@ -684,7 +705,7 @@ const goHome=()=>go(state.role==='stylist'?'feed':state.role==='admin'?'admin':'
 $('#home').onclick=goHome;$('#home').onkeydown=e=>{if(e.key==='Enter')goHome()};
 $('#me-btn').onclick=()=>{if(!ME)return openAuth('login');go(state.role==='stylist'?'sprofile':'me')};
 
-function go(v){if(state.editBoard&&v!=='me'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe()}const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
+function go(v){if(v==='admin')state.people=null;if(state.editBoard&&v!=='me'){state.editBoard=false;state.sel=null;clearTimeout(saveTimer);saveMe()}const from=v;setTimeout(()=>{if(!db.loaded)return;load().then(()=>{const a=document.activeElement;if(state.view===(from==='colors'?'me':from)&&!(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}).catch(()=>{})},0);state.view=v;if(v==='colors'){state.meTab='colors';state.view='me'}else if(v==='me')state.meTab=state.meTab||'board';state.placing=null;render();window.scrollTo({top:0})}
 function render(){
   if(!db.loaded){$('#app').innerHTML='<div class="empty"><h3>Loading Lookover…</h3></div>';return}
   if(state.view==='feed'||state.view==='studio'||state.view==='sprofile'){if(!db.me.stylistId)state.view='join'}
@@ -727,8 +748,60 @@ function stylistCard(s){
     <div class="stylist-info"><div class="kind">${svc(s).map(k=>KINDS[k].label).join(' · ')}</div><h3>${esc(s.name)}</h3>
       <div class="meta num"><span>★ ${s.rating||'New'}${s.reviews?` (${s.reviews})`:''}</span><span class="dot">${tierOf(s)}</span></div></div></button>`;
 }
+async function openPerson(id){
+  if(!id)return;closeSheet();setMenu(false);
+  if(id===ME&&state.role!=='admin')return go('me');
+  state.person={id,loading:true,tab:'collage'};state.view='person';render();window.scrollTo({top:0});
+  try{
+    const [pr,st,po]=await Promise.all([sb.from('profiles').select('id,name,photo_url,fav_color,keywords,board,stickers,submissions,created_at').eq('id',id).maybeSingle(),
+      sb.from('stylists').select('*').eq('id',id).maybeSingle(),
+      sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').eq('author_id',id).order('created_at',{ascending:false}).limit(60)]);
+    if(!pr.data){state.person={id,missing:true};return render()}
+    const u=mapUser(pr.data);u.joined=ts(pr.data.created_at);db.users[id]={...(db.users[id]||{}),...u};
+    const posts=(po.data||[]).map(mapPost);
+    const ids=[...new Set(posts.flatMap(x=>x.comments.map(c=>c.by)).filter(x=>!db.users[x]))];
+    if(ids.length){const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords').in('id',ids);(data||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})})}
+    if(state.person?.id!==id)return;
+    state.person={id,user:u,stylist:st.data?{...mapStylist(st.data),photo:u.photo}:null,posts,tab:state.person.tab||'collage'};
+  }catch(e){console.error(e);state.person={id,missing:true}}
+  if(state.view==='person')render();
+}
+async function loadPeople(){
+  const [pr,st,po]=await Promise.all([sb.from('profiles').select('id,name,photo_url,fav_color,keywords,is_admin,created_at').order('created_at',{ascending:false}).limit(1000),
+    sb.from('stylists').select('id,verified').limit(1000),sb.from('posts').select('author_id').limit(5000)]);
+  const sty=Object.fromEntries((st.data||[]).map(x=>[x.id,x.verified]));const counts={};(po.data||[]).forEach(x=>counts[x.author_id]=(counts[x.author_id]||0)+1);
+  state.people=(pr.data||[]).map(x=>({...mapUser(x),admin:x.is_admin,joined:ts(x.created_at),stylist:x.id in sty,verified:!!sty[x.id],posts:counts[x.id]||0}));
+  state.people.forEach(x=>{db.users[x.id]={...x,...(db.users[x.id]||{})}});
+}
+function peopleTab(){
+  if(!state.people){loadPeople().then(()=>{if(state.view==='admin'&&state.adminTab==='people')render()}).catch(e=>{console.error(e);toast('Could not load people')});
+    return '<div class="empty"><h3>Loading everyone…</h3></div>'}
+  const list=state.people;const day=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  return `<div class="board-tools"><input class="search" id="people-q" type="search" placeholder="Search by name or style" aria-label="Search people"><span class="muted">${list.length} account${list.length===1?'':'s'}</span></div>
+    <div class="people" id="people">${list.map(x=>`<button class="person" data-person="${x.id}" data-find="${esc((x.name+' '+(x.keywords||[]).join(' ')).toLowerCase())}">
+      <div class="avatar">${face(x)}</div><div style="min-width:0"><b>${esc(x.name)}</b>
+      <div class="meta"><span>Joined ${day(x.joined)}</span><span class="dot">${x.posts} look${x.posts===1?'':'s'}</span></div>
+      <div class="badges">${x.admin?'<span class="on">Admin</span>':''}${x.verified?'<span class="on">Verified stylist</span>':x.stylist?'<span>Stylist</span>':''}${(x.keywords||[]).slice(0,2).map(k=>`<span>${esc(k)}</span>`).join('')}</div></div></button>`).join('')||'<p class="muted">No accounts yet.</p>'}</div>
+    <p class="hint" id="people-none" hidden style="text-align:center;margin-top:20px">No one matches that search.</p>`;
+}
 function signInPrompt(h,t){return `<div class="empty" style="padding:90px 0"><h3>${h}</h3><p style="max-width:44ch;margin:8px auto 18px">${t}</p><div class="ctas" style="justify-content:center"><button class="btn" data-signup="1">Create account</button><button class="btn line" id="login">Log in</button></div></div>`}
 const VIEWS={
+  person(){
+    const P=state.person;
+    if(!P||P.loading)return '<div class="empty"><h3>Loading profile…</h3></div>';
+    if(P.missing)return '<div class="empty"><h3>Profile not found</h3>This account may have been deleted.</div>';
+    const u=P.user,st=P.stylist,mine=P.id===ME;
+    const day=new Date(u.joined).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    const head=`<section class="prof-head"><div class="prof-avatar" style="cursor:default;border-color:${esc(u.favColor)}">${face(u)}</div>
+      <div><div class="eyebrow">${st?`${tierOf(st)} stylist`:'Member'} · Joined ${day}</div><h1>${esc(u.name)} ${st?.verified?'<span class="vcheck" style="width:22px;height:22px;font-size:12px">✓</span>':''}</h1>
+        ${st?`<p class="muted" style="margin:6px 0 8px">${esc(st.line||st.title)}</p><div class="meta num" style="margin-bottom:8px"><span>★ ${st.rating||'New'} (${st.reviews} ratings)</span><span class="dot">${svc(st).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${priceOf(st)?'$'+priceOf(st)+' per review':'Free reviews'}</span></div>`:''}
+        <div style="margin:8px 0 0">${tags(u.keywords)}</div></div>
+      <div class="edit">${mine?'<button class="btn line" data-go="me">Edit my profile</button>':st?`<div class="ctas">${svc(st).map((k,i)=>`<button class="btn ${i?'line':''} sm" data-compose="${k}" data-to="${st.id}">${KINDS[k].ask}</button>`).join('')}</div>`:''}</div></section>
+      <div class="tabs" role="tablist"><button role="tab" data-ptab="collage" aria-selected="${P.tab==='collage'}">Collage</button><button role="tab" data-ptab="looks" aria-selected="${P.tab==='looks'}">Looks · ${P.posts.length}</button></div>`;
+    if(P.tab==='looks')return head+(P.posts.length?`<div class="feed">${P.posts.map(postCard).join('')}</div>`:`<div class="empty"><h3>No public looks yet</h3>${esc(u.name)} hasn’t shared anything with the community.</div>`);
+    const c=collageOf(u);
+    return head+(c.items.length?collageHTML(c,false):`<div class="empty"><h3>No collage yet</h3>${esc(u.name)} hasn’t made a collage.</div>`);
+  },
   browse(){
     const inCat=db.stylists.filter(s=>state.cat==='all'||svc(s).includes(state.cat));
     const list=inCat.filter(s=>state.filter==='All'||(state.filter==='Free'?!s.verified:s.verified));
@@ -761,14 +834,14 @@ const VIEWS={
     return `<div class="section-head"><div><h2>My <em>reviews</em></h2><p>Everything you have sent to a stylist.</p></div><button class="btn" id="plus3">New request</button></div>
       <div class="list">${list.map(r=>{const s=stylist(r.stylistId);const f=r.feedback;
         return `<article class="req"><div class="req-media">${media(r,r.kind,r.art||db.profile?.wear,'Your photo')}</div>
-        <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div><h3>${esc(s?.name)}</h3>
-          <div class="meta"><span>${tierOf(s)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span><span class="dot">${ago(r.created)}</span></div></div>
+        <div class="req-body"><div class="req-head"><div><div class="kind">${KINDS[r.kind].label}</div>${pName(r.stylistId,s?.name,'h3')}
+          <div class="meta"><span>${tierOf(s)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.postId?'Public':'Private'}</span></div></div>
           <span class="pill ${r.status}">${r.status==='done'?'Reviewed':'In review'}</span></div>
           <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
           ${f?feedbackBlock(f,r.kind):`<p class="muted" style="margin:0">${esc(s?.name.split(' ')[0])} usually replies within ${esc(s?.turnaround)}.</p>`}
           ${f?`<div class="row-actions"><span class="hint" style="flex:1">${r.stars?'You rated this review':'How helpful was this review?'}</span><div class="chips">${[1,2,3,4,5].map(n=>`<button class="chip" ${r.stars?'disabled':''} data-stars="${r.id}" data-n="${n}" aria-pressed="${(r.stars||0)>=n}" aria-label="${n} star${n>1?'s':''}">★</button>`).join('')}</div></div>`:''}
           <div class="row-actions">${r.postId?`<span class="hint" style="flex:1">Posted to the community</span><button class="btn sm line" data-go="community">See ratings</button>`
-            :`<span class="hint" style="flex:1">Want more opinions?</span><button class="btn sm soft" data-share="${r.id}">Post to community</button>`}
+            :`<span class="hint" style="flex:1">Private. Only your stylist can see it.</span><button class="btn sm soft" data-share="${r.id}">Make it public</button>`}
             ${f&&(f.season||f.skinType||f.lips?.length||f.nailShades?.length||f.faceShape)?`<button class="btn sm line" data-adopt="${r.id}">Save to my colors</button>`:''}</div>
         </div></article>`}).join('')||'<div class="empty"><h3>No reviews yet</h3>Tap the + button to send your first look.</div>'}</div>`;
   },
@@ -807,7 +880,7 @@ const VIEWS={
       <div class="progress"><span style="width:${(state.qi+1)/q.length*100}%"></span></div>
       <div class="desk" data-rid="${r.id}">
         <div class="desk-left"><div class="zoomer" id="zoomer" tabindex="0" aria-label="Photo, tap to zoom">${media(r,r.kind,r.art||r.profile?.wear,'Client photo')}<span class="zoom-hint">Tap to zoom</span></div>
-          <div class="client-box"><div class="who"><div class="avatar">${face(personOf(r.clientId))}</div><div><b>${esc(r.client)}</b><div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
+          <div class="client-box"><div class="who">${pAvatar(r.clientId)}<div>${pName(r.clientId,r.client)}<div class="meta"><span class="kind">${KINDS[r.kind].label}</span><span class="dot">${ago(r.created)}</span><span class="dot">${r.amount?'$'+r.amount:'Free'}</span></div></div></div>
             <p class="ask">“${esc(r.question)}”</p>${notesBlock(r)}
             ${r.profile?profileMini(r.profile,'Client’s'):'<p class="hint" style="margin:0">No color profile yet.</p>'}</div></div>
         <div class="desk-form"><h3 style="font-size:24px;margin-bottom:16px">Your review</h3>${r.profile?'<p class="hint" style="margin:-8px 0 16px">Pre-filled from the client’s color profile. Change anything you disagree with.</p>':''}
@@ -842,20 +915,26 @@ const VIEWS={
         <div class="actions"><button class="btn" id="create-stylist">Create my stylist profile</button></div></div>`;
   },
   admin(){
+    const tabs=`<div class="section-head" style="padding-bottom:8px"><div><div class="eyebrow">Admin</div><h2>${state.adminTab==='people'?'Everyone on <em>Lookover</em>':'Stylist <em>verification</em>'}</h2></div></div>
+      <div class="tabs" role="tablist"><button role="tab" data-atab="people" aria-selected="${state.adminTab==='people'}">People</button><button role="tab" data-atab="verify" aria-selected="${state.adminTab==='verify'}">Verification</button></div>`;
+    if(state.adminTab==='people')return tabs+peopleTab();
+    return tabs+adminVerify();
+  }
+};
+function adminVerify(){
     const apps=db.applications.slice().sort((a,b)=>(a.status!=='pending')-(b.status!=='pending')||b.created-a.created);
     const ver=db.stylists.filter(x=>x.verified);
-    return `<div class="section-head"><div><div class="eyebrow">Admin</div><h2>Verified <em>stylists</em></h2><p>Revoking moves a stylist back to free community reviews. They can apply again later.</p></div><span class="muted">${ver.length} verified</span></div>
-      <div class="queue">${ver.map(x=>`<div class="qrow"><div class="avatar" style="width:56px;height:56px">${face(x)}</div>
-        <div><b style="font-size:16px">${esc(x.name)}</b><div class="meta"><span>${svc(x).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${tierOf(x)} · $${priceOf(x)}</span><span class="dot">★ ${x.rating||0} (${x.reviews||0})</span></div></div>
+    return `<div class="section-head"><div><h2 style="font-size:30px">Verified <em>stylists</em></h2><p>Revoking moves a stylist back to free community reviews. They can apply again later.</p></div><span class="muted">${ver.length} verified</span></div>
+      <div class="queue">${ver.map(x=>`<div class="qrow">${pAvatar(x.id,'avatar','width:56px;height:56px')}
+        <div>${pName(x.id)}<div class="meta"><span>${svc(x).map(k=>KINDS[k].label).join(' · ')}</span><span class="dot">${tierOf(x)} · $${priceOf(x)}</span><span class="dot">★ ${x.rating||0} (${x.reviews||0})</span></div></div>
         <button class="btn sm line" data-revoke="${x.id}">Revoke verification</button></div>`).join('')||'<p class="muted">No verified stylists yet.</p>'}</div>
-      <div class="section-head"><div><h2>Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
+      <div class="section-head"><div><h2 style="font-size:30px">Verification <em>requests</em></h2><p>Check each stylist’s portfolio and experience. Approving them lets them charge $10 per review, or $15 once they are top rated.</p></div></div>
       <div class="list">${apps.map(a=>{const s=stylist(a.stylistId);return `<div class="app-card"><div class="avatar" style="width:72px;height:72px">${face(s)}</div>
-        <div><h3 style="font-size:24px">${esc(s?.name)}</h3><div class="meta"><span>${s?svc(s).map(k=>KINDS[k].label).join(' · '):''}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s?.rating||0} (${s?.reviews||0})</span></div>
+        <div>${pName(a.stylistId,s?.name,'h3')}<div class="meta"><span>${s?svc(s).map(k=>KINDS[k].label).join(' · '):''}</span><span class="dot">${esc(a.experience)}</span><span class="dot">★ ${s?.rating||0} (${s?.reviews||0})</span></div>
           <p style="margin:8px 0 4px">${esc(a.note)}</p><span class="hint">${esc(a.link)}</span>
           <div class="portfolio">${a.portfolio.map(p=>`<div>${typeof p==='string'?`<img src="${p}" alt="Portfolio photo">`:art(p[0],p[1])}</div>`).join('')}</div></div>
         <div class="actions" style="margin:0">${a.status==='pending'?`<button class="btn line sm" data-decline="${a.id}">Decline</button><button class="btn sm" data-approve="${a.id}">Approve</button>`:`<span class="pill ${a.status==='approved'?'done':'pending'}">${a.status}</span>${a.status==='approved'&&s?.verified?`<button class="btn sm line" data-revoke="${a.stylistId}">Revoke</button>`:''}`}</div></div>`}).join('')||'<div class="empty"><h3>No requests</h3></div>'}</div>`;
-  }
-};
+}
 function colorsTab(P){
   if(!P)return `<div class="empty"><h3>No color profile yet</h3>Take the two-minute quiz to find your season, undertone and best shades.<div style="margin-top:16px"><button class="btn" data-quiz="1">Take the quiz</button></div></div>`;
   const sec=(t,rows)=>`<div class="pp-sec"><h3>${t}</h3><div class="pp-rows">${rows}</div></div>`,row=(l,c)=>c?`<div><h4 class="h4">${l}</h4>${c}</div>`:'';
@@ -896,10 +975,10 @@ function postCard(p){
   const a=personOf(p.authorId),vals=Object.values(p.ratings||{}),avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:0;
   const mineR=ME?p.ratings?.[ME]:null;const cm=p.comments||[];
   return `<article class="post" id="post-${p.id}"><div class="post-media">${media(p,p.kind,p.art,'')}${vals.length?`<span class="avgtag num"><b>${avg.toFixed(1)}</b>${vals.length} rating${vals.length>1?'s':''}</span>`:''}</div>
-    <div class="post-body"><div class="who"><div class="avatar">${face(a)}</div><div style="flex:1"><b>${esc(p.authorId===ME?'You':a.name)}</b><div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
+    <div class="post-body"><div class="who">${pAvatar(p.authorId)}<div style="flex:1">${pName(p.authorId,p.authorId===ME?'You':a.name)}<div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
       <p style="margin:0">${esc(p.caption)}</p>
       ${p.authorId===ME?'<span class="hint">You can’t rate your own look.</span>':`<div><span class="hint">${mineR?'Your rating':'Rate this look'}</span><div class="rate" role="group" aria-label="Rate out of 10">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-rate="${p.id}" data-n="${n}" aria-pressed="${mineR===n}">${n}</button>`).join('')}</div></div>`}
-      <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by===ME?'You':w.name)}</b>${esc(c.text)}</div>`}).join('')}
+      <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}${pName(c.by,c.by===ME?'You':w.name)} ${esc(c.text)}</div>`}).join('')}
         ${cm.length>2?`<button class="textlink" data-allc="${p.id}">View all ${cm.length} comments</button>`:''}</div>
       <form class="cmt-form" data-cform="${p.id}"><input name="c" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200"><button class="btn sm" type="submit">Post</button></form>
     </div></article>`;
@@ -911,7 +990,7 @@ function addComment(pid,text){
 
 /* ================= Composer (+ button) ================= */
 function openComposer(opts={}){
-  state.compose={kind:opts.kind||'outfit',stylistId:opts.stylistId||'auto',photo:null,share:true,aesthetic:''};
+  state.compose={kind:opts.kind||'outfit',stylistId:opts.stylistId||'auto',photo:null,vis:'private',aesthetic:''};
   renderComposer();
 }
 function renderComposer(){
@@ -933,7 +1012,10 @@ function renderComposer(){
       ${pros.map(s=>`<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${s.verified?'Verified $'+priceOf(s):'Free'} · ★ ${s.rating}</option>`).join('')}</select>
       <span class="hint">${chosen&&priceOf(chosen)?`$${priceOf(chosen)} per review. Payment is not live yet, so it is free for now.`:'Fastest match picks a free community stylist unless you choose a verified pro.'}</span></div>
     ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
-    <label class="switch"><span><b>Also post to the community</b><span class="hint">Let other people rate it out of 10 and comment</span></span><input type="checkbox" id="cp-share" ${c.share?'checked':''}></label>
+    <div class="field"><span class="label">Who can see it?</span><div class="vis" role="group" aria-label="Who can see it">
+      <button type="button" data-vis="private" aria-pressed="${pros.length&&c.vis==='private'}" ${pros.length?'':'disabled'}><b>Private</b><span>Only your stylist sees it</span></button>
+      <button type="button" data-vis="public" aria-pressed="${!pros.length||c.vis==='public'}"><b>Public</b><span>Your stylist, plus the community can rate and comment</span></button></div>
+      ${pros.length?'':'<span class="hint">There is no pro for this yet, so it will be public.</span>'}</div>
     <div class="actions" style="margin-top:20px"><button class="btn line" id="cp-cancel">Cancel</button><button class="btn" id="cp-send">${pros.length?'Send for review':'Post to community'}</button></div>`);
   const onFile=async e=>{const f=e.target.files?.[0];if(!f)return;state.compose.photo=await readPhoto(f,1000);if(!state.compose.photo){toast('That photo could not be read. Try another one.');return}snapshotCompose();renderComposer()};
   $('#cp-roll')&&($('#cp-roll').onchange=onFile);$('#cp-cam')&&($('#cp-cam').onchange=onFile);
@@ -942,7 +1024,7 @@ function renderComposer(){
   $('#cp-cancel').onclick=closeSheet;$('#cp-send').onclick=submitCompose;
   if(vals.q){$('#cp-q').value=vals.q}
 }
-function snapshotCompose(){const c=state.compose;if(!$('#cp-q'))return;c._q=$('#cp-q').value;c._keep=$('#cp-keep').value;c._swap=$('#cp-swap').value;c.aesthetic=$('#cp-aes').value;c.share=$('#cp-share').checked;
+function snapshotCompose(){const c=state.compose;if(!$('#cp-q'))return;c._q=$('#cp-q').value;c._keep=$('#cp-keep').value;c._swap=$('#cp-swap').value;c.aesthetic=$('#cp-aes').value;
   setTimeout(()=>{if($('#cp-q')){$('#cp-q').value=c._q||'';$('#cp-keep').value=c._keep||'';$('#cp-swap').value=c._swap||''}},0)}
 function submitCompose(){
   if(!ME){snapshotCompose();openAuth('signup',()=>renderComposer());return}
@@ -952,7 +1034,7 @@ function submitCompose(){
   const pool=db.stylists.filter(x=>svc(x).includes(c.kind)&&x.id!==ME);
   let s=c.stylistId==='auto'?null:stylist(c.stylistId);
   if(!s&&pool.length){const tt=t=>parseInt(t.turnaround)||48;s=pool.filter(x=>!x.verified).sort((a,b)=>tt(a)-tt(b)||b.rating-a.rating)[0]||pool.sort((a,b)=>tt(a)-tt(b))[0]}
-  const share=$('#cp-share').checked||!s;
+  const share=c.vis==='public'||!s;
   const fields={keep:$('#cp-keep').value.trim().slice(0,120),swap:$('#cp-swap').value.trim().slice(0,120),aesthetic:$('#cp-aes').value.trim().slice(0,60)};
   run(async()=>{
     const url=await upload(c.photo,c.kind);const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
@@ -1105,7 +1187,7 @@ function addToBoard(){
 }
 function viewStylist(id){
   const s=stylist(id),p=priceOf(s);
-  openSheet(`<div class="who" style="gap:16px;margin-bottom:18px"><div class="avatar" style="width:84px;height:84px">${face(s)}</div><div><div class="eyebrow">${tierOf(s)} ${s.verified?'<span class="vcheck">✓</span>':''}</div><h2 style="margin:4px 0 0">${esc(s.name)}</h2></div></div>
+  openSheet(`<div class="who" style="gap:16px;margin-bottom:18px"><div class="avatar" style="width:84px;height:84px">${face(s)}</div><div><div class="eyebrow">${tierOf(s)} ${s.verified?'<span class="vcheck">✓</span>':''}</div><h2 style="margin:4px 0 0">${esc(s.name)}</h2><button class="textlink" data-person="${s.id}">View full profile</button></div></div>
     <p style="font-size:17px;margin:0 0 12px">${esc(s.line||s.title)}</p>
     <div class="meta num" style="margin-bottom:14px"><span>★ ${s.rating||'New'} (${s.reviews} reviews)</span><span class="dot">Replies in ${esc(s.turnaround||'48h')}</span><span class="dot">${p?'$'+p+' per review':'Free'}</span></div>
     ${tags(s.specialties)}<div style="margin:14px 0 22px">${svc(s).map(k=>`<span class="chip" style="margin-right:6px">${KINDS[k].label}</span>`).join('')}</div>
@@ -1161,11 +1243,16 @@ function afterRender(){
   }
   document.querySelectorAll('[data-cform]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.elements.c.value;if(!t.trim())return;addComment(f.dataset.cform,t);render();const el=document.getElementById('post-'+f.dataset.cform);el&&el.scrollIntoView({block:'center'})});
   const as=$('#apply-v');if(as)as.onclick=applyVerification;
+  const pq=$('#people-q');if(pq)pq.oninput=()=>{const v=pq.value.trim().toLowerCase();let n=0;document.querySelectorAll('#people .person').forEach(el=>{const ok=!v||el.dataset.find.includes(v);el.hidden=!ok;if(ok)n++});$('#people-none').hidden=n>0};
 }
 
 /* ================= Global click handling ================= */
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a[role=button]');if(!t)return;const d=t.dataset;
+  if(d.person)return openPerson(d.person);
+  if(d.ptab&&state.person){state.person.tab=d.ptab;return render()}
+  if(d.atab){state.adminTab=d.atab;if(d.atab==='people')state.people=null;return render()}
+  if(d.vis){t.parentElement.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b===t));state.compose.vis=d.vis;return}
   if(d.go){setMenu(false);closeSheet();return go(d.go)}
   if(d.role){state.role=d.role;setMenu(false);return go(DOCK[d.role][0][0])}
   if(t.id==='plus'||t.id==='plus2'||t.id==='plus3'){return openComposer()}
@@ -1191,7 +1278,7 @@ document.addEventListener('click',e=>{
     queueSave();return render()}
   if(d.rate){if(!requireAuth())return;const pid=d.rate,n=+d.n,had=db.posts.find(x=>x.id===pid)?.ratings?.[ME];
     return run(async()=>{must(had?await sb.from('ratings').update({score:n}).eq('post_id',pid).eq('user_id',ME):await sb.from('ratings').insert({post_id:pid,user_id:ME,score:n}));await load();render();document.getElementById('post-'+pid)?.scrollIntoView({block:'center'})})}
-  if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}<b>${esc(c.by===ME?'You':personOf(c.by).name)}</b>${esc(c.text)}</div>`).join('')}</div>`);return}
+  if(d.allc){const p=db.posts.find(x=>x.id===d.allc);openSheet(`<h2 style="margin-bottom:16px">Comments</h2><div class="comments">${p.comments.map(c=>`<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}${pName(c.by,c.by===ME?'You':personOf(c.by).name)} ${esc(c.text)}</div>`).join('')}</div>`);return}
   if(d.share){const r=db.requests.find(x=>x.id===d.share);return run(async()=>{const post=must(await sb.from('posts').insert({author_id:ME,kind:r.kind,caption:r.question,aesthetic:r.aesthetic,photo_url:r.photo,request_id:r.id}).select().single());
     must(await sb.from('requests').update({post_id:post.id}).eq('id',r.id));await load();render()},'Posted to the community')}
   if(d.stars){return run(async()=>{must(await sb.from('requests').update({client_stars:+d.n}).eq('id',d.stars));await load();render()},'Thanks for rating your stylist')}
