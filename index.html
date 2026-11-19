@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lookover</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lookover">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -37,6 +46,8 @@ h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;text-wrap:balance;l
 .mast{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .mast-in{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:20px}
 .wordmark{font-family:var(--display);font-size:28px;font-weight:500;letter-spacing:-.01em;text-decoration:none;line-height:1;cursor:pointer}
+.logo-svg{display:block;height:56px;width:auto}
+@media (max-width:620px){.logo-svg{height:40px}}
 .wordmark em{font-style:italic;font-weight:400;color:var(--accent-text)}
 .explore{position:relative}
 .explore-btn{display:flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px;font-weight:500}
@@ -439,7 +450,15 @@ footer{padding:0 24px 110px;text-align:center;font-size:12px;color:var(--muted)}
 <body>
 <header class="mast">
   <div class="mast-in">
-    <a class="wordmark" id="home" role="button" tabindex="0" aria-label="Lookover home">Look<em>over</em></a>
+    <a class="wordmark" id="home" role="button" tabindex="0" aria-label="Lookover home"><svg class="logo-svg" viewBox="100 150 1360 700" aria-hidden="true">
+  <g fill="none" stroke="#C2185B" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="18" d="M686 238 C690 205 735 178 775 180 C820 182 850 212 848 245 C846 290 790 305 775 330 C770 340 768 345 770 352"/>
+    <path stroke-width="17" d="M770 352 C700 388 430 420 336 498 C318 513 304 528 300 545"/>
+    <path stroke-width="17" d="M770 352 C840 388 1110 420 1204 498 C1222 513 1234 528 1236 545"/>
+    <path stroke-width="10" d="M300 818 C520 748 1020 748 1236 818"/>
+  </g>
+  <text x="125" y="725" textLength="1310" lengthAdjust="spacingAndGlyphs" font-family="'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif" font-size="300" font-weight="600" fill="#4A1529">Look<tspan fill="#C2185B" font-style="italic" font-weight="500">over</tspan></text>
+</svg></a>
     <div class="explore">
       <button class="explore-btn" id="explore-btn" aria-expanded="false" aria-controls="menu">Explore
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>

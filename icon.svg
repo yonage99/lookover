@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Lookover">
+  <rect width="1024" height="1024" rx="224" fill="#ffffff"/>
+  <g transform="translate(512 470) scale(0.86) translate(-768 -500)" fill="none" stroke="#C2185B" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="34" d="M686 238 C690 205 735 178 775 180 C820 182 850 212 848 245 C846 290 790 305 775 330 C770 340 768 345 770 352"/>
+    <path stroke-width="32" d="M770 352 C700 388 430 420 336 498 C318 513 304 528 300 545"/>
+    <path stroke-width="32" d="M770 352 C840 388 1110 420 1204 498 C1222 513 1234 528 1236 545"/>
+    
+  </g>
+  <text x="512" y="842" text-anchor="middle" font-family="'Bodoni Moda', Didot, 'Bodoni 72', Georgia, serif" font-size="430" font-weight="600" fill="#4A1529">L</text>
+</svg>
