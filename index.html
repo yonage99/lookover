@@ -250,6 +250,16 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .tray button{width:42px;height:42px;border-radius:12px;border:1px solid transparent;background:var(--surface);font-size:22px;cursor:pointer;display:grid;place-items:center}
 .tray button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .tray button.locked{opacity:.35;cursor:not-allowed;filter:grayscale(1)}
+.sticker.word{font-family:'Bodoni Moda',serif;font-style:italic;font-weight:600;white-space:nowrap;background:var(--accent);color:var(--accent-ink);padding:.28em .7em;border-radius:999px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18))}
+.tray .packs{display:flex;gap:6px;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none}
+.tray .packs button{width:auto;height:auto;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;border-radius:999px}
+.tray .packs button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-text)}
+.tray .packs button.lk{opacity:.6}
+.tray .grid{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.tray .grid button.w{width:auto;padding:0 12px;font-size:13px;font-family:'Bodoni Moda',serif;font-style:italic;font-weight:600}
+.tray .prog{width:100%;display:flex;align-items:center;gap:10px;font-size:13px}
+.tray .prog i{flex:1;height:6px;border-radius:9px;background:var(--surface);overflow:hidden;display:block}
+.tray .prog i b{display:block;height:100%;background:var(--accent);border-radius:9px}
 .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .presets button{padding:0;border:2px solid transparent;border-radius:14px;overflow:hidden;cursor:pointer;background:none}
 .presets button[aria-pressed="true"]{border-color:var(--accent)}
@@ -520,7 +530,30 @@ const AESTHETICS=['Quiet luxury','Minimal','Modest','Streetwear','Coquette','Old
 const STYLE_WORDS=['Modest','Minimal','Colorful','Vintage','Streetwear','Classic','Feminine','Edgy','Sporty','Boho','Preppy','Glam','Thrifted','Neutral tones','Bold prints','Gold jewelry','Silver jewelry'];
 const SPECIALTIES=['Color analysis','Modest fashion','Streetwear','Workwear','Menswear','Events & formal','Thrift & budget','Capsule wardrobes','Everyday makeup','Bridal makeup','Nail art','Gel & builder','Haircuts','Hair color','Curly hair','Barbering'];
 const FAV_COLORS=['#C2185B','#8c1238','#e0607e','#d9742b','#c9a227','#2e7d5b','#1f6f78','#2b59c3','#6a4cc2','#8a6f5a','#5f6670','#111114'];
-const STICKERS=['✨','🎀','🌸','💖','⭐','🦋','🍒','👑','🔥','🌈','💅','👗','💄','🕶️','👠','🧸'];
+// Sticker packs unlock as people send looks for review. `at` = looks sent.
+const PACKS=[
+  {id:'starter',name:'Starter',at:0,s:['✨','🎀','🌸','💖','⭐','🦋','🍒','👑','🔥','🌈','💅','🧸']},
+  {id:'closet',name:'Closet',at:1,s:['👗','👚','👕','👖','🧥','🥼','👘','🥻','🩱','👙','🩳','🧣','🧤','🧦','👔','🎽','🦺','🩲']},
+  {id:'glam',name:'Glam',at:2,s:['💄','💋','👄','💍','💎','🪞','🌹','🥂','🍾','🪭','👛','🫦','💐','🕯️','🎐','🪷']},
+  {id:'words',name:'Words',at:3,s:['slay','icon','obsessed','10/10','chic','iconic','main character','yes!','love','vibe','serve','gorgeous','fit check','perfect','wow','it girl','glow','classy','cute','legend']},
+  {id:'shoes',name:'Shoes & bags',at:4,s:['👠','👟','🥿','👡','👢','🩰','🥾','👞','🩴','👜','🎒','💼','🧳','🕶️','👓','🧢','👒','🎩','⛑️','🪖']},
+  {id:'garden',name:'Garden',at:5,s:['🌷','🌺','🌻','🌼','🪻','🌿','🍀','🍃','🌱','🌵','🍄','🪴','🌾','🍁','🍂','🌲','🌳','🌴','🪺','🪹']},
+  {id:'sweets',name:'Sweets',at:7,s:['🍓','🍑','🍋','🍉','🍰','🧁','🍩','🍪','🍭','🍬','🍫','🍦','🧋','☕','🍵','🫐','🍒','🍯','🎂','🥐']},
+  {id:'hearts',name:'Hearts',at:9,s:['❤️','🩷','🧡','💛','💚','🩵','💙','💜','🤎','🖤','🩶','🤍','💕','💞','💓','💗','💘','💝','❣️','💌']},
+  {id:'sky',name:'Sky',at:12,s:['🌙','☀️','🌟','💫','☁️','❄️','⚡','🌊','🪐','☄️','🌤️','🌕','🌑','🌗','🌠','🌌','🌅','🌄','💧','🫧']},
+  {id:'critters',name:'Critters',at:15,s:['🐱','🐶','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐸','🐥','🦄','🐝','🐞','🦢','🦩','🐢','🐙','🦭','🐧']},
+  {id:'party',name:'Party',at:18,s:['🎉','🎊','🎈','🎁','🪩','🎶','🎵','🎤','🎧','📸','🎬','🪅','🎟️','🏆','🥳','🎆','🎇','🪇','🎀','🍸']},
+  {id:'faces',name:'Moods',at:22,s:['😍','🥰','😎','🤩','😘','😌','🤭','🫶','💁‍♀️','🙆‍♀️','💃','🕺','🫠','😇','🥹','😏','🤌','👏','🙌','💪']},
+  {id:'travel',name:'Travel',at:26,s:['✈️','🗼','🗽','🏝️','🏖️','🗺️','🧭','🚗','🛍️','🏙️','🌃','🎡','🎠','⛱️','🏔️','🚂','🛳️','🏰','🕌','🗻']},
+  {id:'art',name:'Studio',at:30,s:['🎨','🖌️','🖍️','✂️','🧵','🪡','🧶','📐','📏','🖼️','📷','📚','✏️','🖋️','📌','📎','🗒️','💡','🪄','🔮']},
+  {id:'gold',name:'Gold',at:40,s:['🏅','🥇','💯','🎖️','🗝️','🧿','🦚','🐉','🪽','🧚‍♀️','🧜‍♀️','🦸‍♀️','👸','🤴','🌋','🏵️','💠','🔱','⚜️','♾️']},
+  {id:'legend',name:'Legend',at:50,s:['Lookover legend','style icon','best dressed','runway ready','trendsetter','muse','couture','haute','signature look','hall of fame']}
+];
+const STICKERS=PACKS.flatMap(p=>p.s);
+const isWord=e=>/[a-z0-9]/i.test(e);
+const unlockedPacks=n=>PACKS.filter(p=>(n||0)>=p.at);
+const stickerCount=n=>unlockedPacks(n).reduce((a,p)=>a+p.s.length,0);
+const nextPack=n=>PACKS.find(p=>(n||0)<p.at);
 const KINDS={
   outfit:{label:'Outfit',ask:'Rate my outfit',blurb:'Fit, color, what to swap',photo:'Full-length, in daylight'},
   makeup:{label:'Makeup',ask:'Rate my makeup',blurb:'Shades and technique',photo:'Front-facing, in daylight'},
@@ -686,7 +719,7 @@ function itemHTML(it,edit){
   const st=`left:${it.x}%;top:${it.y}%;width:${it.w}%;transform:translate(-50%,-50%) rotate(${it.r}deg);z-index:${it.z}`;let inner='';
   if(it.type==='photo')inner=`<div class="polaroid"><img src="${esc(it.src)}" alt="Collage photo" draggable="false"></div>`;
   else if(it.type==='preset'){const P=PRESETS[it.preset]||['outfit',['Dove grey']];inner=`<div class="polaroid">${art(P[0],P[1])}<span class="cap" style="font-size:${(it.w*.085).toFixed(2)}cqw">${esc(it.preset)}</span></div>`}
-  else if(it.type==='sticker')inner=`<span class="sticker" style="font-size:${(it.w*.8).toFixed(2)}cqw">${esc(it.e)}</span>`;
+  else if(it.type==='sticker')inner=isWord(it.e)?`<span class="sticker word" style="font-size:${(it.w*.2).toFixed(2)}cqw">${esc(it.e)}</span>`:`<span class="sticker" style="font-size:${(it.w*.8).toFixed(2)}cqw">${esc(it.e)}</span>`;
   else inner=`<span class="ctext" style="font-size:${(it.w*.15).toFixed(2)}cqw;color:${esc(it.color||'#111114')}">${esc(it.text)}</span>`;
   return `<div class="ci ci-${it.type} ${edit&&state.sel===it.id?'sel':''}" data-ci="${it.id}" style="${st}">${inner}${edit?'<span class="h-rot" data-h="rot"></span><span class="h-size" data-h="size"></span>':''}</div>`;
 }
@@ -1026,7 +1059,8 @@ const VIEWS={
   me(){
     if(!ME)return signInPrompt('Make it yours','Create a free account to build your mood board, collect stickers and save your colors.');
     const u=me(),P=db.profile;
-    const unlocked=Math.min(STICKERS.length,3+2*(u.submissions||0));
+    const n=u.submissions||0,unlocked=stickerCount(n),nx=nextPack(n),prevAt=[...PACKS].reverse().find(p=>n>=p.at)?.at||0;
+    const pk=PACKS.find(p=>p.id===state.pack)||PACKS[0],open=n>=pk.at;
     const head=`<section class="prof-head"><button class="prof-avatar" id="avatar-btn" aria-label="Change profile photo">${face(u)}</button>
       <div><div class="eyebrow">My profile</div><h1>${esc(u.name)}</h1>
         <div style="margin:10px 0 8px">${tags(u.keywords)}</div>
@@ -1043,11 +1077,14 @@ const VIEWS={
         <button class="btn sm" data-cb="done">Done</button></div>`
       :`<p class="muted" style="margin:0">Your collage. Mix photos, inspiration, stickers and words.</p><button class="btn" data-cb="edit">${c.items.length?'Edit collage':'Start my collage'}</button>`;
     return head+`<div class="board-tools">${tools}</div>
-      ${edit?`<div class="tray" aria-label="Your stickers"><span class="hint" style="margin-right:6px">Stickers ${unlocked}/${STICKERS.length}</span>
-        ${STICKERS.map((e,i)=>i<unlocked?`<button data-sticker="${e}" aria-label="Add sticker">${e}</button>`:`<button class="locked" disabled aria-label="Locked sticker">${e}</button>`).join('')}
-        <span class="hint" style="margin-left:auto">Drag to move · corner dot resizes · top dot rotates</span></div>`:''}
+      ${edit?`<div class="tray" aria-label="Your stickers">
+        <div class="prog"><b style="white-space:nowrap">${unlocked} of ${STICKERS.length} stickers</b><i><b style="width:${nx?Math.max(4,Math.round(100*n/nx.at)):100}%"></b></i><span class="hint" style="white-space:nowrap">${nx?`${nx.at-n} more look${nx.at-n===1?'':'s'} to unlock ${esc(nx.name)}`:'Every pack unlocked'}</span></div>
+        <div class="packs" role="group" aria-label="Sticker packs">${PACKS.map(p=>`<button data-pack="${p.id}" aria-pressed="${p.id===pk.id}" class="${n>=p.at?'':'lk'}">${n>=p.at?'':'🔒 '}${esc(p.name)}</button>`).join('')}</div>
+        <div class="grid">${pk.s.map(e=>open?`<button data-sticker="${esc(e)}" class="${isWord(e)?'w':''}" aria-label="Add ${isWord(e)?esc(e):'sticker'}">${esc(e)}</button>`:`<button class="locked ${isWord(e)?'w':''}" disabled aria-label="Locked sticker">${esc(e)}</button>`).join('')}</div>
+        ${open?'':`<p class="hint" style="margin:0;width:100%">Send ${pk.at-n} more look${pk.at-n===1?'':'s'} for review to unlock the ${esc(pk.name)} pack.</p>`}
+        <span class="hint" style="width:100%">Drag to move · corner dot resizes · top dot rotates</span></div>`:''}
       ${collageHTML(c,edit)}
-      ${edit?'':'<p class="hint" style="text-align:center;margin-top:12px">Submit looks to unlock more stickers.</p>'}`;
+      ${edit?'':`<p class="hint" style="text-align:center;margin-top:12px">${unlocked} of ${STICKERS.length} stickers unlocked.${nx?` Send ${nx.at-n} more look${nx.at-n===1?'':'s'} for review to unlock the ${esc(nx.name)} pack.`:''}</p>`}`;
   },
   feed(){
     const mine=stylist(db.me.stylistId);
@@ -1424,12 +1461,11 @@ function submitCompose(){
   if(!s){toast('No one reviews this category yet');return}
   const fields={keep:$('#cp-keep').value.trim().slice(0,120),swap:$('#cp-swap').value.trim().slice(0,120),aesthetic:$('#cp-aes').value.trim().slice(0,60)};
   run(async()=>{
-    const urls=[];for(const ph of c.photos)urls.push(await upload(ph.out,c.kind));const u=me();const before=Math.min(STICKERS.length,3+2*(u.submissions||0));
+    const urls=[];for(const ph of c.photos)urls.push(await upload(ph.out,c.kind));const u=me();const before=u.submissions||0;
     let req=null;
     req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kinds[0],kinds:c.kinds,question:q.slice(0,600),...fields,photo_url:urls[0],photo_urls:urls,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
-    must(await sb.from('profiles').update({submissions:(u.submissions||0)+1}).eq('id',ME));
-    closeSheet();await load();const gained=Math.min(STICKERS.length,3+2*me().submissions)-before;
-    toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${gained>0?` You unlocked ${gained} new sticker${gained>1?'s':''}.`:''}`);state.role='client';go('mine');
+    closeSheet();await load();const newPacks=PACKS.filter(p=>p.at>before&&p.at<=(me().submissions||0));
+    toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${newPacks.length?` You unlocked the ${newPacks.map(p=>p.name).join(' and ')} sticker pack${newPacks.length>1?'s':''}!`:''}`);state.role='client';go('mine');
   });
 }
 
@@ -1756,7 +1792,7 @@ function afterRender(){
         const R=cv.getBoundingClientRect(),cx=R.left+it.x/100*R.width,cy=R.top+it.y/100*R.height;
         const st={x:e.clientX,y:e.clientY,ix:it.x,iy:it.y,w:it.w,r:it.r,d:Math.hypot(e.clientX-cx,e.clientY-cy)||1,a:Math.atan2(e.clientY-cy,e.clientX-cx)};
         const apply=()=>{el.style.left=it.x+'%';el.style.top=it.y+'%';el.style.width=it.w+'%';el.style.transform=`translate(-50%,-50%) rotate(${it.r}deg)`;
-          const k=el.querySelector('.sticker,.ctext,.cap');if(k)k.style.fontSize=(it.w*(it.type==='sticker'?.8:it.type==='text'?.15:.085)).toFixed(2)+'cqw'};
+          const k=el.querySelector('.sticker,.ctext,.cap');if(k)k.style.fontSize=(it.w*(it.type==='sticker'?(isWord(it.e)?.2:.8):it.type==='text'?.15:.085)).toFixed(2)+'cqw'};
         const move=ev=>{if(h==='size')it.w=+clamp(st.w*Math.hypot(ev.clientX-cx,ev.clientY-cy)/st.d,6,95).toFixed(1);
           else if(h==='rot')it.r=Math.round(st.r+(Math.atan2(ev.clientY-cy,ev.clientX-cx)-st.a)*180/Math.PI);
           else{it.x=+clamp(st.ix+(ev.clientX-st.x)/R.width*100,0,100).toFixed(1);it.y=+clamp(st.iy+(ev.clientY-st.y)/R.height*100,0,100).toFixed(1)}apply()};
@@ -1828,6 +1864,10 @@ document.addEventListener('click',e=>{
       if(r.error?.code==='23505')throw Object.assign(new Error('You already reported this look.'),{code:'P0001'});must(r);closeSheet();await load();render()},'Thanks. Our team will take a look.');return}
   if(d.upfolder){state.upFolder=d.upfolder;return render()}
   if(d.upmod){const a=d.upmod,id=d.id,done=()=>run(async()=>{must(await sb.rpc('moderate_upload',{rid:id,action:a}));closeSheet();state.uploads=null;await load();render()},{approve:'Approved · moved to Checked',hide:'Hidden from the stylist and the community',restore:'Restored · moved to Checked',delete:'Upload deleted'}[a]);
+    if(a==='hide'){const x=(state.uploads||[]).find(u=>u.id===id);
+      openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Hide this upload?</h2><p class="muted" style="margin:0 0 18px">${x?esc(x.client)+'’s upload to '+esc(personOf(x.stylistId).name)+' will be':'It will be'} removed from the whole app: the stylist, the community and the sender. Only admins will see it, in Hidden. You can restore it later.</p>
+        <div class="actions"><button class="btn line" id="du-keep">Keep it live</button><button class="btn" id="du-ok">Hide upload</button></div>`);
+      $('#du-keep').onclick=closeSheet;$('#du-ok').onclick=done;return}
     if(a!=='delete')return done();
     openSheet(`<div class="eyebrow">Admin</div><h2 style="margin:6px 0 10px">Delete this upload?</h2><p class="muted" style="margin:0 0 18px">It’s removed everywhere: the stylist’s feed, the sender’s reviews and the community, with its review, ratings and comments. This can’t be undone.</p>
       <div class="actions"><button class="btn line" id="du-keep">Keep it</button><button class="btn" id="du-ok">Delete upload</button></div>`);
@@ -1876,6 +1916,7 @@ document.addEventListener('click',e=>{
   if(d.filter){state.filter=d.filter;render();document.getElementById('roster')?.scrollIntoView({block:'start'});return}
   if(d.comcat){state.comCat=d.comcat;return render()}
   if(d.tab){state.meTab=d.tab;return render()}
+  if(d.pack){state.pack=d.pack;return render()}
   if(d.sticker){if(addItem({type:'sticker',e:d.sticker,w:14,r:Math.round(Math.random()*20-10)})){queueSave();render()}return}
   if(d.cb){const c=collageOf(me()),it=c.items.find(i=>i.id===state.sel);
     if(d.cb==='edit'){if(!requireAuth())return;state.editBoard=true;state.sel=null;return render()}
