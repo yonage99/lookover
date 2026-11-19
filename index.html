@@ -521,7 +521,8 @@ async function load(){
   const [st,po]=await Promise.all([sb.from('stylists').select('*').order('verified',{ascending:false}).order('rating',{ascending:false}).limit(200),
     sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').order('created_at',{ascending:false}).limit(60)]);
   if(st.error||po.error)throw (st.error||po.error);
-  const next={users:{},stylists:st.data.map(mapStylist),posts:po.data.map(mapPost),requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
+  const posts=po.data.map(mapPost);await attachScores(posts);
+  const next={users:{},stylists:st.data.map(mapStylist),posts,requests:[],applications:[],profile:null,me:{stylistId:null},isAdmin:false,loaded:true};
   const ids=new Set([...next.stylists.map(x=>x.id),...next.posts.map(x=>x.authorId),...next.posts.flatMap(x=>x.comments.map(c=>c.by))]);
   if(ME){
     ids.add(ME);
@@ -539,6 +540,11 @@ async function load(){
   db=next;
   if(state.role==='stylist'&&!db.me.stylistId)state.role='client';
   if(state.role==='admin'&&!db.isAdmin)state.role='client';
+}
+async function attachScores(posts){
+  if(!posts.length)return;
+  const {data,error}=await sb.rpc('post_scores',{ids:posts.map(p=>p.id)});if(error){console.error(error);return}
+  const m=Object.fromEntries((data||[]).map(r=>[r.post_id,r]));posts.forEach(p=>{p.median=m[p.id]?+m[p.id].median:null;p.nratings=m[p.id]?.ratings||0});
 }
 async function refresh(){try{await load()}catch(e){console.error(e);toast('Could not reach Lookover. Check your connection.')}render()}
 function dataUrlToBlob(u){const [h,b]=u.split(',');const bin=atob(b);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:(h.match(/:(.*?);/)||[])[1]||'image/jpeg'})}
@@ -758,7 +764,7 @@ async function openPerson(id){
       sb.from('posts').select('*,ratings(user_id,score),comments(id,author_id,text,is_pro,created_at)').eq('author_id',id).order('created_at',{ascending:false}).limit(60)]);
     if(!pr.data){state.person={id,missing:true};return render()}
     const u=mapUser(pr.data);u.joined=ts(pr.data.created_at);db.users[id]={...(db.users[id]||{}),...u};
-    const posts=(po.data||[]).map(mapPost);
+    const posts=(po.data||[]).map(mapPost);await attachScores(posts);
     const ids=[...new Set(posts.flatMap(x=>x.comments.map(c=>c.by)).filter(x=>!db.users[x]))];
     if(ids.length){const {data}=await sb.from('profiles').select('id,name,photo_url,fav_color,keywords').in('id',ids);(data||[]).forEach(x=>db.users[x.id]={...mapUser(x),...(db.users[x.id]||{})})}
     if(state.person?.id!==id)return;
@@ -824,7 +830,7 @@ const VIEWS={
   },
   community(){
     const posts=db.posts.filter(p=>state.comCat==='all'||p.kind===state.comCat).sort((a,b)=>b.created-a.created);
-    return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Real people, honest ratings. Rate a look out of ten and leave a kind, useful comment.</p></div><button class="btn" id="plus2">Post a look</button></div>
+    return `<div class="section-head"><div><h2>The <em>community</em></h2><p>Real people, honest ratings. Everyone sees the median score. Comments go only to the person who posted.</p></div><button class="btn" id="plus2">Post a look</button></div>
       <div class="filters" role="group" aria-label="Filter looks">${[['all','All'],...Object.entries(KINDS).map(([k,v])=>[k,v.label])].map(([k,l])=>`<button data-comcat="${k}" aria-pressed="${state.comCat===k}">${l}</button>`).join('')}</div>
       <div class="feed">${posts.map(postCard).join('')||'<div class="empty"><h3>No looks yet</h3>Be the first to post one.</div>'}</div>`;
   },
@@ -972,15 +978,16 @@ function readStylistForm(){
 
 /* ================= Community posts ================= */
 function postCard(p){
-  const a=personOf(p.authorId),vals=Object.values(p.ratings||{}),avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:0;
+  const a=personOf(p.authorId),n=p.nratings||0,mine=p.authorId===ME;
   const mineR=ME?p.ratings?.[ME]:null;const cm=p.comments||[];
-  return `<article class="post" id="post-${p.id}"><div class="post-media">${media(p,p.kind,p.art,'')}${vals.length?`<span class="avgtag num"><b>${avg.toFixed(1)}</b>${vals.length} rating${vals.length>1?'s':''}</span>`:''}</div>
+  return `<article class="post" id="post-${p.id}"><div class="post-media">${media(p,p.kind,p.art,'')}${n?`<span class="avgtag num" title="Median score"><b>${p.median.toFixed(1)}</b>median · ${n} rating${n>1?'s':''}</span>`:''}</div>
     <div class="post-body"><div class="who">${pAvatar(p.authorId)}<div style="flex:1">${pName(p.authorId,p.authorId===ME?'You':a.name)}<div class="meta"><span class="kind">${KINDS[p.kind].label}</span><span class="dot">${ago(p.created)}</span></div></div>${p.aesthetic?`<span class="chip tag">${esc(p.aesthetic)}</span>`:''}</div>
       <p style="margin:0">${esc(p.caption)}</p>
       ${p.authorId===ME?'<span class="hint">You can’t rate your own look.</span>':`<div><span class="hint">${mineR?'Your rating':'Rate this look'}</span><div class="rate" role="group" aria-label="Rate out of 10">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-rate="${p.id}" data-n="${n}" aria-pressed="${mineR===n}">${n}</button>`).join('')}</div></div>`}
       <div class="comments">${cm.slice(-2).map(c=>{const w=personOf(c.by);return `<div class="cmt">${c.pro?'<span class="pro-tag">Stylist</span>':''}${pName(c.by,c.by===ME?'You':w.name)} ${esc(c.text)}</div>`}).join('')}
-        ${cm.length>2?`<button class="textlink" data-allc="${p.id}">View all ${cm.length} comments</button>`:''}</div>
-      <form class="cmt-form" data-cform="${p.id}"><input name="c" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200"><button class="btn sm" type="submit">Post</button></form>
+        ${cm.length>2?`<button class="textlink" data-allc="${p.id}">View all ${cm.length} comments</button>`:''}
+        <span class="hint">${mine?(cm.length?'Only you can see these comments.':'Comments are private. Only you will see them.'):`Your comment is private. Only ${esc(a.name)} will see it.`}</span></div>
+      <form class="cmt-form" data-cform="${p.id}"><input name="c" placeholder="${mine?'Reply privately…':'Add a private comment…'}" aria-label="Add a private comment" maxlength="200"><button class="btn sm" type="submit">Post</button></form>
     </div></article>`;
 }
 function addComment(pid,text){
