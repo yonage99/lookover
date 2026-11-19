@@ -772,9 +772,9 @@ const memberLive=m=>m.status==='active'||(m.ends&&m.ends>Date.now());
 const offersPlan=s=>s.verified&&s.planPrice&&s.planSubs;
 const myMembership=sid=>(db.memberships||[]).find(m=>m.clientId===ME&&m.stylistId===sid&&memberLive(m));
 function quote(s){
-  if((s.firstFree||s.price===0)&&!(ME&&db.requests.some(r=>r.clientId===ME&&r.stylistId===s.id)))return {amount:0,label:'Free · your first review with them'};
-  const m=myMembership(s.id);if(m&&(m.used??0)<m.subs)return {amount:0,label:`Included in your membership · ${m.subs-(m.used||0)} of ${m.subs} left`};
-  return s.price===0?{amount:0,label:'Free review'}:s.price?{amount:s.price,label:`$${s.price} per review`}:{amount:0,label:'Price not set yet'};
+  if((s.firstFree||s.price===0)&&!(ME&&db.requests.some(r=>r.clientId===ME&&r.stylistId===s.id)))return {amount:0,label:'Free · your first review with them',counts:true};
+  const m=myMembership(s.id);if(m&&(m.used??0)<m.subs)return {amount:0,label:`Included in your membership · ${m.subs-(m.used||0)} of ${m.subs} left`,counts:true};
+  return s.price===0?{amount:0,label:'Free review',counts:false}:s.price?{amount:s.price,label:`$${s.price} per review`,counts:true}:{amount:0,label:'Price not set yet',counts:false};
 }
 const COUNTS=r=>['standard','membership','first_free'].includes(r.reason);
 const starsTxt=n=>'★'.repeat(n)+'☆'.repeat(5-n);
@@ -1079,12 +1079,13 @@ const VIEWS={
     return head+`<div class="board-tools">${tools}</div>
       ${edit?`<div class="tray" aria-label="Your stickers">
         <div class="prog"><b style="white-space:nowrap">${unlocked} of ${STICKERS.length} stickers</b><i><b style="width:${nx?Math.max(4,Math.round(100*n/nx.at)):100}%"></b></i><span class="hint" style="white-space:nowrap">${nx?'Upload more looks to unlock more sticker packs':'Every pack unlocked'}</span></div>
+        <p class="hint" style="margin:0;width:100%">Paid reviews, memberships and your first free review with each stylist count. Extra free reviews with the same stylist don’t.</p>
         <div class="packs" role="group" aria-label="Sticker packs">${PACKS.map(p=>`<button data-pack="${p.id}" aria-pressed="${p.id===pk.id}" class="${n>=p.at?'':'lk'}">${n>=p.at?'':'🔒 '}${esc(p.name)}</button>`).join('')}</div>
         <div class="grid">${pk.s.map(e=>open?`<button data-sticker="${esc(e)}" class="${isWord(e)?'w':''}" aria-label="Add ${isWord(e)?esc(e):'sticker'}">${esc(e)}</button>`:`<button class="locked ${isWord(e)?'w':''}" disabled aria-label="Locked sticker">${esc(e)}</button>`).join('')}</div>
         ${open?'':`<p class="hint" style="margin:0;width:100%">Send ${pk.at-n} more look${pk.at-n===1?'':'s'} for review to unlock the ${esc(pk.name)} pack.</p>`}
         <span class="hint" style="width:100%">Drag to move · corner dot resizes · top dot rotates</span></div>`:''}
       ${collageHTML(c,edit)}
-      ${edit?'':`<p class="hint" style="text-align:center;margin-top:12px">${unlocked} of ${STICKERS.length} stickers unlocked.${nx?` Send ${nx.at-n} more look${nx.at-n===1?'':'s'} for review to unlock the ${esc(nx.name)} pack.`:''}</p>`}`;
+      ${edit?'':`<p class="hint" style="text-align:center;margin-top:12px">${unlocked} of ${STICKERS.length} stickers unlocked.${nx?` Send ${nx.at-n} more look${nx.at-n===1?'':'s'} for review to unlock the ${esc(nx.name)} pack.`:''}<br>Paid reviews, memberships and your first free review with each stylist count toward stickers. Extra free reviews with the same stylist don’t.</p>`}`;
   },
   feed(){
     const mine=stylist(db.me.stylistId);
@@ -1430,7 +1431,7 @@ function renderComposer(){
     ${pros.length?'':`<div class="mini"><span class="eyebrow">No stylist for this yet</span><span class="hint">No one reviews ${c.kinds.map(k=>KINDS[k].label.toLowerCase()).join(' + ')||'this'} together yet. Try fewer categories, or check back soon.</span></div>`}
     <div class="field" ${pros.length?'':'hidden'}><label for="cp-pro">Send to</label><select id="cp-pro"><option value="auto">Fastest match · we pick a great stylist</option>
       ${pros.map(s=>{const qq=quote(s);return `<option value="${s.id}" ${c.stylistId===s.id?'selected':''}>${esc(s.name)} · ${qq.amount?'$'+qq.amount:'Free'}${s.verified?' · verified':''} · ★ ${s.rating}</option>`}).join('')}</select>
-      <span class="hint">${chosen?`${esc(quote(chosen).label)}.${quote(chosen).amount?' Payments are not live yet, so it is free for now.':''}`:'Fastest match picks a top-rated stylist, using a free first review when one is offered.'}</span></div>
+      <span class="hint">${chosen?`${esc(quote(chosen).label)}.${quote(chosen).amount?' Payments are not live yet, so it is free for now.':''} ${quote(chosen).counts?'Counts toward your stickers.':'You already had a free review with this stylist, so this one won’t count toward your stickers.'}`:'Fastest match picks a top-rated stylist, using a free first review when one is offered.'}</span></div>
     ${db.profile?profileMini(db.profile,'Your','Attached automatically so they can answer faster.'):'<div class="mini"><span class="eyebrow">No color profile yet</span><span class="hint">Stylists answer faster when they know your colors.</span><div><button class="btn sm line" data-quiz="1">Take the 2-minute quiz</button></div></div>'}
     <div class="field"><span class="label">After your review comes back</span><div class="vis" role="group" aria-label="After your review comes back">
       <button type="button" data-vis="private" aria-pressed="${c.vis==='private'}"><b>Keep it private</b><span>Only you and your stylist see it. You can still share it later.</span></button>
@@ -1465,7 +1466,7 @@ function submitCompose(){
     let req=null;
     req=must(await sb.from('requests').insert({client_id:ME,stylist_id:s.id,kind:c.kinds[0],kinds:c.kinds,question:q.slice(0,600),...fields,photo_url:urls[0],photo_urls:urls,color_profile:db.profile,share_when_done:c.vis==='public'}).select().single());
     closeSheet();await load();const newPacks=PACKS.filter(p=>p.at>before&&p.at<=(me().submissions||0));
-    toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${newPacks.length?` You unlocked the ${newPacks.map(p=>p.name).join(' and ')} sticker pack${newPacks.length>1?'s':''}!`:''}`);state.role='client';go('mine');
+    toast(`Sent to ${s.name}.${c.vis==='public'?' It will be shared to the community once it’s reviewed.':''}${(me().submissions||0)===before?' This extra free review doesn’t count toward your stickers.':''}${newPacks.length?` You unlocked the ${newPacks.map(p=>p.name).join(' and ')} sticker pack${newPacks.length>1?'s':''}!`:''}`);state.role='client';go('mine');
   });
 }
 
